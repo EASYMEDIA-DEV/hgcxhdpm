@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.COCAdmDAO">
+
+    <!--
+		쿼리명 : selectAdmList
+		설  명 : 관리자 계정 관리 List
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+	<select id="selectAdmList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* selectAdmList */
+			T.*
+			, (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'AUTH_CD' AND CD = T.AUTH_CD) AS AUTH_NM
+      	FROM (
+			SELECT
+				ADM_SEQ
+				, AUTH_CD
+			  	, ID
+			  	, NAME
+			  	, USE_YN
+			  	, REG_DTM
+			FROM
+		  	  	CO_ADM_MST A
+			<include refid="selectAdmListWhereSql" />
+			ORDER BY
+			 	REG_DTM DESC
+	 		LIMIT
+	 		 	#{firstIndex}, #{recordCountPerPage}
+		) T
+	</select>
+
+	<!--
+		쿼리명 : getAdmAllList
+		설  명 : 관리자 강제 변경을 위한 조회
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+	<select id="getAdmAllList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getAdmAllList */
+			  ID
+		  	, PWD
+		  	, NAME
+		  	, A.ADM_SEQ
+		FROM
+	  	  	CO_ADM_MST A JOIN CO_ADM_DTL B
+	  	ON A.ADM_SEQ = B.ADM_SEQ
+	  	WHERE A.AUTH_CD = #{authCd} AND B.natn_cd = #{natnCd} AND A.USE_YN = 'Y' AND A.appv_yn = 'Y' AND TMP_PWD_YN = 'N'
+	</select>
+
+	<!--
+		쿼리명 : selectAdmListTotCnt
+		설  명 : 관리자 계정 관리 Total Count
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+	<select id="selectAdmListTotCnt" parameterType="com.easymedia.dto.EmfMap" resultType="java.lang.Integer">
+		SELECT /* selectAdmListTotCnt */
+			COUNT(*) AS TOT_CNT
+		FROM
+			CO_ADM_MST
+		<include refid="selectAdmListWhereSql" />
+	</select>
+
+	<!--
+		쿼리명 : selectAdmListWhereSql
+		설  명 : 관리자 계정 관리 Where Sql
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+   	<sql id="selectAdmListWhereSql">
+   		<where>
+   			AND ADM_SEQ != #{admSeq}
+   			<if test="authCd != null and authCd != ''">
+				AND AUTH_CD = #{authCd}
+	      	</if>
+	      	<if test="q != null and q != ''">
+	      		<choose>
+	 				<when test="f == 1">
+	 					AND ID LIKE CONCAT('%', #{q} , '%')
+	 				</when>
+	 				<when test="f == 2">
+	 					AND NAME LIKE CONCAT('%', #{q} , '%')
+	 				</when>
+	 				<otherwise>
+	 					AND (ID LIKE CONCAT('%', #{q} , '%') OR NAME LIKE CONCAT('%', #{q} , '%'))
+	 				</otherwise>
+	 			</choose>
+	  		</if>
+   		</where>
+   	</sql>
+
+	<!--
+		쿼리명 : selectAdmDtl
+		설  명 : 관리자 계정 관리 Details
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+	<select id="selectAdmDtl" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* selectAdmDtl */
+			  A.ADM_SEQ
+			, A.AUTH_CD
+			, (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'AUTH_CD' AND CD = A.AUTH_CD) AS AUTH_NM
+			, A.ID
+			, A.NAME
+			, A.TEL
+			, A.USE_YN
+			, A.HP
+			, B.dlrsp_cd
+		FROM
+			CO_ADM_MST A LEFT JOIN CO_ADM_DTL B
+		ON A.ADM_SEQ = B.ADM_SEQ
+		WHERE
+			A.ADM_SEQ = #{detailsKey}
+	</select>
+
+	<!--
+		쿼리명 : insertAdm
+		설  명 : 관리자 계정 관리 Insert
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+ 	<insert id="insertAdm" parameterType="com.easymedia.dto.EmfMap">
+		INSERT /* insertAdm */ INTO CO_ADM_MST
+			( ADM_SEQ
+			, AUTH_CD
+			, ID
+	  		, PWD
+	  		, NAME
+	  		, TEL
+	  		, HP
+	  		, TMP_PWD_YN
+	  		, APPV_YN
+	  		, USE_YN
+	  		, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+	  		)
+		VALUES
+			( #{detailsKey}
+			, #{authCd}
+			, #{id}
+			, #{pwd}
+	  		, #{name}
+	  		, #{tel, jdbcType=VARCHAR}
+	  		, #{hp, jdbcType=VARCHAR}
+	  		, 'N'
+	  		, 'N'
+	  		, #{useYn}
+	  		, #{regId}
+	  		, #{regIp}
+	  		, NOW()
+	  		, #{modId}
+	  		, #{modIp}
+	  		, NOW()
+			)
+ 	</insert>
+
+ 	<!--
+		쿼리명 : updateAdm
+		설  명 : 관리자 계정 관리 Update
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+ 	<update id="updateAdm" parameterType="com.easymedia.dto.EmfMap">
+ 		UPDATE /* updateAdm */ CO_ADM_MST
+ 		SET
+ 			TEL = #{tel, jdbcType=VARCHAR}
+ 		   	, HP = #{hp, jdbcType=VARCHAR}
+ 		   	, MOD_ID = #{modId}
+ 		    , MOD_IP = #{modIp}
+ 		   	, MOD_DTM = NOW()
+ 		<if test= "useYn == 'Y'.toString()">
+ 		   	, LONG_TERM_YN = NULL
+ 		</if>
+		<if test="pwd != null and pwd != ''">
+			, PWD = #{pwd}
+			, LAST_PWD_MOD_DTM = NOW()
+		</if>
+		<if test="isAdmMng == 'Y'.toString()">
+			, AUTH_CD = #{authCd}
+			, NAME = #{name}
+			, USE_YN = #{useYn}
+		</if>
+		WHERE
+			ADM_SEQ = #{detailsKey}
+ 	</update>
+
+ 	<!--
+		쿼리명 : deleteAdm
+		설  명 : 관리자 계정 관리 Delete
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+ 	<delete id="deleteAdm" parameterType="com.easymedia.dto.EmfMap">
+		DELETE /* deleteAdm */
+		FROM
+			CO_ADM_MST
+		WHERE
+			ADM_SEQ IN
+		<foreach collection="delKeyList" item="detailsKey" index="index" separator=", " open="(" close=")">
+            #{detailsKey}
+        </foreach>
+ 	</delete>
+
+    <!--
+		쿼리명 : getIdCheck
+		설  명 : 관리자 계정 중복 Check
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+	<select id="getIdCheck" parameterType="com.easymedia.dto.EmfMap" resultType="java.lang.Integer">
+		SELECT /* getIdCheck */
+			COUNT(*)
+		FROM
+			CO_ADM_MST
+		WHERE
+			ID = #{id}
+	</select>
+
+    <!--
+		쿼리명 : insertAdmMenu
+		설  명 : 관리자 계정 메뉴 Insert
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+ 	<insert id="insertAdmMenu" parameterType="com.easymedia.dto.EmfMap">
+		INSERT /* insertAdmMenu */ INTO CO_ADM_MENU_INF
+			( MENU_SEQ
+			, ADM_SEQ
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+  			)
+		VALUES
+			( #{menuSeq}
+			, #{detailsKey}
+			, #{regId}
+			, #{regIp}
+			, NOW()
+			, #{modId}
+			, #{modIp}
+			, NOW()
+			)
+ 	</insert>
+
+    <!--
+		쿼리명 : deleteAdmMenu
+		설  명 : 관리자 계정 메뉴 Delete
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.14    허진영       최초생성
+    -->
+ 	<delete id="deleteAdmMenu" parameterType="com.easymedia.dto.EmfMap">
+ 		DELETE /* deleteAdmMenu */
+		FROM
+			CO_ADM_MENU_INF
+		WHERE
+			ADM_SEQ IN
+		<foreach collection="delKeyList" item="detailsKey" index="index" separator=", " open="(" close=")">
+            #{detailsKey}
+        </foreach>
+ 	</delete>
+
+</mapper>

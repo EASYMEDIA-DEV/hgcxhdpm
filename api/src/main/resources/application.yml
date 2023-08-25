@@ -1,0 +1,90 @@
+spring:
+  config:
+    import:
+      - classpath:/application-db-api.yml
+      - classpath:/application-domain-api.yml
+      - classpath:/application-globals.yml
+      - classpath:/application-upload.yml
+      - classpath:/application-jwt.yml
+      - classpath:/application-file.yml
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  #OBJECTMAPPER CAMELCASE
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+
+  #REDIS(테스트용도라서 REDIS를 박주석 컴퓨터에 설치)
+  redis:
+    host: 192.168.0.109
+    port: 6379
+
+springdoc:
+  show-login-endpoint: false
+  api-docs:
+    groups:
+      enabled: true
+    path: /api-docs
+  swagger-ui:
+    doc-expansion: none
+    operations-sorter: alpha
+    tags-sorter: alpha
+    supported-submit-methods: []
+    path: /index.html
+    display-request-duration: true
+    groups-order: DESC
+    url: /v3/api-docs
+  cache:
+    disabled: true
+  packages-to-scan: com.easymedia.api.controller
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
+  override-with-generic-response: false
+  model-and-view-allowed: true
+
+
+logging:
+  level:
+    root: info
+    jdbc:
+      connection: off
+      sqlonly: off
+      sqltiming: debug
+      audit: off
+      resultset: off
+      resultsettable: off
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(%5p) %clr(%-60(%logger{0}.%M\\(%L\\))){cyan} %clr(:){faint} %m%n%wEx"
+    #console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr([%10t]){faint} %clr(%-60(%logger{39}.%M\\(%L\\))){cyan} %clr(:){faint} %m%n%wEx"
+    #console: "%d{yyyy-MM-dd HH:mm:ss} [%-5p] [%F]%M\\(%L\\) : %m%n"
+
+
+---
+spring.config.activate.on-profile: dev_hgcx, stg_hgcx, prod_hgcx
+logging:
+  level:
+    org.springframework.orm.jpa: debug
+    org.springframework.orm.jpa.SharedEntityManagerCreator: info
+    com.easymedia: debug
+---
+spring.config.activate.on-profile: stg_hgcx, prod_hgcx
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:- } [%10t] %-60(%logger{39}.%M\\(%L\\)) : %m%n%wEx"
+---
+spring.config.activate.on-profile: dev_hgcx
+spring :
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+    thymeleaf:
+      cache: false
+logging:
+  file:
+    path: C:\\logs\\api
+  level:
+    org.springframework.orm.jpa: debug
+    org.springframework.orm.jpa.SharedEntityManagerCreator: info
+    com.easymedia: debug

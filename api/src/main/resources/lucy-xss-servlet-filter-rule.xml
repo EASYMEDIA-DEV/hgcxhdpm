@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.navercorp.com/lucy-xss-servlet ">
+    <defenders>
+        <defender>
+            <name>xssPreventerDefender</name>
+            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssPreventerDefender</class>
+        </defender>
+        <defender>
+            <name>xssSaxFilterDefender</name>
+            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssSaxFilterDefender</class>
+            <init-param>
+                <param-value>lucy-xss-sax.xml</param-value>
+                <param-value>false</param-value>
+            </init-param>
+        </defender>
+    </defenders>
+    <default>
+        <defender>xssPreventerDefender</defender>
+    </default>
+    <global>
+        <params>
+            <param name="gParam" useDefender="false"/>
+            <param name="g" usePrefix="true" useDefender="false"/>
+        </params>
+    </global>
+    <url-rule-set>
+        <url-rule>
+            <url disable="true">/</url>
+        </url-rule>
+        <!-- 설정된 param은 필터링에서 제외된다. -->
+        <url-rule>
+            <url>/app/admin</url>
+            <params>
+                <param name="title" useDefender="false"/>
+            </params>
+        </url-rule>
+    </url-rule-set>
+</config>

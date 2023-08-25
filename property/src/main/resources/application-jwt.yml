@@ -1,0 +1,12 @@
+jwt:
+  secret-key: gusEkdlEnflaXndjdbFpdlfvmfhwPrxmDlaSlEkd)@Gkrh&@#gkrh@@##dPdydhdlfDlqkdlxmakszmaejsjgdjdigoDY$d@#?@ddefee
+  token-header: Authorization
+  token-prefix: "Bearer "
+  token-type: JWT
+  auth-login-url: /api/v1/member/login
+  #expiration: 864000000 #10일(60 * 60 * 24 * 10 * 1000)
+  #cookie-max-age: 7200 #120분(120*60)
+  expiration: 3600000 #60분(60 * 60 * 1000)
+  #expiration: 5000 #5초(5 * 1000)
+  cookie-max-age: 1800 #30분(60 * 30)
+#  expiration: 60000

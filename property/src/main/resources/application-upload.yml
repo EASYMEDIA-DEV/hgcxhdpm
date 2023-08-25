@@ -1,0 +1,32 @@
+spring.config.activate.on-profile: dev_hgcx
+upload:
+  company: c:\upload\company
+  notice: c:\upload\notice
+  promotion: c:\upload\promotion
+  product: c:\upload\product
+  banner: c:\upload\banner
+  faq: c:\upload\faq
+  mainConfig: c:\upload\mainConfig
+  booking: c:\upload\booking
+---
+spring.config.activate.on-profile: stg_hgcx
+upload:
+  company: /wasapp/atchfile/image/rail/company
+  notice: /wasapp/atchfile/image/rail/notice
+  promotion: /wasapp/atchfile/image/rail/promotion
+  product: /wasapp/atchfile/image/rail/product
+  banner: /wasapp/atchfile/image/rail/banner
+  faq: /wasapp/atchfile/image/rail/faq
+  mainConfig: /wasapp/atchfile/image/rail/mainConfig
+  booking: /wasapp/atchfile/image/rail/booking
+---
+spring.config.activate.on-profile: prod_hgcx
+upload:
+  company: /wasapp/atchfile/image/rail/company
+  notice: /wasapp/atchfile/image/rail/notice
+  promotion: /wasapp/atchfile/image/rail/promotion
+  product: /wasapp/atchfile/image/rail/product
+  banner: /wasapp/atchfile/image/rail/banner
+  faq: /wasapp/atchfile/image/rail/faq
+  mainConfig: /wasapp/atchfile/image/rail/mainConfig
+  booking: /wasapp/atchfile/image/rail/booking

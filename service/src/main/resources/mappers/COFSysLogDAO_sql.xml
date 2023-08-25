@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.COFSysLogDAO">
+
+	<select id="logSelectSysLogList" parameterType="EmfMap" resultType="EmfMap" statementType="CALLABLE">
+		{
+			CALL SP_COFSysLog
+			(
+				#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+				#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+				#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+				#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+				#{prcsCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+				#{f, mode=IN, jdbcType=VARCHAR, javaType=string},
+				#{q, mode=IN, jdbcType=VARCHAR, javaType=string}
+			)
+		}
+	</select>
+	
+	
+	<!--
+         쿼리명 : logSelectSysLogListTotCnt
+         설  명 : 로그 목록의 총 갯수를 조회한다.
+       	  수정일	 수정자     수정내용 
+        ==========   ======   ============= 
+        2019.01.14   김진수     최초생성
+    -->	
+	<select id="logSelectSysLogListTotCnt" parameterType="EmfMap" resultType="java.lang.Integer">	
+		SELECT /* logSelectSysLogListTotCnt */
+			COUNT(*)
+		FROM 
+			CO_SYS_LOG A
+			LEFT JOIN (SELECT ID, NAME FROM CO_ADM_MST GROUP BY ID) B ON A.REQN_ID = B.ID
+		<include refid="selectSysLogListWhereSql" />
+	</select>
+	
+	<!--
+         쿼리명 : logExcelSysLogList
+         설  명 : 로그 목록을 조회한다. (엑셀 다운로드)
+       	  수정일	 수정자     수정내용 
+        ==========   ======   ============= 
+        2019.01.14   김진수     최초생성
+    -->	
+	<select id="logExcelSysLogList" parameterType="EmfMap" resultType="EmfMap">
+		SELECT /* logExcelSysLogList */ 
+			A.LOG_ID
+			, A.TASK_CD
+			, A.SRVC_NM
+			, A.FNC_NM
+			, A.TRGT_MENU_NM
+			, A.INSTT_CD
+			, A.PRCS_CD
+			, C.CD_NM AS PRCS_NM
+			, A.PRCS_CNT
+			, A.PRCS_TIME
+			, A.ERR_CD
+			, A.ERR_CNT
+			, A.RSPN_CD
+			, A.REQN_ID
+			, B.NAME AS REQN_NM
+			, A.REQN_IP
+			, A.OCCR_DTM
+		FROM 
+			CO_SYS_LOG A 
+			LEFT JOIN CO_ADM_MST B ON A.REQN_ID = B.ID
+			LEFT JOIN CO_CD_DTL C ON A.PRCS_CD = C.CD AND C.CD_ID = 'SYSTEM_LOG'
+		<include refid="selectSysLogListWhereSql" />
+		ORDER BY 
+			OCCR_DTM DESC
+	</select>
+	
+	<!--
+		쿼리명 : selectSysLogListWhereSql
+        설  명 : 로그 목록 조회를 위한 조건 쿼리
+       	 수정일		수정자     수정내용 
+       ==========   ======   ============= 
+       2019.01.14   김진수     최초생성
+   	-->
+   	<sql id="selectSysLogListWhereSql">
+   		<where>
+			<if test="strtDt != null and strtDt != ''">			
+				AND A.OCCR_DTM <![CDATA[>]]> STR_TO_DATE(#{strtDt}, '%m/%d/%Y')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND A.OCCR_DTM <![CDATA[<]]> DATE_ADD(STR_TO_DATE(#{endDt}, '%m/%d/%Y'), INTERVAL 1 DAY)
+			</if>
+			<if test="prcsCd != null and prcsCd != ''">
+				AND A.PRCS_CD = #{prcsCd}
+			</if>
+			<if test="q != null and q != ''">	
+	      		<choose>
+	 				<when test="f == 1">
+	 					AND A.TRGT_MENU_NM LIKE CONCAT('%', #{q} , '%')
+	 				</when>
+	 				<when test="f == 2">
+	 					AND A.REQN_ID LIKE CONCAT('%', #{q} , '%')
+	 				</when>
+	 				<when test="f == 3">
+	 					AND B.NAME LIKE CONCAT('%', #{q} , '%')
+	 				</when>
+	 				<otherwise>
+	 					AND (A.TRGT_MENU_NM LIKE CONCAT('%', #{q} , '%') OR A.REQN_ID LIKE CONCAT('%', #{q} , '%') OR B.NAME LIKE CONCAT('%', #{q} , '%'))
+	 				</otherwise>
+	 			</choose>
+	  		</if>
+	  	</where>
+   	</sql>
+	
+	<!--
+         쿼리명 : logInsertSysLog
+         설  명 : 시스템 로그정보를 생성한다.
+       	  수정일	 수정자     수정내용 
+        ==========   ======   ============= 
+        2019.01.14   김진수     최초생성
+    -->	
+	<insert id="logInsertSysLog" parameterType="EmfMap">
+		INSERT /* logInsertSysLog */ INTO CO_SYS_LOG
+			( LOG_ID
+			, TASK_CD
+			, SRVC_NM
+			, FNC_NM
+			, TRGT_MENU_NM
+			, INSTT_CD
+			, PRCS_CD
+			, PRCS_CNT
+			, PRCS_TIME
+			, ERR_CD
+			, ERR_CNT
+			, RSPN_CD
+			, REQN_ID
+			, REQN_IP
+			, OCCR_DTM
+			)
+		VALUES 
+			( #{logId}
+			, #{taskCd}
+			, #{srvcNm}
+			, #{fncNm}
+			, #{trgtMenuNm}
+			, #{insttCd}
+			, #{prcsCd}
+			, #{prcsCnt}
+			, #{prcsTime}
+			, #{errCd}
+			, #{errCnt}
+			, #{rspnCd}
+			, #{reqnId}
+			, #{reqnIp}  
+			, NOW()
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : logInsertErrLog
+         설  명 : 에러 로그정보를 생성한다.
+       	  수정일	 수정자     수정내용 
+        ==========   ======   ============= 
+        2019.01.14   김진수     최초생성
+    -->	
+	<insert id="logInsertErrLog" parameterType="EmfMap">
+		INSERT /* logInsertErrLog */ INTO CO_ERR_LOG
+			( LOG_ID
+			, SRVC_NM
+			, FNC_NM
+			, TRGT_MENU_NM
+			, ERR_CD
+			, ERR_CNTN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			)
+		VALUES 
+			( #{logId}
+			, #{srvcNm}
+			, #{fncNm}
+			, #{trgtMenuNm}
+			, #{errCd}
+			, #{errCntn}
+			, #{regId}
+			, #{regIp}
+			, NOW()
+			)
+	</insert>
+
+</mapper>

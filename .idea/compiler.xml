@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.28/a2ff5da8bcd8b1b26f36b806ced63213362c6dcc/lombok-1.18.28.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-configuration-processor/2.7.13/7447e272307e17bdb0c86c7c49b66544f2bef5bf/spring-boot-configuration-processor-2.7.13.jar" />
+        </processorPath>
+        <module name="hgcxhdpm.property.main" />
+        <module name="hgcxhdpm.utility.main" />
+        <module name="hgcxhdpm.dto.main" />
+        <module name="hgcxhdpm.common.main" />
+        <module name="hgcxhdpm.api.main" />
+        <module name="hgcxhdpm.enums.main" />
+        <module name="hgcxhdpm.error.main" />
+        <module name="hgcxhdpm.service.main" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="1.8" />
+  </component>
+</project>

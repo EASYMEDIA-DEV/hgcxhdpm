@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.easymedia.service.dao.COMailDAO">
+
+    <!--
+		 쿼리명 : setEmailSendMst
+         설  명 : MST 넣기
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="setEmailSendMst" parameterType="com.easymedia.dto.EmfMap">
+		INSERT /*setEmailSendMst*/ INTO co_email_send_mst
+			(
+			  target_id
+			, hgsi_yn
+			, result_code
+			, result_message
+			, reg_dtm
+			)
+		VALUES
+			(
+			  #{target_id}
+			, #{hgsi_yn}
+			, #{result_code}
+			, #{result_message}
+			, NOW()
+			)
+	</insert>
+
+	<!--
+		 쿼리명 : setEmailSendDtl
+         설  명 : DTL 넣기
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+        2019.01.14   박주석       데이터 조회할것만
+    -->
+    <insert id="setEmailSendDtl" parameterType="com.easymedia.dto.EmfMap">
+		INSERT /*setEmailSendDtl*/ INTO co_email_send_dtl
+			(
+			  target_id
+			, campaign_id
+			, result_code
+			, result_message
+			, reg_dtm
+			, hgsi_yn
+			)
+		VALUES
+			(
+			  #{target_id}
+			, #{campaign_id}
+			, #{result_code}
+			, #{result_message}
+			, NOW()
+			, #{hgsi_yn}
+			)
+	</insert>
+</mapper>

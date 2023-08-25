@@ -1,0 +1,24 @@
+spring.config.activate.on-profile: dev_hgcx
+domain:
+  host: 127.0.0.1
+  port: 9011
+server:
+  port: 9011
+  ssl:
+    enabled: true
+    key-store-type: PKCS12
+    key-store: classpath:keystore.p12
+    key-store-password: dnfntk1##
+    key-alias: bns-ssl
+  tomcat:
+    additional-tld-skip-patterns: "*.jar"
+---
+spring.config.activate.on-profile: stg_hgcx
+domain:
+  host: devapi.therailntel.com
+  port: 20141
+
+---
+spring.config.activate.on-profile: prod_hgcx
+domain:
+  host: api.therailntel.com

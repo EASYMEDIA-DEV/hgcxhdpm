@@ -1,0 +1,272 @@
+buildscript {
+    ext {
+        springBootVersion = '2.7.13'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://code.lds.org/nexus/content/groups/main-repo"}
+
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
+    }
+}
+
+//모든 프로젝트에 공통으로 넣을때 사용
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'idea'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'war'
+
+    group 'con.easymedia'
+    version '1.0'
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    [compileJava, compileTestJava, javadoc]*.options*.encoding = "UTF-8"
+
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://maven.egovframe.go.kr/maven/"
+            metadataSources {
+                artifact()
+            }
+        }
+        maven {
+            url "https://json-lib.sourceforge.net/"
+        }
+    }
+
+    // 하위 모듈에서 공통으로 사용하는 세팅 추가
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+
+        implementation 'org.apache.commons:commons-lang3:3.12.0'
+        implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+        //전자정부표준프레임워크 idgen
+        implementation 'org.egovframe.rte:org.egovframe.rte.psl.dataaccess:4.0.0'
+        implementation 'org.egovframe.rte:org.egovframe.rte.fdl.idgnr:4.0.0'
+        implementation 'org.egovframe.rte:org.egovframe.rte.fdl.property:4.0.0'
+        implementation 'org.egovframe.rte:org.egovframe.rte.fdl.cmmn:4.0.0'
+        implementation 'org.egovframe.rte:org.egovframe.rte.ptl.mvc:4.0.0'
+
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+        runtimeOnly 'com.mysql:mysql-connector-j'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+}
+
+
+
+//공통 Config, AOP, Filter, Interceptor
+project(":common") {
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-legacy:2.1.0.RELEASE'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-aop'
+        implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4'
+        /* VELOCITY EMAIL */
+        implementation 'org.apache.velocity:velocity:1.7'
+
+        /* VALID */
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+        /*  JPA */
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+        /* TIKA */
+        implementation group: 'org.apache.tika', name: 'tika-core', version: '2.4.1'
+
+        //공통 속성
+        implementation project(':property')
+        implementation project(':dto')
+
+
+
+
+    }
+
+    bootWar.enabled = false
+    war.enabled = true
+}
+
+//API
+project(":api") {
+    dependencies {
+        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+        //REDIS 서버 연동
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-aop'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+        implementation 'com.sun.mail:javax.mail:1.6.2'
+        implementation 'org.apache.commons:commons-collections4:4.0'
+
+        //SWAGGER
+        implementation "org.springdoc:springdoc-openapi-ui:1.6.2"
+        implementation "org.springdoc:springdoc-openapi-security:1.6.2"
+
+        implementation('com.navercorp.lucy:lucy-xss-servlet:2.0.1') {
+            exclude group: "commons-logging", module: 'commons-logging'
+        }
+
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+
+
+        //공통 설정
+        implementation project(':common')
+        //공통 속성
+        implementation project(':property')
+        //함수
+        implementation project(':utility')
+        //enum
+        implementation project(':enums')
+        //DTO
+        implementation project(':dto')
+        //error
+        implementation project(':error')
+        //서비스
+        implementation project(':service')
+    }
+}
+//ENUM
+project(":enums") {
+    dependencies {
+        implementation "org.springdoc:springdoc-openapi-ui:1.6.2"
+        implementation 'org.apache.commons:commons-collections4:4.4'
+        implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.0'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.4'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+
+        compileOnly project(':error')
+    }
+    bootWar.enabled = false
+    war.enabled = true
+}
+//에러
+project(":error") {
+    dependencies {
+        implementation "org.springdoc:springdoc-openapi-ui:1.6.2"
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+    }
+    bootWar.enabled = false
+    war.enabled = true
+}
+//유틸리티
+project(":utility") {
+    dependencies {
+        implementation 'commons-io:commons-io:2.11.0'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+
+        implementation 'org.apache.poi:poi:5.1.0'
+        implementation 'org.apache.poi:poi-ooxml:5.1.0'
+
+        implementation project(':error')
+    }
+    bootWar.enabled = false
+    war.enabled = true
+}
+//프로퍼티
+project(":property") {
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    }
+    bootWar.enabled = false
+    war.enabled = true
+}
+//DTO
+project(":dto") {
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'com.fasterxml.jackson.core:jackson-annotations'
+        implementation "org.springdoc:springdoc-openapi-ui:1.6.2"
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'javax.persistence:javax.persistence-api:2.2'
+        implementation 'org.mybatis:mybatis-typehandlers-jsr310:1.0.2'
+        implementation 'org.apache.commons:commons-collections4:4.0'
+
+        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+
+
+        implementation project(':utility')
+        implementation project(':enums')
+        implementation project(':error')
+    }
+
+    bootWar.enabled = false
+    war.enabled = true
+}
+//서비스
+project(":service") {
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.4'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+        implementation 'commons-io:commons-io:2.13.0'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        //스프링 캐쉬(메뉴)
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        implementation 'net.sf.ehcache:ehcache'
+        //REDIS 서버 연동
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+        //MAIL
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+        //escapeHtml4 사용 하기 위해
+        implementation group: 'org.apache.commons', name: 'commons-text', version: '1.9'
+
+        //tika
+        implementation 'org.apache.tika:tika-core:2.8.0'
+        //thumnails
+        implementation 'net.coobird:thumbnailator:0.4.20'
+        //json
+        implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+        //excel
+        implementation 'org.apache.poi:poi:5.2.3'
+        implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
+        //enum
+        implementation project(':enums')
+        //DTO
+        implementation project(':dto')
+        //DTO
+        implementation project(':error')
+        //UTILITY
+        implementation project(':utility')
+        //프로퍼티
+        implementation project(':property')
+
+        implementation project(':common')
+    }
+    bootWar.enabled = false
+    war.enabled = true
+}
