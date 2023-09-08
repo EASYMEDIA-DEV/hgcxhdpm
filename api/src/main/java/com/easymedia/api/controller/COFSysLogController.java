@@ -1,13 +1,11 @@
-package com.easymedia.api.web;
+package com.easymedia.api.controller;
 
 import com.easymedia.dto.EmfMap;
 import com.easymedia.service.COFSysLogService;
 import com.easymedia.service.EgovCmmUseService;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

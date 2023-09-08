@@ -1,4 +1,4 @@
-package com.easymedia.api.web;
+package com.easymedia.api.controller;
 
 import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
@@ -79,25 +79,25 @@ public class COBLgnController {
     @RequestMapping(value="/setLogin", method=RequestMethod.POST)
     public EmfMap actionLogin(@ApiData EmfMap emfMap, HttpServletRequest request) throws Exception
     {
-    	try
-    	{
-    		// 보안 처리(로그인 세션 변경)
-    		if (request.getSession(false) != null)
-    		{
-    			request.getSession().invalidate();
-    		}
-    	}
+		try
+		{
+			// 보안 처리(로그인 세션 변경)
+			if (request.getSession(false) != null)
+			{
+				request.getSession().invalidate();
+			}
+		}
 		catch (Exception he)
 		{
 			if (log.isDebugEnabled())
 			{
 				log.debug(he.getMessage());
-            }
+			}
 			throw he;
 		}
 
-    	return  cOBLgnService.actionLogin(emfMap, request);
-    }
+		return  cOBLgnService.actionLogin(emfMap, request);
+	}
 
     /**
 	 * 로그아웃을 처리한다.
