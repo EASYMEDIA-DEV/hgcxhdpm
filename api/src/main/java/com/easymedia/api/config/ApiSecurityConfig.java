@@ -47,25 +47,18 @@ public class ApiSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().antMatchers( "/*.*",
+        return (web) -> web.ignoring().antMatchers(
                         "/error",
-                        "/swagger-ui/**",
-                        "/swagger-resources/**",
-                        "/swagger**",
-                        "/files/**",
-                        "/api-docs/**",
                         "/v3/api-docs",
-                        "/api/v1/sample/**",
                         "/api/v1/setLogin",
-                        "/api/v1/setLogout")
+                        "/api/v1/setLogout"
+                        ,"/api/v1/getLastLgnInfo")
                 .mvcMatchers("/*.*",
-                        "/error",
                         "/files/**",
                         "/swagger-ui/**",
                         "/swagger-resources/**",
                         "/swagger**",
                         "/api-docs/**",
-                        "/v3/api-docs",
                         "/api/v1/sample/**");
     }
 
@@ -80,10 +73,8 @@ public class ApiSecurityConfig {
         http.cors();
         //인증
         http
-                .authorizeRequests()
-                .mvcMatchers("/api/v1/setLogin", "/api/v1/setLogout").permitAll()
-                .antMatchers("/api/v1/setLogin", "/api/v1/setLogout").permitAll()
-                .anyRequest().authenticated();
+        .authorizeRequests()
+        .anyRequest().authenticated();
 
         http.addFilterBefore(new JwtRequestFilter(_jwtProperties, _apiJwtTokenProvider, Site.MNGWSERC), UsernamePasswordAuthenticationFilter.class);
         return http.build();
