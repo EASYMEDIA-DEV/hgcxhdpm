@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CODMenuDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+	    <result property="CNTN" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!--
+         쿼리명 : CODMenuDAO.selectMenuList
+         설  명 : 메뉴 목록을 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.selectMenuList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.selectMenuList */
+			MENU_SEQ
+			, PARNT_SEQ
+			, PSTN
+			, LFT_VAL
+			, RHT_VAL
+			, DPTH
+			, MENU_GB
+			, MENU_NM
+			, MENU_ICON
+			, USER_LINK
+			, USER_USE_YN
+			, (SELECT COUNT(*) FROM CO_MENU_MST WHERE PARNT_SEQ = A.MENU_SEQ) AS CHILDCNT
+		<if test="isChkd == 'Y'.toString()">
+			<if test="menuType == 'admin'.toString()">
+				, (SELECT MENU_SEQ FROM CO_ADM_MENU_INF WHERE MENU_SEQ = A.MENU_SEQ AND ADM_SEQ = #{admSeq}) AS CHECKTYPE
+				, (SELECT MENU_SEQ FROM CO_ADM_MENU_INF WHERE MENU_SEQ = A.MENU_SEQ AND ROLE_CD = #{roleCd}) AS CHECKROLE
+			</if>
+			<if test="menuType == 'role'.toString()">
+				, (SELECT MENU_SEQ FROM CO_ADM_MENU_INF WHERE MENU_SEQ = A.MENU_SEQ AND ROLE_CD = #{roleCd}) AS CHECKTYPE
+			</if>
+		</if>
+		FROM
+			CO_MENU_MST A
+		WHERE 1=1
+			AND LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq})
+		   	AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq})
+		ORDER BY
+			LFT_VAL
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.selectMenuDtl
+         설  명 : 메뉴 상세를 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.01.15   김대환       최초생성
+    -->
+	<select id="CODMenuDAO.selectMenuDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.selectMenuDtl */
+			MENU_SEQ
+			, PARNT_SEQ
+			, PSTN
+			, LFT_VAL
+			, RHT_VAL
+			, DPTH
+			, MENU_GB
+			, MENU_NM
+			, MENU_ICON
+			, ADM_LINK
+			, USER_LINK
+			, USER_WND_YN
+			, USER_USE_YN
+			, SEO_KWRD
+			, SEO_CNTN
+		FROM
+			CO_MENU_MST
+		WHERE
+			MENU_SEQ = #{menuSeq}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.insertMenu
+         설  명 : 메뉴를 등록한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.01.15   김대환       최초생성
+    -->
+	<insert id="CODMenuDAO.insertMenu" parameterType="emfMap">
+		INSERT INTO /* CODMenuDAO.insertMenu */ CO_MENU_MST
+			( MENU_SEQ
+			, PARNT_SEQ
+			, PSTN
+			, LFT_VAL
+			, RHT_VAL
+			, DPTH
+			, MENU_GB
+			, MENU_NM
+			, MENU_ICON
+			, ADM_LINK
+			, USER_LINK
+			, USER_WND_YN
+			, USER_USE_YN
+			, SEO_KWRD
+			, SEO_CNTN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			( #{menuSeq}
+			, #{parntSeq}
+			, #{pstn}
+			, IFNULL(#{rhtVal}, 1)
+			, IFNULL(#{rhtVal} + 1 , 2)
+			, #{dpth}
+			, #{menuGb}
+			, #{menuNm}
+			, #{menuIcon}
+			, #{admLink}
+			, #{userLink}
+			, #{userWndYn}
+			, #{userUseYn}
+			, #{seoKwrd}
+			, #{seoCntn}
+			, #{regId}
+			, #{regIp}
+			, NOW()
+			, #{modId}
+			, #{modIp}
+			, NOW()
+			)
+	</insert>
+
+	<!--
+         쿼리명 : CODMenuDAO.updateMenuNm
+         설  명 : 메뉴명을 수정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<update id="CODMenuDAO.updateMenuNm" parameterType="emfMap">
+		UPDATE /* CODMenuDAO.updateMenuNm */ CO_MENU_MST
+		SET
+			MENU_NM = #{menuNm}
+		    , MOD_ID = #{modId}
+			, MOD_IP = #{modIp}
+			, MOD_DTM = NOW()
+		WHERE
+			MENU_SEQ = #{menuSeq}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.updateMenuInf
+         설  명 : 메뉴의 정보를 수정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.01.15   김대환       최초생성
+    -->
+	<update id="CODMenuDAO.updateMenuInf" parameterType ="emfMap">
+		UPDATE /* CODMenuDAO.updateMenuInf */ CO_MENU_MST
+		SET
+			ADM_LINK = #{admLink}
+			, USER_LINK = #{userLink}
+		<if test="menuGb != null and menuGb != ''">
+			, MENU_GB = #{menuGb}
+		</if>
+		<if test="menuIcon != null and menuIcon != ''">
+			, MENU_ICON = #{menuIcon}
+		</if>
+		<if test="userWndYn != null and userWndYn != ''">
+			, USER_WND_YN = #{userWndYn}
+		</if>
+		<if test="userUseYn != null and userUseYn != ''">
+			, USER_USE_YN = #{userUseYn}
+		</if>
+			, SEO_KWRD = #{seoKwrd}
+			, SEO_CNTN = #{seoCntn}
+		   	, MOD_ID = #{modId}
+			, MOD_IP = #{modIp}
+			, MOD_DTM = NOW()
+		WHERE
+			MENU_SEQ = #{menuSeq}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.updateUserUseYn
+         설  명 : 사용자 노출 여부를 수정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<update id="CODMenuDAO.updateUserUseYn" parameterType ="emfMap">
+		UPDATE /* CODMenuDAO.updateUserUseYn */ CO_MENU_MST
+		SET
+			USER_USE_YN = #{userUseYn}
+		   	, MOD_ID = #{modId}
+			, MOD_IP = #{modIp}
+			, MOD_DTM = NOW()
+		WHERE
+			MENU_SEQ = #{menuSeq}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.getRhtVal
+         설  명 : 해당 메뉴의 오른쪽 값을 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2015.11.13   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getRhtVal" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CODMenuDAO.getRhtVal */
+			RHT_VAL
+		FROM
+			CO_MENU_MST
+		WHERE
+			MENU_SEQ = #{parntSeq}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getDpth
+         설  명 : 해당 메뉴의 깊이를 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2015.11.13   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getDpth" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CODMenuDAO.getDpth */
+			DPTH + 1 AS DPTH
+		FROM
+			CO_MENU_MST
+		WHERE
+			MENU_SEQ = #{parntSeq}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.setLftVal
+         설  명 : 해당 메뉴의 왼쪽 값을 지정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2015.11.13   허진영       최초생성
+    -->
+	<update id="CODMenuDAO.setLftVal" parameterType="emfMap">
+		UPDATE /* CODMenuDAO.setLftVal */ CO_MENU_MST
+		SET
+			LFT_VAL = LFT_VAL + 2
+		WHERE
+			LFT_VAL <![CDATA[>]]> #{rhtVal}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.setRhtVal
+         설  명 : 해당 메뉴의 오른쪽 값을 지정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2015.11.13   허진영       최초생성
+    -->
+	<update id="CODMenuDAO.setRhtVal" parameterType="emfMap">
+		UPDATE /* CODMenuDAO.setRhtVal */ CO_MENU_MST
+		SET
+			RHT_VAL = RHT_VAL + 2
+		WHERE
+			RHT_VAL <![CDATA[>=]]> #{rhtVal}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.getMaxPosition
+         설  명 : 최상위 포지션을 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getMaxPosition" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CODMenuDAO.getMaxPosition */
+			COUNT(*)
+		FROM
+			CO_MENU_MST
+		WHERE
+			PARNT_SEQ = #{refSeq}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getMoveNodeIds
+         설  명 : 하위 트리들을 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getMoveNodeIds" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.getMoveNodeIds */
+			MENU_SEQ
+		FROM
+			CO_MENU_MST
+		WHERE 1=1
+			AND LFT_VAL <![CDATA[>=]]> #{lftVal}
+		   	AND RHT_VAL <![CDATA[<=]]> #{rhtVal}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getRefInd
+         설  명 : 하위트리갯수를 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getRefInd" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CODMenuDAO.getRefInd */
+			LFT_VAL
+		FROM
+			CO_MENU_MST
+		WHERE 1=1
+			AND PARNT_SEQ = #{refSeq}
+			AND PSTN - #{self} = #{pstn}
+		ORDER BY
+			PSTN
+		LIMIT 1
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getMoveExits
+         설  명 : 메뉴 자식의 갯수를 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getMoveExits" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CODMenuDAO.getMoveExits */
+			MENU_SEQ
+		FROM
+			CO_MENU_MST
+		WHERE 1=1
+			AND LFT_VAL <![CDATA[>=]]> #{lftVal}
+		   	AND RHT_VAL <![CDATA[<=]]> #{rhtVal}
+		   	AND MENU_SEQ IN (#{refSeq})
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getMoveExits2
+         설  명 : 움직일 노드 갯수 확인한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getMoveExits2" parameterType="emfMap" resultType="java.lang.Integer">
+	 	SELECT /* CODMenuDAO.getMoveExits2 */
+			COUNT(*)
+		FROM
+			CO_MENU_MST
+		WHERE 1=1
+			AND PARNT_SEQ = #{refSeq}
+			AND PSTN - #{self} = #{pstn}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.setMenuMove
+         설  명 : 메뉴를 이동한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<update id="CODMenuDAO.setMenuMove" parameterType="java.lang.String">
+		<![CDATA[
+			${value}
+		]]>
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.deleteMenu
+         설  명 : 메뉴를 삭제한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<delete id="CODMenuDAO.deleteMenu" parameterType="emfMap">
+		DELETE /* CODMenuDAO.deleteMenu */
+		FROM
+			CO_MENU_MST
+		WHERE 1=1
+			AND LFT_VAL <![CDATA[>=]]> #{lftVal}
+		   	AND RHT_VAL <![CDATA[<=]]> #{rhtVal}
+    </delete>
+
+    <!--
+         쿼리명 : CODMenuDAO.setDeleteUpdateLftVal
+         설  명 : 메뉴의 하위노드 왼쪽키값 변경
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+    <update id="CODMenuDAO.setDeleteUpdateLftVal" parameterType ="emfMap">
+		UPDATE /* CODMenuDAO.setDeleteUpdateLftVal */ CO_MENU_MST
+		SET
+			LFT_VAL = LFT_VAL - (#{rhtVal} - #{lftVal} + 1)
+		WHERE
+			LFT_VAL <![CDATA[>]]> #{rhtVal}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.setDeleteUpdateRhtVal
+         설  명 : 메뉴의 하위노드 오른쪽키값 변경
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+    <update id="CODMenuDAO.setDeleteUpdateRhtVal" parameterType ="emfMap">
+		UPDATE /* CODMenuDAO.setDeleteUpdateRhtVal */ CO_MENU_MST
+		SET
+			RHT_VAL = RHT_VAL - (#{rhtVal} - #{lftVal} + 1)
+		WHERE
+			RHT_VAL <![CDATA[>]]> #{lftVal}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.setDeleteUpdatePstn
+         설  명 : 메뉴의 하위노드 오른쪽키값 변경
+          수정일     수정자      수정내용
+        ==========   ======   ==============
+        2017.04.03   박주석      최초생성
+    -->
+	<update id="CODMenuDAO.setDeleteUpdatePstn" parameterType ="emfMap">
+		UPDATE /* CODMenuDAO.setDeleteUpdatePstn */ CO_MENU_MST
+		SET
+			PSTN = PSTN -1
+		WHERE 1=1
+			AND PARNT_SEQ = #{parntSeq}
+		    AND PSTN <![CDATA[>]]> #{pstn}
+	</update>
+
+	<!--
+         쿼리명 : CODMenuDAO.getParntData
+         설  명 : 상위부모를 다 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getParntData" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.getParntData */
+			MENU_SEQ
+			, PARNT_SEQ
+			, MENU_NM
+		FROM
+			CO_MENU_MST A
+		WHERE 1=1
+			AND LFT_VAL <![CDATA[<=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq})
+		   	AND RHT_VAL <![CDATA[>=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq})
+		   	AND DPTH <![CDATA[>=]]> (SELECT DPTH - 1 FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq})
+		ORDER BY
+			LFT_VAL
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.getChildData
+         설  명 : 하위노드를 다 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getChildData" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.getChildData */
+			MENU_SEQ
+			, PARNT_SEQ
+	        , MENU_NM
+		FROM (
+			SELECT
+				FN_GET_CONNECT_BY_PARENT(MENU_SEQ) AS ID
+				, @LEVEL AS LEVEL
+			FROM (
+				SELECT
+					@START_WITH:=#{menuSeq}
+					, @ID:=@START_WITH
+					, @LEVEL:=0
+			) VARS JOIN CO_MENU_MST
+			WHERE @ID IS NOT NULL
+		) T1 JOIN CO_MENU_MST T2 ON T1.ID = T2.MENU_SEQ
+		WHERE 1=1
+			AND MENU_SEQ != #{menuSeq}
+		  	AND USER_USE_YN = 'Y'
+		  	AND LEVEL = 1
+		ORDER BY
+			LFT_VAL
+	</select>
+
+
+
+	<!--
+         쿼리명 : CODMenuDAO.getChildNodeData
+         설  명 : 부모키 기준으로 첫번째 하위노드를 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="CODMenuDAO.getChildNodeData" parameterType="emfMap" resultType="emfMap">
+		SELECT /*CODMenuDAO.getChildNodeData*/
+			MENU_SEQ
+			,PARNT_SEQ
+			,PSTN
+			,MENU_NM
+		FROM
+			CO_MENU_MST
+		WHERE
+			PARNT_SEQ = #{menuSeq}
+			AND USER_USE_YN = 'Y'
+		ORDER BY PSTN ASC
+	</select>
+
+
+	<!--
+         쿼리명 : CODMenuDAO.getLgugMenuList
+         설  명 : 다국어 메뉴명 조회
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.07.10   박주석       최초생성
+    -->
+	<select id="CODMenuDAO.getLgugMenuList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODMenuDAO.getLgugMenuList */
+			  menu_seq
+			, lgug_cd
+			, menu_nm
+		FROM
+			co_menu_nm_dtl
+		WHERE
+			MENU_SEQ = #{menuSeq}
+	</select>
+
+	<!--
+         쿼리명 : CODMenuDAO.insertLgugMenuNm
+         설  명 : 다국어 메뉴명을 등록한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.07.10   박주석       최초생성
+    -->
+	<insert id="CODMenuDAO.insertLgugMenuNm" parameterType="emfMap">
+		INSERT INTO /* CODMenuDAO.insertLgugMenuNm */ co_menu_nm_dtl
+			(
+			  menu_seq
+			, lgug_cd
+			, menu_nm
+			, REG_ID
+			, REG_DTM
+			, MOD_ID
+			, MOD_DTM
+			)
+		VALUES
+			(
+			  #{menuSeq}
+			, #{lgugCd}
+			, #{lgugMenuNm}
+			, #{regId}
+			, NOW()
+			, #{modId}
+			, NOW()
+			)
+		ON DUPLICATE KEY UPDATE
+	        menu_nm = #{lgugMenuNm}
+	      , MOD_ID = #{modId}
+	      , MOD_DTM = NOW()
+	</insert>
+
+</mapper>

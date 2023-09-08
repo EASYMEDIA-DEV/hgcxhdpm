@@ -139,4 +139,17 @@ public class EgovIdgenConfig {
                 .setCipers(13)
                 .build();
     }
+
+    /** 메뉴
+     * @return
+     */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl menuIdgen() {
+        return new EgovIdGnrBuilder().setDataSource(dataSource).setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+                .setBlockSize(1)
+                .setTable("CO_SEQ_MST")
+                .setTableName("MENU_SEQ")
+                .setCipers(13)
+                .build();
+    }
 }

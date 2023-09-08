@@ -55,6 +55,8 @@ subprojects {
         implementation 'org.egovframe.rte:org.egovframe.rte.fdl.cmmn:4.0.0'
         implementation 'org.egovframe.rte:org.egovframe.rte.ptl.mvc:4.0.0'
 
+        implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
         annotationProcessor 'org.projectlombok:lombok'
         annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
