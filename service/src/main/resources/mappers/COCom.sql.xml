@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CommonSql">
+
+    <!--
+         쿼리명 : CommonSql.getNationList
+         설  명 : 국가 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  김필기     최초 생성
+    -->
+    <select id="CommonSql.getNationList" parameterType="emfMap" resultType="emfMap">
+        SELECT /* CommonSql.getNationList */
+        NTN_CD AS CD
+        , LGUG_CD
+        , NTN_CD_NM AS NM
+        , STANDARD_TIME
+        FROM
+        CO_NATION_MST
+        WHERE 1=1
+        AND USE_YN = 'Y'
+        <if test="admAuthCd >= 30  and admNatnCd != null and admNatnCd != ''">
+            AND NTN_CD = #{admNatnCd}
+        </if>
+        <if test="ntnSrchKey != null and ntnSrchKey != ''">
+            <choose>
+                <when test="ntnSrchKey == 'rsc'.toString()">
+                    AND RSC_USE_YN = 'Y'
+                </when>
+                <when test="ntnSrchKey == 'mys'.toString()">
+                    AND MYS_USE_YN = 'Y'
+                </when>
+                <when test="ntnSrchKey == 'kpi'.toString()">
+                    AND KPI_USE_YN = 'Y'
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <!--
+         쿼리명 : CommonSql.getAgencyList
+         설  명 : 국가 > 대리점 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  김필기     최초 생성
+    -->
+    <select id="CommonSql.getAgencyList" parameterType="emfMap" resultType="emfMap">
+        SELECT /* CommonSql.getAgencyList */
+        NTN_CD
+        , DLSP_CD AS CD
+        , DLSP_CD_NM AS NM
+        FROM
+        CO_DEALERSHIP_MST
+        WHERE 1=1
+        AND USE_YN = 'Y'
+        AND NTN_CD = #{ntnCd}
+        <if test="admAuthCd >= 30 and admDlspCd != null and admDlspCd != ''">
+            AND DLSP_CD = #{admDlspCd}
+        </if>
+    </select>
+
+    <!--
+         쿼리명 : CommonSql.getDelearList
+         설  명 : 국가 > 대리점 > 딜러 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  김필기     최초 생성
+    -->
+    <select id="CommonSql.getDelearList" parameterType="emfMap" resultType="emfMap">
+        SELECT /* CommonSql.getDelearList */
+        MST.NTN_CD
+        , MST.DLSP_CD
+        , MST.DLR_CD AS CD
+        , MST.DLR_NM AS NM
+        , MST.ASGN_TASK
+        FROM
+        co_dealer_mst AS MST
+        WHERE 1=1
+        <if test="dlrStatus != null and dlrStatus != ''">
+            AND MST.USE_YN = #{dlrStatus}
+        </if>
+        AND MST.NTN_CD = #{ntnCd}
+        AND MST.DLSP_CD = #{dlspCd}
+        <if test="asgnTaskCd != null">
+            AND MST.ASGN_TASK LIKE CONCAT('%', #{asgnTaskCd} , '%')
+        </if>
+        <choose>
+            <when test="admAuthCd == '42'.toString() or admAuthCd == '41'.toString() or admAuthCd == '43'.toString() or admAuthCd == '44'.toString()">
+                /* 관리하는 딜러별 */
+                AND
+                (
+                <foreach collection="admDlrCdList" item="dlrCd" index="index" separator=" OR " open="(" close=")">
+                    MST.dlr_cd = #{dlrCd}
+                </foreach>
+                )
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+    </select>
+
+
+
+    <!--
+         쿼리명 : CommonSql.getDelearGrpList
+         설  명 : 국가 > 대리점 > 딜러 그룹 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  김필기     최초 생성
+    -->
+    <select id="CommonSql.getDelearGrpList" parameterType="emfMap" resultType="emfMap">
+        SELECT /*CommonSql.getDelearGrpList*/
+            MST.DLR_GRP_SEQ AS CD
+             ,(SELECT GRP_NM FROM CO_DEALER_GROUP_MST WHERE DLR_GRP_SEQ = MST.DLR_GRP_SEQ) AS NM
+        FROM
+            CO_DEALER_GROUP_REL MST
+        WHERE 1=1
+          AND MST.NTN_CD = #{ntnCd}
+          AND MST.DLSP_CD = #{dlspCd}
+        GROUP BY MST.DLR_GRP_SEQ
+    </select>
+
+
+
+
+    <!--
+         쿼리명 : CommonSql.getBadgeList
+         설  명 : 뱃지 리스트 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  박주석     최초 생성
+    -->
+    <select id="CommonSql.getBadgeList" parameterType="emfMap" resultType="emfMap">
+        SELECT /* CommonSql.getBadgeList */
+        NTC_PRCS_CD AS CD
+        , NTC_TYPE
+        , ADM_NTC_SEQ AS IDX
+        , PRCS_DLRSP_CD
+        , PRCS_DLR_CD
+        , (SELECT
+        <choose>
+            <when test="siteLanguage == 'en' or siteLanguage == null or siteLanguage == ''">
+                B.CD_NM
+            </when>
+            <otherwise>
+                C.CD_NM
+            </otherwise>
+        </choose>
+        FROM CO_CD_DTL B LEFT JOIN CO_CD_NM_DTL C ON B.CD_ID = C.CD_ID AND B.CD = C.CD
+        WHERE B.CD_ID = 'NTC_PRCS_CD' AND B.CD = NTC_PRCS_CD
+        <choose>
+            <when test="siteLanguage == 'en' or siteLanguage == null or siteLanguage == ''">
+            </when>
+            <otherwise>
+                AND C.LGUG_CD = #{siteLanguage}
+            </otherwise>
+        </choose>
+        ) AS CD_NM
+        , (SELECT CD_DSC FROM CO_CD_DTL WHERE CD_ID = 'NTC_PRCS_CD' AND CD = NTC_PRCS_CD) AS CD_DSC
+        , (SELECT dlsp_cd_nm FROM co_dealership_mst WHERE dlsp_cd = PRCS_DLRSP_CD ) AS NTC_DLSP_CD_NM
+        , (SELECT DLR_NM FROM co_dealer_mst WHERE dlr_cd = PRCS_DLR_CD ) AS NTC_DLR_CD_NM
+        , REG_DTM
+        FROM
+        CO_ADM_PRCS_LOG
+        WHERE PRCS_DLRSP_CD = #{dlspCd}
+        <if test="( authCd gte 40)">
+            <foreach collection="dlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+                PRCS_DLR_CD = #{dlrCd}
+            </foreach>
+        </if>
+        AND REG_DTM >= DATE_ADD(NOW(), INTERVAL -3 DAY)
+        ORDER BY REG_DTM DESC
+    </select>
+
+    <!--
+         쿼리명 : CommonSql.setBadge
+         설  명 : 뱃지 로그 등록
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.01.25  박주석     최초 생성
+    -->
+    <insert id="CommonSql.setBadge" parameterType="emfMap">
+        <selectKey resultType="Integer" keyProperty="admNtcSeq" order="BEFORE">
+            SELECT (IFNULL(MAX(ADM_NTC_SEQ), 0) + 1 ) AS ADM_NTC_SEQ FROM CO_ADM_PRCS_LOG
+        </selectKey>
+        INSERT /*CommonSql.setBadge*/ INTO co_adm_prcs_log
+        (
+        ADM_NTC_SEQ
+        ,NTC_TYPE
+        ,NTC_PRCS_CD
+        ,PRCS_DLR_CD
+        ,PRCS_DLRSP_CD
+        ,REG_ID
+        ,REG_DTM
+        )
+        VALUES
+        <choose>
+            <when test="insertBadgeList != null and insertBadgeList.size() > 0">
+                <foreach collection="insertBadgeList" item="queueMap" index="index" separator=",">
+                    (
+                    #{admNtcSeq} + #{index}
+                    ,#{queueMap.ntcType}
+                    ,#{queueMap.ntcPrcsCd}
+                    ,#{queueMap.admDlrCd}
+                    ,#{queueMap.admDlspCd}
+                    ,#{queueMap.regId}
+                    ,NOW()
+                    )
+                </foreach>
+            </when>
+            <otherwise>
+                (
+                #{admNtcSeq}
+                ,#{ntcType}
+                ,#{ntcPrcsCd}
+                ,#{admDlrCd}
+                ,#{admDlspCd}
+                ,#{regId}
+                ,#{regDtm}
+                )
+            </otherwise>
+        </choose>
+
+    </insert>
+
+    <!--
+         쿼리명 : CommonSql.getDlrCd
+         설  명 : 현대 딜러코드로 딜러코드 조회
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.12.19  신혜정     최초 생성
+    -->
+    <select id="CommonSql.getDlrCd" parameterType="emfMap" resultType="EmfMap">
+        SELECT /*CommonSql.getDlrCd*/
+        DLR_CD
+        , ASGN_TASK
+        FROM
+        CO_DEALER_MST
+        WHERE
+        (OUT_DLR_CD = #{dlrCd} OR OUT_DLR_CD = #{outDlrCd}
+        <if test="dlrCd != null and dlrCd != ''">
+            OR DLR_CD = #{dlrCd}
+        </if>
+        )
+        AND (NTN_CD = #{ntnCd} OR NTN_CD = #{admNatnCd})
+        AND USE_YN = 'Y'
+    </select>
+
+
+    <!--
+         쿼리명 : CommonSql.updateSessionAdm
+         설  명 : 다중접속 방지를 위한 세션 저장
+         수정일     수정자     수정내용
+        ==========  ======  ==============
+        2019.12.19  신혜정     최초 생성
+    -->
+    <update id="CommonSql.updateSessionAdm" parameterType="emfMap">
+        UPDATE /* CommonSql.updateSessionAdm */
+            CO_ADM_MST
+        SET SESSION_ID = #{sessionId}
+          , SESSION_DTM = NOW()
+        WHERE ID = #{id}
+    </update>
+
+</mapper>
