@@ -1,0 +1,4325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.COAMainDAO">
+
+	<!--
+		쿼리명 : COAMainDAO.getDlearDtl
+		설  명 : 딜러 사용자, 딜러 관리자용 딜러 정보
+	      수정일     수정자       수정내용
+        ==========   =======   ==============
+        2019.02.14   허진영       최초생성
+    -->
+	<select id="getDlearDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlearDtl */
+			A.DLR_CD
+			, A.DLR_NM
+	  		, (SELECT WEB_PATH FROM CO_FILE_DTL WHERE ATCH_FILE_ID = B.ATCH_FILE_ID AND USE_YN = 'Y' LIMIT 1) AS ATCH_FILE_WEB_PATH
+  		FROM
+			CO_DEALER_MST A
+			JOIN CO_DEALER_DTL B ON A.DLR_CD = B.DLR_CD
+  		WHERE 1=1
+  			AND A.NTN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLSP_CD = #{searchDlspCd}
+			AND A.DLR_CD = #{searchCd}
+        LIMIT 1
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspDtl
+		설  명 : 대리점 관리자 정보
+	      수정일     수정자       수정내용
+        ==========   =======   ==============
+        2019.02.14   허진영       최초생성
+    -->
+	<select id="getDlrspDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspDtl */
+			DLSP_CD
+			, DLSP_CD_NM
+			, (
+				SELECT
+					C.GRP_NM
+				FROM
+					CO_ADM_MST A
+					JOIN CO_ADM_DTL B ON A.ADM_SEQ = B.ADM_SEQ AND A.USE_YN = 'Y'
+					JOIN CO_DEALER_GROUP_MST C ON B.DLR_GRP_SEQ = C.DLR_GRP_SEQ AND C.USE_YN = 'Y'
+				WHERE
+					A.ID = #{admId}
+			) AS DLR_GRP_NM
+		FROM
+			CO_DEALERSHIP_MST
+		WHERE 1=1
+			AND NTN_CD = LEFT(#{searchCd}, 2)
+			AND DLSP_CD = #{searchDlspCd}
+		LIMIT 1
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getAllHgsiStatus
+		설  명 : HGSI Status 조회 (권역)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+		2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업	
+    -->
+	<select id ="getAllHgsiStatus" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getAllHgsiStatus_Tune2023 */
+			<!--  IFNULL(AVG(AVG_SCRG), 0) AS AVG_SCRG-->
+			IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+			    on A.NATN_CD = B.NTN_CD
+			    and A.DLRSP_CD = B.DLSP_CD
+			    and A.DLR_CD = B.DLR_CD
+			JOIN CO_NATION_MST C on
+			A.NATN_CD = C.NTN_CD
+		WHERE
+			A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+			AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.SBMT_YN = 'Y'
+		<if test="dlrStatus != ''.toString()">	
+			AND B.USE_YN = #{dlrStatus}
+		</if>	
+		<!-- <if test="kpiCd == 'KP'.toString()">
+			AND C.KPI_USE_YN = 'Y'
+		</if> -->
+		<choose>
+			<when test="kpiCd == 'KP'.toString()">
+				AND C.KPI_USE_YN = 'Y'
+			</when>
+			<when test="otcCd == 'OTC'.toString()">
+				AND C.OTHER_CNTRY_YN = 'Y'
+			</when>
+			<otherwise>
+				AND C.OTHER_CNTRY_YN = 'N'
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+	<!--
+		쿼리명 : COAMainDAO.getNatnHgsiStatus
+		설  명 : HGSI Status 조회 (나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+		2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNatnHgsiStatus" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnHgsiStatus_Tune2023 */
+			IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+			    on A.NATN_CD = B.NTN_CD
+			    and A.DLRSP_CD = B.DLSP_CD
+			    and A.DLR_CD = B.DLR_CD
+		WHERE 
+			A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+			AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = #{searchCd}
+			AND A.SBMT_YN = 'Y'
+			
+			
+		<if test="dlrStatus != ''.toString()">	
+			AND B.USE_YN = #{dlrStatus}
+		</if>
+
+		UNION ALL
+			SELECT 
+		<choose>
+			<when test="prevStrtDt != ''.toString()">
+				<choose>
+					<when test="trgtYN == 'Y'.toString()">
+						#{trgtVal} AS AVG_SCRG
+					</when>
+					<otherwise>
+							IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+							A.REG_DTM <![CDATA[>=]]> CONCAT(#{prevStrtDt}, ' 00:00:00')
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{prevEndDt}, ' 23:59:59')
+							AND A.ASGN_TASK_CD = #{asgnTaskCd}
+							AND A.NATN_CD = #{searchCd}
+							AND A.SBMT_YN = 'Y'
+							
+							
+							<if test="dlrStatus != ''.toString()">	
+								AND B.USE_YN = #{dlrStatus}
+							</if>
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>'' AS AVG_SCRG</otherwise>
+		</choose>			
+	</select>	
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspHgsiStatus
+		설  명 : HGSI Status 조회 (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+		2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getDlrspHgsiStatus" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspHgsiStatus_Tune2023 */
+			<!--  IFNULL(AVG(AVG_SCRG), 0) AS AVG_SCRG-->
+			IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+			    on A.NATN_CD = B.NTN_CD
+			    and A.DLRSP_CD = B.DLSP_CD
+			    and A.DLR_CD = B.DLR_CD
+		WHERE 
+			A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+			AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+		<choose>
+			<when test="searchDlrCdList != null">
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					A.DLR_CD = #{dlrCd}
+				</foreach>
+			</when>
+			<otherwise>
+				/* 대리점에 속한 딜러들 */
+				AND A.DLRSP_CD = #{searchDlspCd}
+			</otherwise>
+		</choose>
+			AND A.SBMT_YN = 'Y'			
+			<if test="dlrStatus != ''.toString()">
+			AND B.USE_YN = #{dlrStatus}
+			</if>
+		UNION ALL
+			SELECT 
+		<choose>
+			<when test="prevStrtDt != ''.toString()">
+				<choose>
+					<when test="trgtYN == 'Y'.toString()">
+						#{trgtVal} AS AVG_SCRG
+					</when>
+					<otherwise>
+							IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+							A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+							AND A.ASGN_TASK_CD = #{asgnTaskCd}
+							AND A.NATN_CD = LEFT(#{searchCd}, 2)
+							<choose>
+								<when test="searchDlrCdList != null">
+									<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+										A.DLR_CD = #{dlrCd}
+									</foreach>
+								</when>
+								<otherwise>
+									/* 대리점에 속한 딜러들 */
+									AND A.DLRSP_CD = #{searchDlspCd}
+								</otherwise>
+							</choose>
+							AND A.SBMT_YN = 'Y'
+							<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>'' AS AVG_SCRG</otherwise>
+		</choose>				
+	</select>
+	
+	
+
+	
+	<!--
+		쿼리명 : COAMainDAO.getHgsiStatus
+		설  명 : HGSI Status 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getHgsiStatus" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getHgsiStatus_Tune2023 */
+			  IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+			    on A.NATN_CD = B.NTN_CD
+			    and A.DLRSP_CD = B.DLSP_CD
+			    and A.DLR_CD = B.DLR_CD
+		WHERE 
+			A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+			AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLRSP_CD = #{searchDlspCd}
+		<choose>
+			<when test="searchScope == 'dlr'.toString()">
+				AND A.DLR_CD = #{searchCd}
+			</when>
+			<otherwise>
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					A.DLR_CD = #{dlrCd}
+				</foreach>
+			</otherwise>
+		</choose>
+		
+			AND A.SBMT_YN = 'Y'			
+			<if test="dlrStatus != ''.toString()">
+			AND B.USE_YN = #{dlrStatus}
+			</if>
+
+		UNION ALL
+			SELECT 
+		<choose>
+			<when test="prevStrtDt != ''.toString()">
+				<choose>
+					<when test="trgtYN == 'Y'.toString()">
+						#{trgtVal} AS AVG_SCRG
+					</when>
+					<otherwise>
+							IFNULL(ROUND(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),1),0) AS AVG_SCRG
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+							A.REG_DTM <![CDATA[>=]]> CONCAT(#{prevStrtDt}, ' 00:00:00')
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{prevEndDt}, ' 23:59:59')
+							AND A.ASGN_TASK_CD = #{asgnTaskCd}
+							AND A.NATN_CD = LEFT(#{searchCd}, 2)
+							AND A.DLRSP_CD = #{searchDlspCd}
+							<choose>
+								<when test="searchScope == 'dlr'.toString()">
+									AND A.DLR_CD = #{searchCd}
+								</when>
+								<otherwise>
+									<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+										A.DLR_CD = #{dlrCd}
+									</foreach>
+								</otherwise>
+							</choose>
+						
+							AND A.SBMT_YN = 'Y'							
+							<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>'' AS AVG_SCRG</otherwise>
+		</choose>						
+	</select>
+	
+	
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnHgsiRankingList
+		설  명 : HGSI Ranking 조회 (국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNatnHgsiRankingList" parameterType="emfMap" resultType="emfMap">
+				SELECT /* COAMainDAO.getNatnHgsiRankingList_Tune2023 */
+				  	M1.NTN_CD
+				  	, M1.NTN_CD_NM
+				  	, V1.DLRSP_CD
+				  	, IFNULL(ROUND(V1.AVG_SCRG, 1), 0) AS TOT_HGSI_AVG
+				  	, IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+				 	, IFNULL(V2.RESPONSE_CNT, 0) AS RESPONSE_CNT
+				FROM
+					CO_NATION_MST M1
+					LEFT JOIN (
+						SELECT
+							A.NATN_CD
+							, A.DLRSP_CD
+							,	IFNULL(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),0) AS AVG_SCRG
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+						 	A.REG_DTM <![CDATA[>=]]> #{strtDt}
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+				  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			    			AND A.SBMT_YN = 'Y'
+							<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+						GROUP BY
+							A.NATN_CD
+					) V1 ON M1.NTN_CD = V1.NATN_CD
+					LEFT JOIN (
+						SELECT
+							A.NATN_CD
+							, COUNT(DISTINCT A.SEND_PDDG) AS RESPONSE_CNT
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+						 	A.REG_DTM <![CDATA[>=]]> #{strtDt}
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+							AND A.ASGN_TASK_CD = #{asgnTaskCd}
+							<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+							AND A.SBMT_YN = 'Y'
+						GROUP BY
+							A.NATN_CD
+					) V2 ON M1.NTN_CD = V2.NATN_CD
+				<!-- <if test="kpiCd == 'KP'.toString()">
+					WHERE M1.KPI_USE_YN = 'Y'
+				</if> -->
+				<choose>
+					<when test="kpiCd == 'KP'.toString()">
+						WHERE M1.KPI_USE_YN = 'Y'
+					</when>
+					<when test="otcCd == 'OTC'.toString()">
+						WHERE M1.OTHER_CNTRY_YN = 'Y'
+					</when>
+					<otherwise>
+						WHERE M1.OTHER_CNTRY_YN = 'N'
+					</otherwise>
+				</choose>
+				ORDER BY
+					DATA_SORT, TOT_HGSI_AVG
+				<choose>
+					<when test="hgsiRankingSort == '1'.toString()">
+						ASC
+					</when>
+					<otherwise>
+						DESC
+					</otherwise>
+				</choose>
+				, RESPONSE_CNT
+				<choose>
+					<when test="hgsiRankingSort == '1'.toString()">
+						ASC
+					</when>
+					<otherwise>
+						DESC
+					</otherwise>
+				</choose>
+				, M1.NTN_CD_NM
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspHgsiRankingList
+		설  명 : HGSI Ranking 조회 (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getDlrspHgsiRankingList" parameterType="emfMap" resultType="emfMap">
+				SELECT /* COAMainDAO.getDlrspHgsiRankingList_Tune2023 */
+					M1.DLSP_CD
+					, M1.DLSP_CD_NM AS DLR_NM
+					, IFNULL(ROUND(V1.AVG_SCRG, 1), 0) AS TOT_HGSI_AVG
+				  	, IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+				 	, IFNULL(V2.RESPONSE_CNT, 0) AS RESPONSE_CNT
+				FROM
+					CO_DEALERSHIP_MST M1
+					LEFT JOIN (
+						SELECT
+							A.NATN_CD
+							, A.DLRSP_CD
+							, IFNULL(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),0) AS AVG_SCRG
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+							A.REG_DTM <![CDATA[>=]]> #{strtDt}
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+				  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			    			AND A.SBMT_YN = 'Y'
+							<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+						GROUP BY
+							A.NATN_CD, A.DLRSP_CD
+					) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD
+					LEFT JOIN (
+						SELECT
+							A.NATN_CD
+							, A.DLRSP_CD
+							, COUNT(DISTINCT A.SEND_PDDG) AS RESPONSE_CNT
+						FROM
+							HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+							    on A.NATN_CD = B.NTN_CD
+							    and A.DLRSP_CD = B.DLSP_CD
+							    and A.DLR_CD = B.DLR_CD
+						WHERE 
+						 	A.REG_DTM <![CDATA[>=]]> #{strtDt}
+							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+							AND A.ASGN_TASK_CD = #{asgnTaskCd}
+							AND A.SBMT_YN = 'Y'
+						  	<if test="dlrStatus != ''.toString()">
+							AND B.USE_YN = #{dlrStatus}
+							</if>
+						GROUP BY
+							A.NATN_CD, A.DLRSP_CD
+					) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD
+				WHERE 1=1
+					AND M1.NTN_CD = LEFT(#{searchCd},2)
+				ORDER BY
+					DATA_SORT, TOT_HGSI_AVG
+				<choose>
+					<when test="hgsiRankingSort == '1'.toString()">
+						ASC
+					</when>
+					<otherwise>
+						DESC
+					</otherwise>
+				</choose>				
+				, RESPONSE_CNT
+				<choose>
+					<when test="hgsiRankingSort == '1'.toString()">
+						ASC
+					</when>
+					<otherwise>
+						DESC
+					</otherwise>
+				</choose>
+				, M1.DLSP_CD_NM			
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getHgsiRankingList
+		설  명 : Ranking 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getHgsiRankingList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getHgsiRankingList_Tune2023 */
+			M1.DLR_CD
+			<choose>
+				<when test="admAuthCd == '44'.toString()">
+					, #{admName} AS DLR_NM
+				</when>
+				<when test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()">
+					, IFNULL(V1.SERVICE_ASGNR, '') AS DLR_NM
+				</when>
+				<otherwise>
+					, IFNULL(M1.DLR_NM, '') AS DLR_NM
+				</otherwise>
+			</choose>
+			
+			, IFNULL(ROUND(V1.AVG_SCRG, 1), 0) AS TOT_HGSI_AVG
+		  	, IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+		 	, IFNULL(V1.RESPONSE_CNT, 0) AS RESPONSE_CNT
+	  	FROM
+			CO_DEALER_MST M1
+			LEFT JOIN (
+				SELECT
+					A.NATN_CD
+					, A.DLRSP_CD
+					, A.DLR_CD
+					, C.SERVICE_ASGNR
+					, B.DLR_NM
+					, A.ASGN_TASK_CD
+					, IFNULL(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),0) AS AVG_SCRG
+					, COUNT(DISTINCT A.SEND_PDDG) AS RESPONSE_CNT
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B
+					    on A.NATN_CD = B.NTN_CD
+					    and A.DLRSP_CD = B.DLSP_CD
+					    and A.DLR_CD = B.DLR_CD
+					JOIN CO_DEALER_CUSTOMER_LOG C ON A.NATN_CD = C.NTN_CD
+						AND A.DLRSP_CD = C.DLSP_CD 
+						AND A.DLR_CD = C.DLR_CD
+						AND A.VHCLT_NO = C.VHCLT_NO
+						AND A.VHCLT_SORT = C.VHCLT_SORT
+						AND A.LOG_SEQ = C.LOG_SEQ
+				WHERE 1=1
+					AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+					AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+		  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					<if test="dlrStatus != ''.toString()">
+					AND B.USE_YN = #{dlrStatus}
+					</if>
+					AND A.SBMT_YN = 'Y'
+					<if test ="admAuthCd == '44'.toString()">AND C.SERVICE_ASGNR = #{admName}</if>
+				GROUP BY
+				<choose>
+					<when test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()"> 
+						C.SERVICE_ASGNR, A.DLR_CD
+					</when>
+					<otherwise>
+						A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+					</otherwise>
+				</choose>
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD AND M1.DLR_CD = V1.DLR_CD
+	 	WHERE 1=1
+	 		AND V1.NATN_CD = LEFT(#{searchCd}, 2)
+			AND V1.DLRSP_CD = #{searchDlspCd}
+			AND FIND_IN_SET(#{asgnTaskCd}, V1.ASGN_TASK_CD)
+			<choose>
+				<when test="admAuthCd == '41'.toString() and searchScope != 'dlr'.toString()">
+					<foreach collection="admDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						M1.dlr_cd = #{dlrCd}
+					</foreach>
+				</when>
+				<when test="admAuthCd >= '42'.toString()  and searchScope != 'dlr'.toString()">
+					<if test="searchDlrCdList != null">
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							M1.DLR_CD = #{dlrCd}
+						</foreach>
+					</if>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND M1.dlr_cd = #{searchCd}
+				</when>
+			</choose>
+		ORDER BY
+			DATA_SORT, TOT_HGSI_AVG
+		<choose>
+			<when test="hgsiRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, RESPONSE_CNT
+		<choose>
+			<when test="hgsiRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		
+		<choose>
+			<when test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()">	
+				, V1.SERVICE_ASGNR
+			</when>
+			<otherwise>
+				, V1.DLR_NM
+			</otherwise>
+		</choose>		
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnHgsiMonthList
+		설  명 : HGSI Trend 조회 (권역, 나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+	-->	
+    <select id ="getNatnHgsiMonthList" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	{ 
+    		CALL SP_COAHgsiTrendList_Tune2023_OTHERS(
+    			#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{targetYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+	    	)
+    	}
+    </select> 
+
+
+	<!--
+		쿼리명 : COAMainDAO.getHgsiMonthList
+		설  명 : HGSI Trend 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getHgsiMonthList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getHgsiMonthList */
+	      	T1.M
+	      	, ROUND(IFNULL(SUM(T2.AVG_SCRG)/(COUNT(T2.AVG_SCRG)-COUNT(if(T2.AVG_SCRG=0,T2.AVG_SCRG,NULL))),0) ,1) AS NTN_HGSI_AVG
+	  	FROM (
+	  		SELECT CONCAT(YEAR(#{endDt}), '01') AS M
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '02')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '03')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '04')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '05')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '06')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '07')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '08')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '09')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '10')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '11')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '12')
+	  	) T1 LEFT JOIN (
+	  		SELECT
+	  			A.SEND_PDDG
+	  			, A.AVG_SCRG
+				, A.SBMT_DTM
+	  		FROM
+	  			HG_HGSI_SURVEY_SEND_MST A JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD
+	  		WHERE 1=1
+	  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+	  			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+	  		<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					<if test="isDlear == '1'.toString()">
+						AND A.DLR_CD = #{searchCd}
+	
+					</if>
+				</when>
+			</choose>
+				AND DATE_FORMAT(A.SBMT_DTM, '%Y') = YEAR(#{endDt})
+				<if test="dlrStatus != ''.toString()">
+				AND B.USE_YN = #{dlrStatus}
+				</if>
+		) T2 ON T1.M = DATE_FORMAT(T2.SBMT_DTM, '%Y%m')
+	 	GROUP BY
+			T1.M
+	  	ORDER BY
+			T1.M
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnNpsStatus
+		설  명 : NPS Status 조회 (권역, 국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNatnNpsStatus" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnNpsStatus_Tune2023 */
+			COUNT(*) AS SUM_NPS_CNT
+	    	, IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) AS PROMOTERS_CNT
+		    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 6 AND T2.EX_ANSW <![CDATA[<=]]> 8, 1, 0)), 0) AS PASSIVES_CNT
+		    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<=]]> 6, 1, 0)), 0) AS DETRACTORS_CNT
+		FROM (
+			SELECT
+				A.SEND_PDDG
+        		, A.NATN_CD
+        		, A.DLRSP_CD
+        		, A.DLR_CD
+    			, B.SRVY_SEQ
+    			, B.QSTN_SORT
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+				JOIN CO_DEALER_MST C 
+					 on A.NATN_CD = C.NTN_CD
+					 and A.DLRSP_CD = C.DLSP_CD
+					 and A.DLR_CD = C.DLR_CD
+				JOIN CO_NATION_MST D ON A.NATN_CD = D.NTN_CD
+			WHERE  
+				A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+		 		AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			<if test="isNatn == '1'.toString()">
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			</if>		 		
+		 		AND B.QSTN_SORT = '1'
+		 		
+		 	<if test="dlrStatus != ''.toString()">	
+		 		AND C.USE_YN = #{dlrStatus}
+		 	</if>	
+		 		AND A.SBMT_YN = 'Y'
+		 	<!-- <if test="kpiCd == 'KP'.toString()">	
+		 		AND D.KPI_USE_YN = 'Y'
+		 	</if> -->
+		 	<choose>
+		 		<when test="kpiCd == 'KP'.toString()">
+		 			AND D.KPI_USE_YN = 'Y'
+		 		</when>
+				<when test="otcCd == 'OTC'.toString()">
+					AND D.OTHER_CNTRY_YN = 'Y'
+				</when>
+				<otherwise>
+					AND D.OTHER_CNTRY_YN = 'N'
+				</otherwise>
+			</choose>
+		) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		WHERE T2.EX_ANSW IS NOT NULL
+		
+		<if test="isNatn == '1'.toString()">
+			UNION ALL
+				SELECT 
+			<choose>
+				<when test="prevStrtDt != ''.toString()">
+					<choose>
+						<when test="trgtYN == 'Y'.toString()">
+							CONVERT(#{trgtVal},INTEGER) AS SUM_NPS_CNT
+							, '' AS PREOMOTERS_CNT
+							, '' AS PASSIVES_CNT
+							, '' AS DETRACTORS_CNT
+						</when>
+						<otherwise>
+								COUNT(*) AS SUM_NPS_CNT
+						    	, IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) AS PROMOTERS_CNT
+							    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 6 AND T2.EX_ANSW <![CDATA[<=]]> 8, 1, 0)), 0) AS PASSIVES_CNT
+							    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<=]]> 6, 1, 0)), 0) AS DETRACTORS_CNT
+							FROM (
+								SELECT
+									A.SEND_PDDG
+					        		, A.NATN_CD
+					        		, A.DLRSP_CD
+					        		, A.DLR_CD
+					    			, B.SRVY_SEQ
+					    			, B.QSTN_SORT
+								FROM
+									HG_HGSI_SURVEY_SEND_MST A
+									JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+									JOIN CO_DEALER_MST C 
+										 on A.NATN_CD = C.NTN_CD
+										 and A.DLRSP_CD = C.DLSP_CD
+										 and A.DLR_CD = C.DLR_CD
+								WHERE 
+									A.REG_DTM <![CDATA[>=]]> CONCAT(#{prevStrtDt}, ' 00:00:00')
+							 		AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{prevEndDt}, ' 23:59:59')
+									AND A.ASGN_TASK_CD = #{asgnTaskCd}
+									AND A.NATN_CD = LEFT(#{searchCd}, 2)									
+							 		AND B.QSTN_SORT = '1'
+							 		<if test="dlrStatus != ''.toString()">	
+								 		AND C.USE_YN = #{dlrStatus}
+								 	</if>
+							) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+							WHERE T2.EX_ANSW IS NOT NULL
+						</otherwise>
+					</choose>
+				</when>
+				<otherwise>
+					  0 AS SUM_NPS_CNT
+					, '' AS PREOMOTERS_CNT
+					, '' AS PASSIVES_CNT
+					, '' AS DETRACTORS_CNT
+				</otherwise>
+			</choose>
+		</if>			
+	</select>
+
+
+	<!--
+		쿼리명 : COAMainDAO.getNpsStatus
+		설  명 : NPS Status 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNpsStatus" parameterType="emfMap" resultType="emfMap">
+	SELECT /* COAMainDAO.getNpsStatus_Tune2023 */
+		COUNT(*) AS SUM_NPS_CNT
+    	, IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) AS PROMOTERS_CNT
+	    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 6 AND T2.EX_ANSW <![CDATA[<=]]> 8, 1, 0)), 0) AS PASSIVES_CNT
+	    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<=]]> 6, 1, 0)), 0) AS DETRACTORS_CNT
+	FROM (
+		SELECT
+			A.SEND_PDDG
+       		, A.NATN_CD
+       		, A.DLRSP_CD
+       		, A.DLR_CD
+   			, B.SRVY_SEQ
+   			, B.QSTN_SORT
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A
+			JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+			JOIN CO_DEALER_MST C
+				 on A.NATN_CD = C.NTN_CD
+				 and A.DLRSP_CD = C.DLSP_CD
+				 and A.DLR_CD = C.DLR_CD
+		WHERE 				
+	 		A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+	 		AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')		 		
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+  			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+	<choose>
+		<when test="searchScope == 'dlrsp'.toString()">
+			<choose>
+				<when test="searchDlrCdList != null">
+					/* 관리하는 딜러별 */
+					<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						A.DLR_CD = #{dlrCd}
+					</foreach>
+				</when>
+				<otherwise>
+					/* 대리점에 속한 딜러들 */
+					AND A.DLRSP_CD = #{searchDlspCd}
+				</otherwise>
+			</choose>
+		</when>
+		<when test="searchScope == 'dlr'.toString()">
+			AND A.DLRSP_CD = #{searchDlspCd}
+			/* 관리하는 딜러별 */
+			<choose>
+				<when test="searchCd == searchDlspCd">
+					<if test="searchDlrCdList != null">
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							A.DLR_CD = #{dlrCd}
+						</foreach>
+					</if>
+				</when>
+				<otherwise>
+					AND A.DLR_CD = #{searchCd}
+				</otherwise>
+			</choose> 
+			
+		</when>
+	</choose>		 		
+	 		AND B.QSTN_SORT = '1'
+	 		<if test="dlrStatus != ''.toString()">	
+		 		AND C.USE_YN = #{dlrStatus}
+		 	</if>
+	) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+	WHERE T2.EX_ANSW IS NOT NULL
+	
+	UNION ALL
+			SELECT 
+		<choose>
+			<when test="prevStrtDt != ''.toString()">
+				<choose>
+					<when test="trgtYN == 'Y'.toString()">
+						CONVERT(#{trgtVal},INTEGER) AS SUM_NPS_CNT
+						, '' AS PREOMOTERS_CNT
+						, '' AS PASSIVES_CNT
+						, '' AS DETRACTORS_CNT
+					</when>
+					<otherwise>
+							COUNT(*) AS SUM_NPS_CNT
+					    	, IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) AS PROMOTERS_CNT
+						    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 6 AND T2.EX_ANSW <![CDATA[<=]]> 8, 1, 0)), 0) AS PASSIVES_CNT
+						    , IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<=]]> 6, 1, 0)), 0) AS DETRACTORS_CNT
+						FROM (
+							SELECT
+								A.SEND_PDDG
+				        		, A.NATN_CD
+				        		, A.DLRSP_CD
+				        		, A.DLR_CD
+				    			, B.SRVY_SEQ
+				    			, B.QSTN_SORT
+							FROM
+								HG_HGSI_SURVEY_SEND_MST A
+								JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+								JOIN CO_DEALER_MST C
+									 on A.NATN_CD = C.NTN_CD
+									 and A.DLRSP_CD = C.DLSP_CD
+									 and A.DLR_CD = C.DLR_CD
+							WHERE 
+								A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+	 							AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+								AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					  			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+						<choose>
+							<when test="searchScope == 'dlrsp'.toString()">
+								<choose>
+									<when test="searchDlrCdList != null">
+										/* 관리하는 딜러별 */
+										<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+											A.DLR_CD = #{dlrCd}
+										</foreach>
+									</when>
+									<otherwise>
+										/* 대리점에 속한 딜러들 */
+										AND A.DLRSP_CD = #{searchDlspCd}
+									</otherwise>
+								</choose>
+							</when>
+							<when test="searchScope == 'dlr'.toString()">
+								AND A.DLRSP_CD = #{searchDlspCd}
+								/* 관리하는 딜러별 */
+								<choose>
+									<when test="searchCd == searchDlspCd">
+										<if test="searchDlrCdList != null">
+											<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+												A.DLR_CD = #{dlrCd}
+											</foreach>
+										</if>
+									</when>
+									<otherwise>
+										AND A.DLR_CD = #{searchCd}
+									</otherwise>
+								</choose> 
+								
+							</when>
+						</choose>							 		
+						 		AND B.QSTN_SORT = '1'
+						 		<if test="dlrStatus != ''.toString()">	
+							 		AND C.USE_YN = #{dlrStatus}
+							 	</if>
+						) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+						WHERE T2.EX_ANSW IS NOT NULL
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				  0 AS SUM_NPS_CNT
+				, '' AS PREOMOTERS_CNT
+				, '' AS PASSIVES_CNT
+				, '' AS DETRACTORS_CNT
+			</otherwise>
+		</choose>		
+	</select>
+		
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnNpsRankingList
+		설  명 : NPS Ranking 조회 (국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNatnNpsRankingList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnNpsRankingList_Tune2023 */
+		  	M1.NTN_CD
+		  	, M1.NTN_CD_NM
+		  	, V1.DLRSP_CD
+		  	<!-- , IFNULL(V1.AVG_SCRG, 0) AS TOT_NPS_AVG -->
+		  	, ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS TOT_NPS_AVG
+		  	, IF(ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) IS NULL, 1, 0) AS DATA_SORT
+		 	, IFNULL(V2.RESPONSE_CNT, 0) AS RESPONSE_CNT
+		FROM
+			CO_NATION_MST M1
+			LEFT JOIN (
+				SELECT
+					T1.NATN_CD
+					, T1.DLRSP_CD
+					<!-- , (((IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) - IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<]]> 7, 1, 0)), 0)) / COUNT(*)) * 100) AS AVG_SCRG -->
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  8, 1, 0)), 0) AS PROMOTERS_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  6 AND T2.EX_ANSW  <![CDATA[<=]]>  8 , 1, 0)), 0) AS PASSIVES_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[<=]]>  6, 1, 0)), 0) AS DETRACTORS_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1, 1, 0)), 0) AS SUM_NPS_CNT
+				FROM (
+					SELECT
+						A.SEND_PDDG
+		        		, A.NATN_CD
+		        		, A.DLRSP_CD
+		        		, A.DLR_CD
+		    			, B.SRVY_SEQ
+		    			, B.QSTN_SORT
+					FROM
+						HG_HGSI_SURVEY_SEND_MST A
+						JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+						JOIN CO_DEALER_MST C
+					 on A.NATN_CD = C.NTN_CD
+					 and A.DLRSP_CD = C.DLSP_CD
+					 and A.DLR_CD = C.DLR_CD
+					WHERE 1=1
+						AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+						AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    			AND A.SBMT_YN = 'Y'
+						AND B.QSTN_SORT = 1
+						<if test="dlrStatus != ''.toString()">
+						AND C.USE_YN = #{dlrStatus}
+						</if>
+				) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+				WHERE T2.EX_ANSW IS NOT NULL
+		        GROUP BY
+					T1.NATN_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD
+			RIGHT JOIN (
+				SELECT
+					A.NATN_CD
+					, COUNT(DISTINCT A.SEND_PDDG) AS RESPONSE_CNT
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN CO_DEALER_MST C
+						 on A.NATN_CD = C.NTN_CD
+						 and A.DLRSP_CD = C.DLSP_CD
+						 and A.DLR_CD = C.DLR_CD
+				WHERE 1=1
+					AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+					AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+					AND A.SBMT_YN = 'Y'
+				GROUP BY
+					A.NATN_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD
+	<choose>
+		<when test="kpiCd == 'KP'.toString()">
+			WHERE 1=1 AND M1.KPI_USE_YN = 'Y'
+		</when>
+		<when test="otcCd == 'OTC'.toString()">
+			WHERE 1=1 AND M1.OTHER_CNTRY_YN = 'Y'
+		</when>
+		<otherwise>
+			WHERE 1=1 AND M1.OTHER_CNTRY_YN = 'N'
+		</otherwise>
+	</choose>			
+		ORDER BY
+			DATA_SORT, TOT_NPS_AVG 
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, RESPONSE_CNT
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, M1.NTN_CD_NM	
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspNpsRankingList
+		설  명 : NPS Ranking 조회 (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getDlrspNpsRankingList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspNpsRankingList_Tune2023 */
+			M1.DLSP_CD
+			, M1.DLSP_CD_NM AS DLR_NM
+			<!-- , IFNULL(V1.AVG_SCRG, 0) AS TOT_NPS_AVG -->
+		  	, ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS TOT_NPS_AVG
+		  	, IF(ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) IS NULL, 1, 0) AS DATA_SORT
+		 	, IFNULL(V2.RESPONSE_CNT, 0) AS RESPONSE_CNT
+		FROM
+			CO_DEALERSHIP_MST M1
+			LEFT JOIN (
+				SELECT
+					T1.NATN_CD
+					, T1.DLRSP_CD
+					<!-- , (((IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) - IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<]]> 7, 1, 0)), 0)) / COUNT(*)) * 100) AS AVG_SCRG -->
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  8, 1, 0)), 0) AS PROMOTERS_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  6 AND T2.EX_ANSW  <![CDATA[<=]]>  8 , 1, 0)), 0) AS PASSIVES_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[<=]]>  6, 1, 0)), 0) AS DETRACTORS_CNT
+					, IFNULL(SUM(IF(T2.QSTN_SORT = 1, 1, 0)), 0) AS SUM_NPS_CNT
+				FROM (
+					SELECT
+						A.SEND_PDDG
+		        		, A.NATN_CD
+		        		, A.DLRSP_CD
+		        		, A.DLR_CD
+		    			, B.SRVY_SEQ
+		    			, B.QSTN_SORT
+					FROM
+						HG_HGSI_SURVEY_SEND_MST A
+						JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+						JOIN CO_DEALER_MST C
+							 on A.NATN_CD = C.NTN_CD
+							 and A.DLRSP_CD = C.DLSP_CD
+							 and A.DLR_CD = C.DLR_CD
+					WHERE 1=1
+						AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+						AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+			  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    			AND A.SBMT_YN = 'Y'
+						AND B.QSTN_SORT = 1
+						<if test="dlrStatus != ''.toString()">
+						AND C.USE_YN = #{dlrStatus}
+						</if>
+				) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		        WHERE T2.EX_ANSW IS NOT NULL
+		        GROUP BY
+					T1.NATN_CD, T1.DLRSP_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD
+			RIGHT JOIN (
+				SELECT
+					A.NATN_CD
+					, A.DLRSP_CD
+					, COUNT(DISTINCT A.SEND_PDDG) AS RESPONSE_CNT
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN CO_DEALER_MST C
+						 on A.NATN_CD = C.NTN_CD
+						 and A.DLRSP_CD = C.DLSP_CD
+						 and A.DLR_CD = C.DLR_CD
+				WHERE 1=1
+					AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+					AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+					AND A.SBMT_YN = 'Y'
+				GROUP BY
+					A.NATN_CD, A.DLRSP_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd},2)
+		ORDER BY
+			DATA_SORT, TOT_NPS_AVG
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, RESPONSE_CNT
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, M1.DLSP_CD_NM	
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNpsRankingList
+		설  명 : NPS Ranking 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNpsRankingList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNpsRankingList_Tune2023 */
+			  TT.DLR_CD
+			, TT.DLR_NM
+			, TT.TOT_NPS_AVG
+			, IF(TT.TOT_NPS_AVG IS NULL, 1, 0) AS DATA_SORT
+			, TT.RESPONSE_CNT
+		
+		FROM(
+				SELECT
+					M1.DLR_CD
+					<choose>
+						<when test="admAuthCd == '44'.toString()">
+							,#{admName} AS DLR_NM
+						</when>
+						<when test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()">
+							, IFNULL(V1.SERVICE_ASGNR, '') AS DLR_NM
+						</when>
+						<otherwise>
+							, IFNULL(M1.DLR_NM, '') AS DLR_NM 
+						</otherwise>
+					</choose>
+		       		<choose>
+						<when test="admAuthCd >= '42'.toString() or searchScope == 'dlr'.toString()">
+						,	ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS TOT_NPS_AVG 
+						</when>
+						<otherwise>
+						,	ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS TOT_NPS_AVG 
+						</otherwise>
+					</choose>
+				  	<choose>
+						<when test="admAuthCd >= '42'.toString() or searchScope == 'dlr'.toString()">
+						,	ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS DATA_SORT 
+						</when>
+						<otherwise>
+						,	ROUND(IFNULL((((V1.PROMOTERS_CNT - V1.DETRACTORS_CNT) / V1.SUM_NPS_CNT) * 1000) / 10,0),1) AS DATA_SORT 
+						</otherwise>
+					</choose>
+				 	, IFNULL(V1.RESPONSE_CNT, 0) AS RESPONSE_CNT
+				 	, V1.SBMT_YN
+				FROM
+					CO_DEALER_MST M1
+					LEFT JOIN (
+						SELECT
+							T1.NATN_CD
+							, T1.DLRSP_CD
+							, T1.DLR_CD
+							, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  8, 1, 0)), 0) AS PROMOTERS_CNT
+							, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[>]]>  6 AND T2.EX_ANSW  <![CDATA[<=]]>  8 , 1, 0)), 0) AS PASSIVES_CNT
+							, IFNULL(SUM(IF(T2.QSTN_SORT = 1 AND T2.EX_ANSW  <![CDATA[<=]]>  6, 1, 0)), 0) AS DETRACTORS_CNT
+							, IFNULL(SUM(IF(T2.QSTN_SORT = 1, 1, 0)), 0) AS SUM_NPS_CNT
+							, T1.SERVICE_ASGNR
+							, AVG(T2.EX_ANSW) AS EX_ANSW
+							, COUNT(DISTINCT T1.SEND_PDDG) AS RESPONSE_CNT
+							, T1.SBMT_YN
+							, T1.DLR_NM
+							, T1.ASGN_TASK_CD
+						FROM (
+							SELECT
+								A.SEND_PDDG
+				        		, A.NATN_CD
+				        		, A.DLRSP_CD
+				        		, A.DLR_CD
+				    			, B.SRVY_SEQ
+				    			, B.QSTN_SORT
+				    			, D.SERVICE_ASGNR
+				    			, A.SBMT_YN
+				    			, C.DLR_NM
+								, A.ASGN_TASK_CD
+							FROM
+								HG_HGSI_SURVEY_SEND_MST A
+								JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+								JOIN CO_DEALER_MST C
+									 on A.NATN_CD = C.NTN_CD
+									 and A.DLRSP_CD = C.DLSP_CD
+									 and A.DLR_CD = C.DLR_CD
+								JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD
+									AND A.DLRSP_CD = D.DLSP_CD 
+							        AND A.DLR_CD = D.DLR_CD
+							        AND A.VHCLT_NO = D.VHCLT_NO
+							        AND A.VHCLT_SORT = D.VHCLT_SORT
+							        AND A.LOG_SEQ = D.LOG_SEQ
+							WHERE 1=1
+								AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+								AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+					  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				    			AND A.SBMT_YN = 'Y'
+								AND B.QSTN_SORT = 1
+								<if test="dlrStatus != ''.toString()">
+								AND C.USE_YN = #{dlrStatus}
+								</if>
+								<if test ="admAuthCd == '44'.toString()">AND D.SERVICE_ASGNR = #{admName}</if>
+						) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+				        <if test="searchScope == 'dlr'.toString()">WHERE T2.EX_ANSW IS NOT NULL</if>
+				        GROUP BY
+				        	<if test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()">	
+								 T1.SERVICE_ASGNR,
+							</if>
+							 T1.DLR_CD
+					) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD AND M1.DLR_CD = V1.DLR_CD
+					
+				WHERE 1=1
+					AND V1.NATN_CD = LEFT(#{searchCd}, 2)
+					AND V1.DLRSP_CD = #{searchDlspCd}
+					AND FIND_IN_SET(#{asgnTaskCd}, V1.ASGN_TASK_CD)
+					<if test="dlrStatus != ''.toString()">
+					AND M1.USE_YN = #{dlrStatus}
+					</if>
+					<choose>
+						<when test="admAuthCd == '41'.toString() and searchScope != 'dlr'.toString()">
+							<foreach collection="admDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								M1.dlr_cd = #{dlrCd}
+							</foreach>
+						</when>
+						<when test="admAuthCd >= '42'.toString() and searchScope != 'dlr'.toString()">
+							<if test="searchDlrCdList != null">
+								<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+									M1.DLR_CD = #{dlrCd}
+								</foreach>
+							</if>
+						</when>
+						<when test="searchScope == 'dlr'.toString()"> AND M1.DLR_CD = #{searchCd}</when>
+					</choose>
+				GROUP BY 
+					<if test="admAuthCd == '42'.toString() or admAuthCd == '43'.toString() or searchScope == 'dlr'.toString()">		
+						 V1.SERVICE_ASGNR,
+					</if> 
+						V1.DLR_CD
+				)TT
+		WHERE ( TT.SBMT_YN = 'Y' OR TT.DLR_CD = #{searchCd})
+		ORDER BY
+			DATA_SORT, TT.TOT_NPS_AVG 
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		, TT.RESPONSE_CNT
+		<choose>
+			<when test="npsRankingSort == '1'.toString()">
+				ASC
+			</when>
+			<otherwise>
+				DESC
+			</otherwise>
+		</choose>
+		,TT.DLR_NM	
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnNpsMonthList
+		설  명 : NPS Trend 조회 (권역, 국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<!-- <select id ="getNatnNpsMonthList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnNpsMonthList */
+			T1.M
+			, (((IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) - IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<]]> 7, 1, 0)), 0)) / COUNT(*)) * 100) AS NTN_NPS_AVG
+	  	FROM (
+	  		SELECT CONCAT(YEAR(#{endDt}), '01') AS M
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '02')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '03')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '04')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '05')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '06')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '07')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '08')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '09')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '10')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '11')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '12')
+	  	) T1 LEFT JOIN (
+			SELECT
+				A.SEND_PDDG
+	          	, A.SBMT_DTM
+	          	, B.EX_ANSW
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN HG_HGSI_SURVEY_ANSWER_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		    WHERE 1=1
+		    	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			<if test="isNatn == '1'.toString()">
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			</if>
+				AND A.SBMT_YN = 'Y'
+				AND DATE_FORMAT(A.SBMT_DTM, '%Y') = YEAR(#{endDt})
+				AND B.QSTN_SORT = 1
+				AND C.USE_YN = 'Y'
+		) T2 ON T1.M = DATE_FORMAT(T2.SBMT_DTM, '%Y%m')
+  		GROUP BY
+  			T1.M
+  		ORDER BY
+  			T1.M
+	</select> -->
+	
+    <select id ="getNatnNpsMonthList" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	{ 
+    		CALL SP_COANPSTrendList_Tune2023_OTHERS(
+    			#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{targetYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+	    	)
+    	}
+    </select>  
+
+
+
+
+	<!--
+		쿼리명 : COAMainDAO.getNpsMonthList
+		설  명 : NPS Trend 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNpsMonthList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNpsMonthList */
+			T1.M
+			, (((IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) - IFNULL(SUM(IF(T2.EX_ANSW <![CDATA[<]]> 7, 1, 0)), 0)) / COUNT(*)) * 100) AS NTN_NPS_AVG
+	  	FROM (
+	  		SELECT CONCAT(YEAR(#{endDt}), '01') AS M
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '02')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '03')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '04')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '05')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '06')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '07')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '08')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '09')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '10')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '11')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '12')
+	  	) T1 LEFT JOIN (
+			SELECT
+				A.SEND_PDDG
+	          	, A.SBMT_DTM
+	          	, B.EX_ANSW
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN HG_HGSI_SURVEY_ANSWER_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		    WHERE 1=1
+		    	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    	AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					<if test="isDlear == '1'.toString()">
+						<!-- /* 대리점에 속한 딜러들 */
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							A.DLR_CD = #{dlrCd}
+						</foreach> -->
+						AND A.DLR_CD = #{searchCd}
+					</if>
+				</when>
+			</choose>
+				AND A.SBMT_YN = 'Y'
+				AND DATE_FORMAT(A.SBMT_DTM, '%Y') = YEAR(#{endDt})
+				AND B.QSTN_SORT = 1
+				<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus}
+				</if>
+		) T2 ON T1.M = DATE_FORMAT(T2.SBMT_DTM, '%Y%m')
+  		GROUP BY
+  			T1.M
+  		ORDER BY
+  			T1.M
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnKeyQuestionPerformanceList
+		설  명 : Key Question Performance 조회 (권역, 국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+	<select id ="getNatnKeyQuestionPerformanceList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnKeyQuestionPerformanceList_Tune2023 */
+			T1.*
+			, (SELECT CASE WHEN NULLIF(B.MENU_NM, '') IS NULL THEN A.MENU_NM
+                    ELSE B.MENU_NM
+                END AS MENU_NM
+        		FROM CO_MENU_MST A LEFT JOIN CO_MENU_NM_DTL B ON A.MENU_SEQ = B.MENU_SEQ
+                AND B.LGUG_CD = #{siteLanguage} 
+                WHERE A.MENU_SEQ = T1.L_CTG_SEQ) AS MENU_NM
+			, <choose>
+               		<when test="nation.indexOf('mea')>-1 and searchCd == 'EG'.toString() ">	
+               			IFNULL(AVG(IF(T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, NULL)), 0)
+               		</when>
+               		<otherwise>
+               			IFNULL(ROUND(AVG( IF(T1.L_CTG_SEQ=81 AND T2.SCRG=0, IF(T2.EX_ANSW=1,0,NULL),IF(T2.SCRG<![CDATA[>]]>0,T2.EX_ANSW * 10,NULL))), 1), 0)
+               		</otherwise>
+             </choose>
+             AS EX_ANSW_AVG
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				JOIN CO_NATION_MST D ON A.NATN_CD = D.NTN_CD
+			WHERE 1=1
+				AND A.REG_DTM <![CDATA[>=]]> #{strtDt}
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.SBMT_YN = 'Y'
+			<if test="isNatn == '1'.toString()">
+				AND A.NATN_CD = #{searchCd}
+			</if>
+				AND B.ANSW_ADD_YN = 'N'
+			<if test="dlrStatus != ''.toString()">	
+				AND C.USE_YN = #{dlrStatus}
+			</if>	
+				AND B.L_CTG_SEQ NOT IN (0)
+			<!-- <if test="kpiCd == 'KP'.toString()">
+				AND D.KPI_USE_YN = 'Y'
+			</if> -->
+			<choose>
+				<when test="kpiCd == 'KP'.toString()">
+					AND D.KPI_USE_YN = 'Y'
+				</when>
+				<when test="otcCd == 'OTC'.toString()">
+					AND D.OTHER_CNTRY_YN = 'Y'
+				</when>
+				<otherwise>
+					AND D.OTHER_CNTRY_YN = 'N'
+				</otherwise>
+			</choose>		
+		) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		GROUP BY
+			T1.L_CTG_SEQ
+		ORDER BY
+			(SELECT PSTN FROM CO_MENU_MST WHERE MENU_SEQ = T1.L_CTG_SEQ)				
+	</select> 
+	
+	
+	<!--
+		쿼리명 : COAMainDAO.getKeyQuestionPerformanceList
+		설  명 : Key Question Performance 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+    <select id ="getKeyQuestionPerformanceList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getKeyQuestionPerformanceList_Tune2023 */
+			T1.*
+			, (SELECT CASE WHEN NULLIF(B.MENU_NM, '') IS NULL THEN A.MENU_NM
+                    ELSE B.MENU_NM
+                END AS MENU_NM
+        		FROM CO_MENU_MST A LEFT JOIN CO_MENU_NM_DTL B ON A.MENU_SEQ = B.MENU_SEQ
+                AND B.LGUG_CD = #{siteLanguage} 
+                WHERE A.MENU_SEQ = T1.L_CTG_SEQ) AS MENU_NM
+			, <choose>
+               		<when test="nation.indexOf('mea')>-1 and searchCd == 'EG001'.toString() ">
+               			IFNULL(AVG(IF(T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, NULL)), 0)
+               		</when>
+               		<otherwise>
+               			IFNULL(ROUND(AVG( IF(T1.L_CTG_SEQ=81 AND T2.SCRG=0, IF(T2.EX_ANSW=1,0,NULL),IF(T2.SCRG<![CDATA[>]]>0,T2.EX_ANSW * 10,NULL))), 1), 0)
+               		</otherwise>
+             </choose>
+             AS EX_ANSW_AVG
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+			WHERE 1=1
+				AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00')
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59')
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.SBMT_YN = 'Y'
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					/* 대리점에 속한 딜러들 */
+					<choose>
+						<when test="searchCd == searchDlspCd">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							AND A.DLR_CD = #{searchCd}
+						</otherwise>
+					</choose>
+					
+				</when>
+			</choose>
+				AND B.ANSW_ADD_YN = 'N'
+				<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus}
+				</if>
+				AND B.L_CTG_SEQ NOT IN (0)
+		) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		GROUP BY
+			T1.L_CTG_SEQ
+		ORDER BY
+			(SELECT PSTN FROM CO_MENU_MST WHERE MENU_SEQ = T1.L_CTG_SEQ)	
+	</select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getNatnKeyQuestionPerformanceAddResultList
+		설  명 : Key Question Performance 추가 질문 조회 (권역, 국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnKeyQuestionPerformanceAddResultList" parameterType="emfMap" resultType="emfMap">
+       	SELECT /* COAMainDAO.getNatnKeyQuestionPerformanceAddResultList */
+			T2.EX
+			, COUNT(*) AS EX_ANSW_CNT
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.LGUG_CD
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND B.LGUG_CD = 'en'
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				JOIN CO_NATION_MST D ON A.NATN_CD = D.NTN_CD			
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			<if test="isNatn == '1'.toString()">
+				AND A.NATN_CD = #{searchCd}
+			</if>
+				AND A.SBMT_YN = 'Y'
+				AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+				AND B.L_CTG_SEQ = #{lCtgSeq}
+				AND B.ANSW_ADD_YN = 'Y'
+			<if test="dlrStatus != ''.toString()">	
+				AND C.USE_YN = #{dlrStatus}
+			</if>	
+			<if test="kpiCd == 'KP'.toString()">
+				AND D.KPI_USE_YN = 'Y'
+			</if>
+			<choose>
+				<when test="otcCd == 'OTC'.toString()">
+					AND D.OTHER_CNTRY_YN = 'Y'
+				</when>
+				<otherwise>
+					AND D.OTHER_CNTRY_YN = 'N'
+				</otherwise>
+			</choose>
+		) T1 JOIN (
+			SELECT
+				A.SEND_PDDG
+				, A.SRVY_SEQ
+				, A.QSTN_SORT
+				, A.EX_ANSW
+				, TRIM(B.EX) AS EX
+			FROM
+				HG_HGSI_SURVEY_ANSWER_DTL A
+				JOIN SM_SURVEY_QUESTION_EXAMPLE_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ 
+				AND B.LGUG_CD = #{siteLanguage}
+				AND A.QSTN_SORT = B.QSTN_SORT AND A.EX_ANSW = B.EX_SORT
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.PRNT_SORT <![CDATA[>]]> 0
+		) T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		GROUP BY
+			T2.EX
+		ORDER BY
+			EX_ANSW_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getKeyQuestionPerformanceAddResultList
+		설  명 : Key Question Performance 추가 질문 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getKeyQuestionPerformanceAddResultList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getKeyQuestionPerformanceAddResultList */
+			T2.EX
+			, COUNT(*) AS EX_ANSW_CNT
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.LGUG_CD
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND B.LGUG_CD = 'en'
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					/* 대리점에 속한 딜러들 */
+					<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						A.DLR_CD = #{dlrCd}
+					</foreach>
+				</when>
+			</choose>
+				AND A.SBMT_YN = 'Y'
+				AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+				AND B.L_CTG_SEQ = #{lCtgSeq}
+				AND B.ANSW_ADD_YN = 'Y'
+			<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus}
+			</if>	
+		) T1 JOIN (
+			SELECT
+				A.SEND_PDDG
+				, A.SRVY_SEQ
+				, A.QSTN_SORT
+				, A.EX_ANSW
+				, TRIM(B.EX) AS EX
+			FROM
+				HG_HGSI_SURVEY_ANSWER_DTL A
+				JOIN SM_SURVEY_QUESTION_EXAMPLE_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ 
+				AND B.LGUG_CD = #{siteLanguage}
+				AND A.QSTN_SORT = B.QSTN_SORT AND A.EX_ANSW = B.EX_SORT
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.PRNT_SORT <![CDATA[>]]> 0
+
+		) T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		GROUP BY
+			T2.EX
+		ORDER BY
+			EX_ANSW_CNT DESC
+	</select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getNatnKeyQuestionPerformanceTestDriveResultList
+		설  명 : Key Question Performance TestDrive(no) 질문 조회 (권역, 국가)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2021.01.26    김한나       최초생성
+    -->
+	<select id ="getNatnKeyQuestionPerformanceTestDriveResultList" parameterType="emfMap" resultType="emfMap">
+       	SELECT /* COAMainDAO.getNatnKeyQuestionPerformanceTestDriveResultList */
+			COUNT(*) AS TD_TOT
+			, SUM(IF(T2.EX_ANSW = 1, 1 ,0)) AS CNT_TD
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.LGUG_CD
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND B.LGUG_CD = 'en'
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				JOIN CO_NATION_MST D ON A.NATN_CD = D.NTN_CD
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			<if test="isNatn == '1'.toString()">
+				AND A.NATN_CD = #{searchCd}
+			</if>
+				AND A.SBMT_YN = 'Y'
+				AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+				AND B.L_CTG_SEQ = #{lCtgSeq}
+			<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus}
+			</if>	
+			<!-- <if test="kpiCd == 'KP'.toString()">
+				AND D.KPI_USE_YN = 'Y'
+			</if> -->
+			<choose>
+				<when test="kpiCd == 'KP'.toString()">
+					AND D.KPI_USE_YN = 'Y'
+				</when>
+				<when test="otcCd == 'OTC'.toString()">
+					AND D.OTHER_CNTRY_YN = 'Y'
+				</when>
+				<otherwise>
+					AND D.OTHER_CNTRY_YN = 'N'
+				</otherwise>
+			</choose>
+		) T1 JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 
+		ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		WHERE T2.SCRG = 0
+		AND T2.ASGN_TASK_CD = #{asgnTaskCd}
+		AND T2.PRNT_SORT = 0
+		AND T2.QSTN_SORT = 4
+	</select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getKeyQuestionPerformanceTestDriveResultList
+		설  명 : Key Question Performance TestDrive(no) 질문 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2021.01.26    김한나       최초생성
+    -->
+	<select id ="getKeyQuestionPerformanceTestDriveResultList" parameterType="emfMap" resultType="emfMap">
+       	SELECT /* COAMainDAO.getKeyQuestionPerformanceTestDriveResultList */
+			COUNT(*) AS TD_TOT
+			, SUM(IF(T2.EX_ANSW = 1, 1 ,0)) AS CNT_TD
+		FROM (
+			SELECT
+				A.SEND_PDDG
+				, B.SRVY_SEQ
+				, B.LGUG_CD
+				, B.QSTN_SORT
+				, B.L_CTG_SEQ
+			FROM
+				HG_HGSI_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND B.LGUG_CD = 'en'
+				JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+			WHERE 1=1
+				AND A.ASGN_TASK_CD = #{asgnTaskCd}
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+				<choose>
+					<when test="searchScope == 'dlrsp'.toString()">
+						/* 관리하는 딜러별 */
+						<choose>
+							<when test="searchDlrCdList != null">
+								<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+									A.DLR_CD = #{dlrCd}
+								</foreach>
+							</when>
+							<otherwise>
+								/* 대리점에 속한 딜러들 */
+								AND A.DLRSP_CD = #{searchDlspCd}
+							</otherwise>
+						</choose>
+					</when>
+					<when test="searchScope == 'dlr'.toString()">
+						AND A.DLRSP_CD = #{searchDlspCd}
+						/* 대리점에 속한 딜러들 */
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							A.DLR_CD = #{dlrCd}
+						</foreach>
+					</when>
+				</choose>
+				AND A.SBMT_YN = 'Y'
+				AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+				AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+				AND B.L_CTG_SEQ = #{lCtgSeq}
+				<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus}
+				</if>
+		) T1 JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 
+		ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		WHERE T2.SCRG = 0
+		AND T2.ASGN_TASK_CD = #{asgnTaskCd}
+		AND T2.PRNT_SORT = 0
+		AND T2.QSTN_SORT = 4
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getKeyLatestQuestionPerformanceList
+		설  명 : Key Question Performance Trend - Latest 1 YEAR 조회  
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+    
+    <select id ="getKeyLatestQuestionPerformanceList" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	{ 
+	   		CALL SP_COScoredTrendList_Tune2023_OTHERS(
+	    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{natnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{siteLanguage, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+	    	)
+	    		
+    	}
+    </select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getNatnSurveyResponseStatusList
+		설  명 : Survey Response Status 조회 (권역, 나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->
+    
+    <select id ="getNatnSurveyResponseStatusList" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	{ 
+    		CALL SP_COASurveyResponseList_Tune2023_OTHERS(
+    			#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+    			#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+	    	)	
+    	}
+    </select>
+     
+	<!-- <select id ="getNatnSurveyResponseStatusList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnSurveyResponseStatusList */
+			T1.M
+	    	, IFNULL(T2.CNT, 0) AS TOTAL_SENT
+	    	, IFNULL(T3.CNT, 0) AS TOTAL_RESPONSE
+	  	FROM (
+	  		SELECT CONCAT(YEAR(#{endDt}), '01') AS M
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '02')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '03')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '04')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '05')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '06')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '07')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '08')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '09')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '10')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '11')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '12')
+	  	) T1 
+	  	LEFT JOIN(
+	  		SELECT 
+	  			  COUNT(DISTINCT C.SEND_PDDG) AS CNT
+	  			, A.REG_DTM
+	  		FROM 
+	  			HG_HGSI_SURVEY_SEND_MST A 
+	  		JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD AND B.USE_YN = 'Y'
+	  		JOIN (
+					SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_EMAIL_DELIVERED_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+					 	JOIN CO_DEALER_MST C ON A.DLR_CD = C.DLR_CD AND C.USE_YN = 'Y'
+					WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG
+					
+					UNION ALL
+					
+					SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_SMS_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+	        			JOIN CO_SMS_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID	
+	        			JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD AND D.USE_YN = 'Y'
+        			WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG
+					
+					UNION ALL
+					
+					 SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_WHATSAPP_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+            			JOIN CO_WHATSAPP_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID
+	        			JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD AND D.USE_YN = 'Y'
+        			WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG 2020.03.23 whats app 미적용
+				)C ON C.SEND_PDDG = A.SEND_PDDG AND C.REG_DTM = A.REG_DTM
+	  		WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+	  			AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+				<if test="isNatn == '1'.toString()">
+					AND A.NATN_CD = #{searchCd}
+				</if>
+				GROUP BY DATE_FORMAT(A.REG_DTM, '%Y%m')
+	  	)T2 ON T1.M = DATE_FORMAT(T2.REG_DTM, '%Y%m')
+	  	
+	  	LEFT JOIN(
+	  		  SELECT COUNT(A.SEND_PDDG) AS CNT
+	  		, A.SBMT_DTM
+	  		FROM 
+	  			HG_HGSI_SURVEY_SEND_MST A 
+	  		JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD AND B.USE_YN = 'Y'
+	  		WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+	  			AND A.SBMT_YN = 'Y'
+	  			AND DATE_FORMAT(A.SBMT_DTM, '%Y') = YEAR(#{endDt})
+				<if test="isNatn == '1'.toString()">
+					AND A.NATN_CD = #{searchCd}
+				</if>
+				GROUP BY DATE_FORMAT(A.SBMT_DTM, '%Y%m')
+	  	)T3 ON T1.M = DATE_FORMAT(T3.SBMT_DTM, '%Y%m')
+		GROUP BY
+			T1.M
+		ORDER BY
+			T1.M
+	</select> -->
+
+	<!--
+		쿼리명 : COAMainDAO.getSurveyResponseStatusList
+		설  명 : Survey Response Status 조회 (대리점, 딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getSurveyResponseStatusList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getSurveyResponseStatusList */
+			T1.M
+    		, IFNULL(T2.CNT, 0) AS TOTAL_SENT
+	    	, IFNULL(T3.CNT, 0) AS TOTAL_RESPONSE
+	  	FROM (
+		  	SELECT CONCAT(YEAR(#{endDt}), '01') AS M
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '02')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '03')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '04')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '05')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '06')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '07')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '08')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '09')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '10')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '11')
+	  		UNION ALL SELECT CONCAT(YEAR(#{endDt}), '12')
+		) T1 
+		LEFT JOIN(
+	  		SELECT 
+	  			  COUNT(DISTINCT C.SEND_PDDG) AS CNT
+	  			, A.REG_DTM
+	  		FROM 
+	  			HG_HGSI_SURVEY_SEND_MST A 
+	  		JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD
+	  		<if test="dlrStatus != ''.toString()">
+	  		 AND B.USE_YN = #{dlrStatus}
+	  		</if>
+	  		JOIN (
+					SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_EMAIL_DELIVERED_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+						JOIN CO_DEALER_MST C ON A.DLR_CD = C.DLR_CD  
+						<if test="dlrStatus != ''.toString()">
+						AND C.USE_YN = #{dlrStatus}
+						</if>
+					WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG
+					
+					UNION ALL
+					
+					SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_SMS_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+	        			JOIN CO_SMS_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID	
+	        			JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD 
+						<if test="dlrStatus != ''.toString()">
+						AND D.USE_YN = #{dlrStatus}
+						</if>
+        			WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG
+					
+					<!-- UNION ALL
+					
+					SELECT 
+						  A.SEND_PDDG 
+						, A.REG_DTM
+					FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_WHATSAPP_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+            			JOIN CO_WHATSAPP_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID
+	        			JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD AND D.USE_YN = 'Y'
+        			WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+					GROUP BY A.SEND_PDDG --> <!-- 2020.03.23 whats app 미적용 -->
+				)C ON C.SEND_PDDG = A.SEND_PDDG AND C.REG_DTM = A.REG_DTM
+	  		WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+	  			AND DATE_FORMAT(A.REG_DTM, '%Y') = YEAR(#{endDt})
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+				<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					/* 대리점에 속한 딜러들 */
+					<choose>
+						<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+							AND A.DLR_CD = #{searchCd}
+						</when>
+						<otherwise>
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</otherwise>
+					</choose>
+				</when>
+			</choose>
+				GROUP BY DATE_FORMAT(A.REG_DTM, '%Y%m')
+	  	)T2 ON T1.M = DATE_FORMAT(T2.REG_DTM, '%Y%m')
+	  	
+	  	LEFT JOIN(
+	  		  SELECT COUNT(A.SEND_PDDG) AS CNT
+	  		, A.SBMT_DTM
+	  		FROM 
+	  			HG_HGSI_SURVEY_SEND_MST A 
+	  		JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD 
+	  		<if test="dlrStatus != ''.toString()">
+	  		AND B.USE_YN = #{dlrStatus}
+	  		</if>
+	  		WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+	  			AND DATE_FORMAT(A.SBMT_DTM, '%Y') = YEAR(#{endDt})
+				AND A.NATN_CD = LEFT(#{searchCd}, 2)
+				AND A.SBMT_YN = 'Y'
+				<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND A.DLRSP_CD = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					AND A.DLRSP_CD = #{searchDlspCd}
+					/* 대리점에 속한 딜러들 */
+					<choose>
+						<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+							AND A.DLR_CD = #{searchCd}
+						</when>
+						<otherwise>
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</otherwise>
+					</choose>
+				</when>
+			</choose>
+				GROUP BY DATE_FORMAT(A.SBMT_DTM, '%Y%m')
+	  	)T3 ON T1.M = DATE_FORMAT(T3.SBMT_DTM, '%Y%m')
+		GROUP BY
+			T1.M
+		ORDER BY
+			T1.M
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getFeedbackList
+		설  명 : HGSI Feedback 조회 
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+        2022.12.08	  김두환		 대시보드 속도 이슈 DB 튜닝 작업
+    -->	
+	
+	<select id ="getFeedbackList" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	{ 
+    		CALL SP_COAFeedbackList_Tune2023_OTHERS(
+	    		#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{ntnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{searchDlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+	    	)
+	    		
+    	}
+    </select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getCstmrFeedbackList
+		설  명 : HGSI Feedback 조회 (고객)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getCstmrFeedbackList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getCstmrFeedbackList */
+		  	IFNULL(V1.NM,'-') AS CSTMR_NM,
+		   <choose>
+				<when test="admAuthCd >= '42'.toString()">
+					 IFNULL(V2.SERVICE_ASGNR, '') AS DLR_NM,
+				</when>
+				<otherwise>
+					 IFNULL(V2.DLR_NM, '') AS DLR_NM,
+				</otherwise>
+			</choose>
+		    IFNULL(V1.SENT_CNT, 0) AS SENT_CNT,
+		    ROUND(IFNULL(V2.AVG_SCRG, 0), 1) AS AVG_SCRG,
+		    ROUND(IFNULL(ROUND(((V2.PROMOTERS_CNT - V2.DETRACTORS_CNT) / V2.SUM_NPS_CNT) * 1000) / 10, 0),  1) AS NPS,
+		    V2.L_CTG1_AVG,
+		    V2.L_CTG2_AVG,
+		    V2.L_CTG3_AVG,
+		    V2.L_CTG4_AVG,
+		    V2.L_CTG5_AVG
+		FROM
+			(
+				SELECT
+					  SUR.NATN_CD 
+				    , SUR.DLRSP_CD
+				    , SUR.DLR_CD
+				    , COUNT(*) AS SENT_CNT
+				    , B.USE_YN
+				    , D.SERVICE_ASGNR	
+				    , A.SEND_PDDG
+				    , E.NM
+				    , B.DLR_NM
+				FROM
+					(
+						SELECT 
+							  A.SEND_PDDG 
+							, A.REG_DTM
+						FROM HG_HGSI_SURVEY_SEND_MST A JOIN CO_EMAIL_DELIVERED_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+							JOIN CO_DEALER_MST C ON A.DLR_CD = C.DLR_CD 
+							<if test="dlrStatus != ''.toString()">
+							AND C.USE_YN = #{dlrStatus}
+							</if>
+						WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+						AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+						GROUP BY B.SEND_PDDG 
+						
+					<!-- 	UNION ALL
+						
+						SELECT 
+							    A.SEND_PDDG
+							  , A.REG_DTM
+					    FROM
+					        HG_HGSI_SURVEY_SEND_MST A
+							JOIN CO_WHATSAPP_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+            				JOIN CO_WHATSAPP_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID
+							JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD AND D.USE_YN = 'Y'
+						WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+						AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+						GROUP BY  A.SEND_PDDG --> <!-- 2020.03.23 whats app 미적용 -->
+						
+						UNION ALL
+						
+						SELECT 
+							    A.SEND_PDDG
+							  , A.REG_DTM
+					    FROM
+					        HG_HGSI_SURVEY_SEND_MST A
+							JOIN CO_SMS_QUEUE_DTL B ON A.SEND_PDDG = B.SEND_PDDG
+							JOIN CO_SMS_DELIVERED_DTL C ON B.MSG_ID = C.MSG_ID
+							JOIN CO_DEALER_MST D ON A.DLR_CD = D.DLR_CD 
+							<if test="dlrStatus != ''.toString()">
+							AND D.USE_YN = #{dlrStatus}
+							</if>
+						WHERE A.ASGN_TASK_CD = #{asgnTaskCd}
+						AND A.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+						GROUP BY A.SEND_PDDG 
+					)A 
+					JOIN HG_HGSI_SURVEY_SEND_MST SUR ON A.SEND_PDDG = SUR.SEND_PDDG
+				    JOIN CO_DEALER_MST B ON SUR.NATN_CD = B.NTN_CD AND SUR.DLRSP_CD = B.DLSP_CD AND SUR.DLR_CD = B.DLR_CD
+				    LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON SUR.NATN_CD = D.NTN_CD
+						AND SUR.DLRSP_CD = D.DLSP_CD 
+						AND SUR.DLR_CD = D.DLR_CD
+						AND SUR.VHCLT_NO = D.VHCLT_NO
+						AND SUR.VHCLT_SORT = D.VHCLT_SORT
+						AND SUR.LOG_SEQ = D.LOG_SEQ
+					JOIN CO_DEALER_CUSTOMER_DTL E ON SUR.NATN_CD = E.NTN_CD
+						AND SUR.DLRSP_CD = E.DLSP_CD
+				        AND SUR.DLR_CD = E.DLR_CD
+				        AND SUR.VHCLT_NO = E.VHCLT_NO
+				        AND SUR.VHCLT_SORT = E.VHCLT_SORT
+				WHERE 1=1
+					AND SUR.ASGN_TASK_CD = #{asgnTaskCd}
+			   		AND SUR.REG_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+					AND SUR.REG_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+					AND SUR.NATN_CD = LEFT(#{searchCd}, 2)
+					AND SUR.DLRSP_CD = #{searchDlspCd}
+					<choose>
+						<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+							AND SUR.DLR_CD = #{searchCd}
+						</when>
+						<otherwise>
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								SUR.DLR_CD = #{dlrCd}
+							</foreach>
+						</otherwise>
+					</choose>
+				GROUP BY
+					<choose>
+						<when test="admAuthCd >= '42'.toString()">
+							E.NM, D.SERVICE_ASGNR, SUR.DLR_CD
+						</when>
+						<otherwise>
+							E.NM, SUR.DLR_CD
+						</otherwise>
+					</choose>
+					
+			) V1
+			RIGHT JOIN (
+				SELECT
+					A.NATN_CD
+					, A.DLRSP_CD
+					, A.DLR_CD
+					, B.USE_YN
+					, D.SERVICE_ASGNR
+					, A.SEND_PDDG
+					, E.NM
+					, B.DLR_NM	
+					, COUNT(DISTINCT A.LOG_SEQ) AS RESPONSE_CNT
+					, IFNULL(SUM(A.AVG_SCRG)/(COUNT(A.AVG_SCRG)-COUNT(if(A.AVG_SCRG=0,A.AVG_SCRG,NULL))),0) AS AVG_SCRG
+		            , IFNULL(SUM(IF(C.QSTN_SORT = 1 AND C.EX_ANSW <![CDATA[>]]> 8, 1, 0)), 0) AS PROMOTERS_CNT
+					, IFNULL(SUM(IF(C.QSTN_SORT = 1 AND C.EX_ANSW <![CDATA[>]]> 6 AND C.EX_ANSW <![CDATA[<=]]> 8 , 1, 0)), 0) AS PASSIVES_CNT
+					, IFNULL(SUM(IF(C.QSTN_SORT = 1 AND C.EX_ANSW <![CDATA[<=]]> 6, 1, 0)), 0) AS DETRACTORS_CNT
+		            , IFNULL(SUM(IF(C.QSTN_SORT = 1, 1, 0)), 0) AS SUM_NPS_CNT
+		            , IFNULL(ROUND(AVG(IF(C.QSTN_SORT = 2 AND C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0) AS L_CTG1_AVG
+		            , CASE 
+						WHEN A.ASGN_TASK_CD = 'Sales' AND C.QSTN_SORT = 4
+		                THEN IFNULL(ROUND(AVG(IF((C.SCRG = 0 AND EX_ANSW = 1) OR C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0)
+		                ELSE IFNULL(ROUND(AVG(IF(C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0) 
+					  END L_CTG2_AVG
+		            , IFNULL(ROUND(AVG(IF(C.QSTN_SORT = 6 AND C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0) AS L_CTG3_AVG
+					, IFNULL(ROUND(AVG(IF(C.QSTN_SORT = 8 AND C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0) AS L_CTG4_AVG
+		            , IFNULL(ROUND(AVG(IF(C.QSTN_SORT = 10 AND C.SCRG<![CDATA[>]]>0, C.EX_ANSW * 10, NULL)), 1), 0.0) AS L_CTG5_AVG
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN CO_DEALER_MST B ON A.NATN_CD = B.NTN_CD AND A.DLRSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD
+					JOIN HG_HGSI_SURVEY_ANSWER_DTL C ON A.SEND_PDDG = C.SEND_PDDG
+					JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD
+						AND A.DLRSP_CD = D.DLSP_CD 
+						AND A.DLR_CD = D.DLR_CD
+						AND A.VHCLT_NO = D.VHCLT_NO
+						AND A.VHCLT_SORT = D.VHCLT_SORT
+						AND A.LOG_SEQ = D.LOG_SEQ
+					JOIN CO_DEALER_CUSTOMER_DTL E ON A.NATN_CD = E.NTN_CD
+						AND A.DLRSP_CD = E.DLSP_CD
+				        AND A.DLR_CD = E.DLR_CD
+				        AND A.VHCLT_NO = E.VHCLT_NO
+				        AND A.VHCLT_SORT = E.VHCLT_SORT
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			   		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+					AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+					AND A.SBMT_YN = 'Y'
+					<if test="dlrStatus != ''.toString()">
+					AND B.USE_YN = #{dlrStatus}
+					</if>
+					AND A.NATN_CD = LEFT(#{searchCd}, 2)
+					AND A.DLRSP_CD = #{searchDlspCd}
+					<choose>
+						<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+							AND A.DLR_CD = #{searchCd}
+						</when>
+						<otherwise>
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								A.DLR_CD = #{dlrCd}
+							</foreach>
+						</otherwise>
+					</choose>
+					
+					GROUP BY
+						<choose>
+							<when test="admAuthCd >= '42'.toString()">
+								E.NM, D.SERVICE_ASGNR, A.DLR_CD, A.SEND_PDDG
+							</when>
+							<otherwise>
+								E.NM,  A.DLR_CD, A.SEND_PDDG
+							</otherwise>
+						</choose>
+				
+			) V2 ON V1.NATN_CD = V2.NATN_CD  AND V1.DLRSP_CD = V2.DLRSP_CD  AND V1.DLR_CD = V2.DLR_CD AND V1.NM = V2.NM	
+		ORDER BY
+			RESPONSE_CNT DESC	
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnHotAlertList
+		설  명 : Hot Alert - Latest 3 Months 조회 (나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnHotAlertList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnHotAlertList */
+			M1.NTN_CD
+			, M1.NTN_CD_NM
+			, IFNULL(V1.NEW_CNT, 0) AS NEW_CNT
+		 	, IFNULL(V1.OVERDUE_CNT, 0) AS OVERDUE_CNT
+			, IFNULL(V1.ACPT_HOUR, 0) AS ACPT_HOUR
+		FROM
+			CO_NATION_MST M1
+			LEFT JOIN (
+				SELECT
+					A.NATN_CD
+				    , IFNULL(SUM(IF(B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[>=]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))), 1, 0)), 0) AS NEW_CNT
+				    , IFNULL(SUM(IF((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))))
+				          		 OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')), 1, 0)), 0) AS OVERDUE_CNT
+			    	, IFNULL(SUM(IF(B.STTS_CD = '2', TIMESTAMPDIFF(HOUR, B.ACPT_DTM, CONCAT(B.ACPT_END_DT, ' 18:00')), 0)), 0) AS ACPT_HOUR
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SBMT_YN = 'Y'
+					AND B.MOD_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -3 MONTH))
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+				GROUP BY
+					A.NATN_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD
+		ORDER BY
+			ACPT_HOUR DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspHotAlertList
+		설  명 : Hot Alert - Latest 3 Months 조회 (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getDlrspHotAlertList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspHotAlertList */
+			M1.DLSP_CD
+			, M1.DLSP_CD_NM
+			, IFNULL(V1.NEW_CNT, 0) AS NEW_CNT
+		 	, IFNULL(V1.OVERDUE_CNT, 0) AS OVERDUE_CNT
+			, IFNULL(V1.ACPT_HOUR, 0) AS ACPT_HOUR
+		FROM
+			CO_DEALERSHIP_MST M1
+			LEFT JOIN (
+				SELECT
+					A.NATN_CD
+					, A.DLRSP_CD
+				    , IFNULL(SUM(IF(B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[>=]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))), 1, 0)), 0) AS NEW_CNT
+				    , IFNULL(SUM(IF((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))))
+				          		 OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')), 1, 0)), 0) AS OVERDUE_CNT
+			    	, IFNULL(SUM(IF(B.STTS_CD = '2', TIMESTAMPDIFF(HOUR, B.ACPT_DTM, CONCAT(B.ACPT_END_DT, ' 18:00')), 0)), 0) AS ACPT_HOUR
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SBMT_YN = 'Y'
+					AND B.MOD_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -3 MONTH))
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+				GROUP BY
+					A.NATN_CD, A.DLRSP_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD
+		WHERE 1=1
+			AND M1.NTN_CD = #{searchCd}
+		ORDER BY
+			ACPT_HOUR DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getHotAlertList
+		설  명 : Hot Alert - Latest 3 Months 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getHotAlertList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getHotAlertList */
+			M1.DLR_CD
+			, M1.DLR_NM
+			, IFNULL(V1.NEW_CNT, 0) AS NEW_CNT
+		 	, IFNULL(V1.OVERDUE_CNT, 0) AS OVERDUE_CNT
+			, IFNULL(V1.ACPT_HOUR, 0) AS ACPT_HOUR
+		FROM
+			CO_DEALER_MST M1
+			RIGHT JOIN (
+				SELECT
+					A.NATN_CD
+					, A.DLRSP_CD
+					, A.DLR_CD
+				    , IFNULL(SUM(IF(B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[>=]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))), 1, 0)), 0) AS NEW_CNT
+				    , IFNULL(SUM(IF((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))))
+				          		 OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')), 1, 0)), 0) AS OVERDUE_CNT
+			    	, IFNULL(SUM(IF(B.STTS_CD = '2', TIMESTAMPDIFF(HOUR, B.ACPT_DTM, CONCAT(B.ACPT_END_DT, ' 18:00')), 0)), 0) AS ACPT_HOUR
+				FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SBMT_YN = 'Y'
+					AND B.MOD_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -3 MONTH))
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+				GROUP BY
+					A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD AND M1.DLR_CD = V1.DLR_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd}, 2)
+		<choose>
+			<when test="searchDlrCdList != null">
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					M1.DLR_CD = #{dlrCd}
+				</foreach>
+			</when>
+			<otherwise>
+				/* 대리점에 속한 딜러들 */
+				AND M1.DLSP_CD = #{searchDlspCd}
+			</otherwise>
+		</choose>
+			AND FIND_IN_SET(#{asgnTaskCd}, M1.ASGN_TASK)
+		ORDER BY
+			ACPT_HOUR DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getCstmrHotAlertList
+		설  명 : Hot Alert - Latest 3 Months 조회 (고객)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getCstmrHotAlertList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getCstmrHotAlertList */
+			B.STTS_CD
+			, CASE WHEN ((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))) OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d'))) THEN 'Y'
+			 	   ELSE 'N'
+			 	    END OVERDUE_YN
+			, B.ACPT_DTM
+			, C.DLR_NM
+		  	, D.NM AS CSTMR_NM
+		FROM
+		    HG_HGSI_SURVEY_SEND_MST A
+		    JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+		    JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+			LEFT JOIN CO_DEALER_CUSTOMER_DTL D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT
+		WHERE 1=1
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLRSP_CD = #{searchDlspCd}
+		<choose>
+			<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+				AND A.DLR_CD = #{searchCd}
+			</when>
+			<otherwise>
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					A.DLR_CD = #{dlrCd}
+				</foreach>
+			</otherwise>
+		</choose>
+			AND (B.STTS_CD = '0' OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))
+			AND A.SBMT_YN = 'Y'
+			<if test="dlrStatus != ''.toString()">
+			AND C.USE_YN = #{dlrStatus}
+			</if>
+			AND B.MOD_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -3 MONTH))
+		ORDER BY
+			B.REG_DTM DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getCstmrHotAlertAvgAcptHour
+		설  명 : Hot Alert - Latest 3 Months 처리일 조회 (고객)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getCstmrHotAlertAvgAcptHour" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getCstmrHotAlertAvgAcptHour */
+			COUNT(*) AS CNT
+			, IFNULL(SUM(TIMESTAMPDIFF(HOUR, B.ACPT_DTM, CONCAT(B.ACPT_END_DT, ' 18:00'))), 0) AS TOT_ACPT_HOUR
+		FROM
+			HG_HGSI_SURVEY_SEND_MST A
+		    JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+		WHERE 1=1
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLRSP_CD = #{searchDlspCd}
+		<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+			A.DLR_CD = #{dlrCd}
+		</foreach>
+			AND B.STTS_CD = '2'
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getHgsiActPlngList
+		설  명 : HGSI Action Planning - Latest 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getHgsiActPlngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getHgsiActPlngList */
+		    SEQN_YM
+    		, HGSI_SMR_SEQ
+    		, L_CTG_SEQ
+    		, (SELECT MENU_NM FROM CO_MENU_MST WHERE MENU_SEQ = A.L_CTG_SEQ) AS CTG_NM
+    		, AVG_SCRG
+    		, (SELECT AVG_SCRG FROM HG_HGSI_SURVEY_SMR
+    			WHERE SEQN_YM <![CDATA[<]]> A.SEQN_YM AND NATN_CD = A.NATN_CD AND DLRSP_CD = A.DLRSP_CD AND DLR_CD = A.DLR_CD AND ASGN_TASK_CD = A.ASGN_TASK_CD AND L_CTG_SEQ = A.L_CTG_SEQ ORDER BY SEQN_YM DESC LIMIT 1) AS PREV_AVG_SCRG
+    		, NEGATIVE_CNT
+    		, POSITIVE_CNT
+    		, (SELECT CASE WHEN COUNT(DISTINCT ASGNR_SEQ) <![CDATA[>]]> 1 THEN CONCAT(T2.NAME, ',', COUNT(DISTINCT ASGNR_SEQ)) ELSE T2.NAME END FROM HG_HGSI_ACTION_PLANNING_ASGNR_DTL T1 LEFT JOIN CO_ADM_MST T2 ON T1.ASGNR_SEQ = T2.ADM_SEQ
+    			WHERE SEQN_YM = A.SEQN_YM AND HGSI_SMR_SEQ = A.HGSI_SMR_SEQ) AS ASGNR_NM
+			, STTS_CD
+			, CASE WHEN (SELECT MAX(END_DT) FROM HG_HGSI_ACTION_PLANNING_MST WHERE SEQN_YM = A.SEQN_YM AND HGSI_SMR_SEQ = A.HGSI_SMR_SEQ) <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d') THEN 'Y' ELSE 'N' END OVER_DUE_YN
+		FROM
+			HG_HGSI_SURVEY_SMR A
+		WHERE 1=1
+			AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+		    AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.NATN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLRSP_CD = #{searchDlspCd}
+		<choose>
+			<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+				AND A.DLR_CD = #{searchCd}
+			</when>
+			<otherwise>
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					A.DLR_CD = #{dlrCd}
+				</foreach>
+			</otherwise>
+		</choose>
+			AND A.USE_YN = 'Y'
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnRscActPlngList
+		설  명 : Retail Standard Check - Action Planning - Latest 조회 (나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnRscActPlngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnRscActPlngList */
+			M1.NTN_CD
+		  	, M1.NTN_CD_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.EX_ANSW_Y_CNT, 0) AS EX_ANSW_Y_CNT
+		  	, IFNULL(V2.EX_ANSW_N_CNT, 0) AS EX_ANSW_N_CNT
+		FROM
+			CO_NATION_MST M1
+			LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+              		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+            	GROUP BY
+              		A.NATN_CD
+          	) V1 ON M1.NTN_CD = V1.NATN_CD
+          	LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, COUNT(*) AS TOT_QSTN_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 1, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_Y_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 0, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_N_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+			  		JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+            		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99')
+			      	<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+            	GROUP BY
+              		A.NATN_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD
+		ORDER BY
+			RESP_CNT DESC, DLR_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspRscActPlngList
+		설  명 : Retail Standard Check - Action Planning - Latest 조회 (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getDlrspRscActPlngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspRscActPlngList */
+			M1.DLSP_CD
+		  	, M1.DLSP_CD_NM AS DLR_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.EX_ANSW_Y_CNT, 0) AS EX_ANSW_Y_CNT
+		  	, IFNULL(V2.EX_ANSW_N_CNT, 0) AS EX_ANSW_N_CNT
+		FROM
+			CO_DEALERSHIP_MST M1
+			LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, A.DLRSP_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+              		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+            	GROUP BY
+              		A.NATN_CD, A.DLRSP_CD
+          	) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD
+          	LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, A.DLRSP_CD
+              		, COUNT(*) AS TOT_QSTN_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 1, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_Y_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 0, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_N_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+			  		JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+            		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99')
+			      	<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus}
+					</if>
+            	GROUP BY
+              		A.NATN_CD, A.DLRSP_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd},2)
+		ORDER BY
+			RESP_CNT DESC, DLR_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getRscActPlngList
+		설  명 : Retail Standard Check - Action Planning - Latest 조회 (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getRscActPlngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getRscActPlngList */
+			M1.DLR_CD
+		  	, M1.DLR_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.EX_ANSW_Y_CNT, 0) AS EX_ANSW_Y_CNT
+		  	, IFNULL(V2.EX_ANSW_N_CNT, 0) AS EX_ANSW_N_CNT
+		FROM
+			CO_DEALER_MST M1
+			LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, A.DLRSP_CD
+              		, A.DLR_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+              		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	<if test="dlrStatus != ''.toString()">
+			      	AND C.USE_YN = #{dlrStatus}
+			      	</if>
+            	GROUP BY
+              		A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+          	) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD AND M1.DLR_CD = V1.DLR_CD
+          	LEFT JOIN (
+            	SELECT
+              		A.NATN_CD
+              		, A.DLRSP_CD
+              		, A.DLR_CD
+              		, COUNT(*) AS TOT_QSTN_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 1, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_Y_CNT
+              		, IFNULL(SUM((SELECT IF(EX_ANSW = 0, 1, 0) FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) AS EX_ANSW_N_CNT
+            	FROM
+              		RC_RSC_SURVEY_SEND_MST A
+			  		JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+            		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+            	WHERE 1=1
+              		AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+			      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+			      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+			      	AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2' OR A.SRVY_STTS_CD = '99')
+			      	<if test="dlrStatus != ''.toString()">
+			      	AND C.USE_YN = #{dlrStatus}
+			      	</if>
+            	GROUP BY
+              		A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD AND M1.DLR_CD = V2.DLR_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd}, 2)
+		<choose>
+			<when test="searchDlrCdList != null">
+				<choose>
+					<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+						AND M1.DLR_CD = #{searchCd}
+					</when>
+					<otherwise>
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							M1.DLR_CD = #{dlrCd}
+						</foreach>
+					</otherwise>
+				</choose>
+				
+			</when>
+			<otherwise>
+				/* 대리점에 속한 딜러들 */
+				AND M1.DLSP_CD = #{searchDlspCd}
+			</otherwise>
+		</choose>
+			AND FIND_IN_SET(#{asgnTaskCd}, M1.ASGN_TASK)
+			AND DLR_CNT <![CDATA[>=]]> 1
+		ORDER BY
+			RESP_CNT DESC, DLR_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getRscActPlngDtl
+		설  명 : Retail Standard Check - Action Planning - Latest 조회 (상세)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getRscActPlngDtl" parameterType="emfMap" resultType="emfMap">
+       	SELECT /* COAMainDAO.getRscActPlngDtl */
+       		V1.QSTN_SORT
+       		, V1.L_CTG_SEQ
+       		, (SELECT MENU_NM FROM CO_MENU_MST WHERE MENU_SEQ = V1.L_CTG_SEQ) AS L_CTG_NM
+       		, V1.S_CTG_SEQ
+       		, (SELECT MENU_NM FROM CO_MENU_MST WHERE MENU_SEQ = V1.S_CTG_SEQ) AS S_CTG_NM
+       		, V1.QSTN
+       		, V2.END_DT
+       		, V2.PLAN_STTS_CD
+       		, V2.OVERDUE_YN
+       	FROM (
+       		SELECT
+       			A.SRVY_TYPE_CD
+       			, A.INSD_SEND_SEQ
+       			, B.QSTN_SORT
+       			, B.L_CTG_SEQ
+       			, B.S_CTG_SEQ
+       			, B.QSTN
+       		FROM
+				RC_RSC_SURVEY_SEND_MST A
+				JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+			WHERE 1=1
+				AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+		      	AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		      	AND A.NATN_CD = LEFT(#{searchCd}, 2)
+				AND A.DLRSP_CD = #{searchDlspCd}
+			<choose>
+				<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+					AND A.DLR_CD = #{searchCd}
+				</when>
+				<otherwise>
+					<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						A.DLR_CD = #{dlrCd}
+					</foreach>
+				</otherwise>
+			</choose>
+			<!-- <foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+				A.DLR_CD = #{dlrCd}
+			</foreach> -->
+		      	AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+		      	AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+       	) V1 JOIN (
+       		SELECT
+       			A.SRVY_TYPE_CD
+				, A.INSD_SEND_SEQ
+				, A.QSTN_SORT
+				, B.END_DT
+				, IFNULL(B.PLAN_STTS_CD, 0) AS PLAN_STTS_CD
+				, CASE WHEN B.END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d') THEN 'Y' ELSE 'N' END OVERDUE_YN
+       		FROM
+            	RC_RSC_ANSWER_DTL A
+            	LEFT JOIN RC_RSC_ACTION_PLANNING_MST B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.INSD_SEND_SEQ = B.INSD_SEND_SEQ AND A.QSTN_SORT = B.QSTN_SORT
+            WHERE 1=1
+            	AND A.SRVY_TYPE_CD = #{srvyTypeCd}
+				AND A.EX_ANSW = 0
+       	) V2 ON V1.SRVY_TYPE_CD = V2.SRVY_TYPE_CD AND V1.INSD_SEND_SEQ = V2.INSD_SEND_SEQ AND V1.QSTN_SORT = V2.QSTN_SORT
+      	ORDER BY
+      		(SELECT PSTN FROM CO_MENU_MST WHERE MENU_SEQ = V1.L_CTG_SEQ), (SELECT PSTN FROM CO_MENU_MST WHERE MENU_SEQ = V1.S_CTG_SEQ)
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnProfitabilityDataList
+		설  명 : Profitability Data Status - Latest (나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnProfitabilityDataList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnProfitabilityDataList */
+		  	M1.NTN_CD
+		  	, M1.NTN_CD_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.LAST_VAL_100_CNT, 0) AS LAST_VAL_100_CNT
+		FROM
+		  	CO_NATION_MST M1
+		  	LEFT JOIN (
+            	SELECT
+              		A.NTN_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.PLAN_STTS_CD <![CDATA[>]]> '0', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		DK_KPI_PLAN_MST A
+              		JOIN CO_DEALER_MST C ON A.NTN_CD = C.NTN_CD AND A.DLSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD 	              		
+					<if test="dlrStatus != ''.toString()">
+              		AND C.USE_YN = #{dlrStatus}
+              		</if>
+            	WHERE 1=1
+              		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+            	GROUP BY
+              		A.NTN_CD
+          	) V1 ON M1.NTN_CD = V1.NTN_CD
+		  	LEFT JOIN (
+				SELECT
+			  		A.NTN_CD
+					, COUNT(*) AS TOT_QSTN_CNT
+					, IFNULL(SUM(IF((A.PLAN_STTS_CD = '2' OR A.PLAN_STTS_CD = '4') AND B.LAST_VAL = '100', 1, 0)), 0) AS LAST_VAL_100_CNT
+				FROM
+					DK_KPI_PLAN_MST A
+					JOIN DK_KPI_PLAN_QSTN_DTL B ON A.NTN_CD = B.NTN_CD AND A.DLSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD AND A.ASGN_TASK_CD = B.ASGN_TASK_CD AND A.SEQN_YM = B.SEQN_YM
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+				GROUP BY
+					A.NTN_CD
+			) V2 ON M1.NTN_CD = V2.NTN_CD
+		ORDER BY
+			RESP_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspProfitabilityDataList
+		설  명 : Profitability Data Status - Latest (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getDlrspProfitabilityDataList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspProfitabilityDataList */
+		  	M1.DLSP_CD
+		  	, M1.DLSP_CD_NM AS DLR_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.LAST_VAL_100_CNT, 0) AS LAST_VAL_100_CNT
+		FROM
+		  	CO_DEALERSHIP_MST M1
+		  	LEFT JOIN (
+            	SELECT
+              		A.NTN_CD
+              		, A.DLSP_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.PLAN_STTS_CD <![CDATA[>]]> '0', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		DK_KPI_PLAN_MST A
+              		JOIN CO_DEALER_MST C ON A.NTN_CD = C.NTN_CD AND A.DLSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD 
+              		<if test="dlrStatus != ''.toString()">
+              		AND C.USE_YN = #{dlrStatus}
+              		</if>
+            	WHERE 1=1
+              		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+            	GROUP BY
+              		A.NTN_CD, A.DLSP_CD
+          	) V1 ON M1.NTN_CD = V1.NTN_CD AND M1.DLSP_CD = V1.DLSP_CD
+		  	LEFT JOIN (
+				SELECT
+			  		A.NTN_CD
+			  		, A.DLSP_CD
+					, COUNT(*) AS TOT_QSTN_CNT
+					, IFNULL(SUM(IF((A.PLAN_STTS_CD = '2' OR A.PLAN_STTS_CD = '4') AND B.LAST_VAL = '100', 1, 0)), 0) AS LAST_VAL_100_CNT
+				FROM
+					DK_KPI_PLAN_MST A
+					JOIN DK_KPI_PLAN_QSTN_DTL B ON A.NTN_CD = B.NTN_CD AND A.DLSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD AND A.ASGN_TASK_CD = B.ASGN_TASK_CD AND A.SEQN_YM = B.SEQN_YM
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+				GROUP BY
+					A.NTN_CD, A.DLSP_CD
+			) V2 ON M1.NTN_CD = V2.NTN_CD AND M1.DLSP_CD = V2.DLSP_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd},2)
+		ORDER BY
+			RESP_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getProfitabilityDataList
+		설  명 : Profitability Data Status - Latest (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getProfitabilityDataList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getProfitabilityDataList */
+		  	M1.DLR_CD
+		  	, M1.DLR_NM
+		  	, IFNULL(V1.DLR_CNT, 0) AS DLR_CNT
+		  	, IFNULL(V1.RESP_CNT, 0) AS RESP_CNT
+		  	, IFNULL(V2.TOT_QSTN_CNT, 0) AS TOT_QSTN_CNT
+		  	, IFNULL(V2.LAST_VAL_100_CNT, 0) AS LAST_VAL_100_CNT
+		FROM
+		  	CO_DEALER_MST M1
+		  	LEFT JOIN (
+            	SELECT
+              		A.NTN_CD
+              		, A.DLSP_CD
+              		, A.DLR_CD
+              		, COUNT(DISTINCT A.DLR_CD) AS DLR_CNT
+              		, IFNULL(SUM(IF(A.PLAN_STTS_CD <![CDATA[>]]> '0', 1, 0)), 0) AS RESP_CNT
+            	FROM
+              		DK_KPI_PLAN_MST A
+              		JOIN CO_DEALER_MST C ON A.NTN_CD = C.NTN_CD AND A.DLSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD 
+              		<if test="dlrStatus != ''.toString()">
+              		AND C.USE_YN = #{dlrStatus}
+              		</if>
+            	WHERE 1=1
+              		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+            	GROUP BY
+              		A.NTN_CD, A.DLSP_CD, A.DLR_CD
+          	) V1 ON M1.NTN_CD = V1.NTN_CD AND M1.DLSP_CD = V1.DLSP_CD AND M1.DLR_CD = V1.DLR_CD
+		  	LEFT JOIN (
+				SELECT
+			  		A.NTN_CD
+			  		, A.DLSP_CD
+			  		, A.DLR_CD
+			  		, A.ASGN_TASK_CD
+					, COUNT(*) AS TOT_QSTN_CNT
+					, IFNULL(SUM(IF((A.PLAN_STTS_CD = '2' OR A.PLAN_STTS_CD = '4') AND B.LAST_VAL = '100', 1, 0)), 0) AS LAST_VAL_100_CNT
+				FROM
+					DK_KPI_PLAN_MST A
+					JOIN DK_KPI_PLAN_QSTN_DTL B ON A.NTN_CD = B.NTN_CD AND A.DLSP_CD = B.DLSP_CD AND A.DLR_CD = B.DLR_CD AND A.ASGN_TASK_CD = B.ASGN_TASK_CD AND A.SEQN_YM = B.SEQN_YM
+				WHERE 1=1
+					AND A.ASGN_TASK_CD = #{asgnTaskCd}
+					AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+		      		AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+				GROUP BY
+					A.NTN_CD, A.DLSP_CD, A.DLR_CD
+			) V2 ON V1.NTN_CD = V2.NTN_CD AND V1.DLSP_CD = V2.DLSP_CD AND V1.DLR_CD = V2.DLR_CD
+		WHERE 1=1
+			AND M1.NTN_CD = LEFT(#{searchCd}, 2)
+		<choose>
+			<when test="searchDlrCdList != null">
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					M1.DLR_CD = #{dlrCd}
+				</foreach>
+			</when>
+			<otherwise>
+				/* 대리점에 속한 딜러들 */
+				AND M1.DLSP_CD = #{searchDlspCd}
+			</otherwise>
+		</choose>
+			AND V2.ASGN_TASK_CD = #{asgnTaskCd}
+		ORDER BY
+			RESP_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getProfitabilityDataDtl
+		설  명 : Profitability Data Status - Latest (상세)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getProfitabilityDataDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getProfitabilityDataDtl */
+			(SELECT CASE WHEN COUNT(B.QSTN_NM) > 0
+		                 THEN B.QSTN_NM
+		                 ELSE A.QSTN_NM
+		            END AS QSTN_NM
+		     FROM DK_KPI_QSTN_MST B
+		     WHERE A.KPI_QSTN_SEQ=B.KPI_QSTN_SEQ AND A.KPI_DTL_CD=B.KPI_DTL_CD AND A.QSTN_SORT=B.QSTN_SORT
+		     AND B.LGUG_CD = #{siteLanguage}) AS QSTN_NM
+		  	, (SELECT CASE WHEN COUNT(C.CD_NM) > 0
+		  	               THEN C.CD_NM
+		  	               ELSE B.CD_NM
+		  	          END AS CD_NM
+     		  FROM CO_CD_DTL B LEFT JOIN CO_CD_NM_DTL C ON B.CD_ID = C.CD_ID AND B.CD = C.CD
+     		  AND C.LGUG_CD = #{siteLanguage}
+     		  WHERE (B.CD_ID = 'KPI_SALES_TYPE_CD' OR B.CD_ID = 'KPI_SERVICE_TYPE_CD') AND B.CD = A.KPI_DTL_CD 
+		  	   ) AS KPI_DTL_CD_NM
+		  	, (SELECT IFNULL(LAST_VAL, 0) FROM DK_KPI_PLAN_QSTN_DTL WHERE KPI_DTL_CD = A.KPI_DTL_CD AND KPI_QSTN_SEQ = A.KPI_QSTN_SEQ AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK_CD) AND DLR_CD = A.DLR_CD AND (SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm} AND SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}) LIMIT 1) AS QUARTER_1
+		  	, (SELECT IFNULL(LAST_VAL, 0) FROM DK_KPI_PLAN_QSTN_DTL WHERE KPI_DTL_CD = A.KPI_DTL_CD AND KPI_QSTN_SEQ = A.KPI_QSTN_SEQ AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK_CD) AND DLR_CD = A.DLR_CD AND (SEQN_YM <![CDATA[>=]]> #{curtQrtList[1].strtYm} AND SEQN_YM <![CDATA[<=]]> #{curtQrtList[1].endYm}) LIMIT 1) AS QUARTER_2
+		  	, (SELECT IFNULL(LAST_VAL, 0) FROM DK_KPI_PLAN_QSTN_DTL WHERE KPI_DTL_CD = A.KPI_DTL_CD AND KPI_QSTN_SEQ = A.KPI_QSTN_SEQ AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK_CD) AND DLR_CD = A.DLR_CD AND (SEQN_YM <![CDATA[>=]]> #{curtQrtList[2].strtYm} AND SEQN_YM <![CDATA[<=]]> #{curtQrtList[2].endYm}) LIMIT 1) AS QUARTER_3
+		  	, (SELECT IFNULL(LAST_VAL, 0) FROM DK_KPI_PLAN_QSTN_DTL WHERE KPI_DTL_CD = A.KPI_DTL_CD AND KPI_QSTN_SEQ = A.KPI_QSTN_SEQ AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK_CD) AND DLR_CD = A.DLR_CD AND (SEQN_YM <![CDATA[>=]]> #{curtQrtList[3].strtYm} AND SEQN_YM <![CDATA[<=]]> #{curtQrtList[3].endYm}) LIMIT 1) AS QUARTER_4
+		FROM
+			DK_KPI_PLAN_QSTN_DTL A
+		WHERE 1=1
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+	      	AND A.NTN_CD = LEFT(#{searchCd}, 2)
+			AND A.DLSP_CD = #{searchDlspCd}
+		<choose>
+			<when test="(admAuthCd == '41'.toString() or admAuthCd == '42'.toString()) and searchCd.length() > 5">
+				AND A.DLR_CD = #{searchCd}
+			</when>
+			<otherwise>
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					A.DLR_CD = #{dlrCd}
+				</foreach>
+			</otherwise>
+		</choose>
+	      	AND A.SEQN_YM <![CDATA[>=]]> #{curtQrtList[0].strtYm}
+	      	AND A.SEQN_YM <![CDATA[<=]]> #{curtQrtList[0].endYm}
+		ORDER BY
+			A.KPI_DTL_CD, A.QSTN_SORT
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getGoogleRvwList
+		설   명 : 대리점 구글 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getGoogleRvwList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getGoogleRvwList */
+			  MST.DLR_CD
+			, MST.DLR_NM
+			, IFNULL(GOOGLE_DTL.RVW_CNT, 0) AS RVW_CNT
+			, GOOGLE_DTL.AVG_VAL AS SCRG
+		FROM co_dealer_mst as MST
+		    LEFT JOIN co_dealer_google_dtl as GOOGLE_DTL
+				ON MST.DLR_CD = GOOGLE_DTL.DLR_CD
+				       AND GOOGLE_DTL.USE_YN = 'Y'
+			LEFT JOIN co_dealer_google_review_dtl AS RVW_DTL
+				ON MST.DLR_CD = RVW_DTL.DLR_CD
+		WHERE  1=1
+			<if test="dlrStatus != ''.toString()">
+			AND MST.USE_YN = #{dlrStatus}
+			</if>
+			<choose>
+				<when test="searchScope == 'dlrsp'.toString()">
+					/* 관리하는 딜러별 */
+					<choose>
+						<when test="searchDlrCdList != null">
+							<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+								MST.dlr_cd = #{dlrCd}
+							</foreach>
+						</when>
+						<otherwise>
+							/* 대리점에 속한 딜러들 */
+							AND MST.dlsp_cd = #{searchDlspCd}
+						</otherwise>
+					</choose>
+				</when>
+				<when test="searchScope == 'dlr'.toString()">
+					/* 대리점에 속한 딜러들 */
+					<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						MST.dlr_cd = #{dlrCd}
+					</foreach>
+				</when>
+				<otherwise>
+
+				</otherwise>
+			</choose>
+			AND MST.ASGN_TASK LIKE CONCAT('%',#{asgnTaskCd},'%')
+		GROUP BY MST.DLR_CD
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getFacebookRvwList
+		설   명 : 대리점 페이스북 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getFacebookRvwList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getFacebookRvwList */
+			  MST.DLR_CD
+			, MST.DLR_NM
+			, COUNT(RVW_DTL.DLR_CD) AS RVW_CNT
+			, SUM(
+			  CASE WHEN RVW_DTL.RCMM_YN = '1' THEN 1
+			  ELSE 0
+			  END
+			) AS POSTIVE_CNT
+			, SUM(
+			  CASE WHEN RVW_DTL.RCMM_YN = '0' THEN 1
+			  ELSE 0
+			  END
+			) AS NEGATIVE_CNT
+		FROM co_dealer_mst as MST LEFT JOIN co_dealer_facebook_dtl as FACEBOOK_DTL
+			ON MST.DLR_CD = FACEBOOK_DTL.DLR_CD AND FACEBOOK_DTL.USE_YN = 'Y'
+			LEFT JOIN co_dealer_facebook_review_dtl AS RVW_DTL
+			ON MST.DLR_CD = RVW_DTL.DLR_CD AND (RVW_DTL.reg_dtm <![CDATA[ >= ]]> CONCAT(#{strtDt}, ' 00:00:00:000') AND RVW_DTL.reg_dtm <![CDATA[ <= ]]> CONCAT(#{endDt}, ' 23:59:59:999'))
+		WHERE 
+		1=1
+		<if test="dlrStatus != ''.toString()">
+		and MST.USE_YN = #{dlrStatus}
+		</if>
+		<choose>
+			<when test="searchScope == 'dlrsp'.toString()">
+				/* 관리하는 딜러별 */
+				<choose>
+					<when test="searchDlrCdList != null">
+						<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							MST.dlr_cd = #{dlrCd}
+						</foreach>
+					</when>
+					<otherwise>
+						/* 대리점에 속한 딜러들 */
+						AND
+			 			(
+			 				MST.dlsp_cd = #{searchDlspCd}
+						)
+					</otherwise>
+				</choose>
+			</when>
+			<when test="searchScope == 'dlr'.toString()">
+				/* 대리점에 속한 딜러들 */
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					MST.dlr_cd = #{dlrCd}
+				</foreach>
+			</when>
+			<otherwise>
+
+			</otherwise>
+		</choose>
+		AND MST.ASGN_TASK LIKE CONCAT('%',#{asgnTaskCd},'%')
+		GROUP BY MST.DLR_CD
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getGoogleNatnRvwList
+		설   명 : 지역 본부 관리자 > 모든 국가 대리점 구글 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getGoogleNatnRvwList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*COAMainDAO.getGoogleNatnRvwList*/
+			TBL.*
+		FROM
+		(
+			SELECT
+			  AA.NTN_CD
+			  ,AA.NTN_CD_NM
+			  ,COUNT(BB.DLR_CD) AS RVW_CNT
+			  ,COUNT(DISTINCT(BB.DLR_CD)) AS PRCPN_CNT
+			  ,ROUND(AVG(BB.SCRG), 1) AS SCRG
+			  ,(SELECT COUNT(*) FROM CO_DEALER_MST 
+			  WHERE NTN_CD = AA.NTN_CD 
+			  <if test="dlrStatus != ''.toString()">
+			  AND USE_YN = #{dlrStatus} 
+			  </if>
+			  AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK)) AS DEALER_CNT
+			FROM
+			  CO_NATION_MST AA LEFT JOIN (
+										SELECT
+											  MST.DLR_CD
+											, MST.NTN_CD
+											, MST.DLR_NM
+											, (
+	                            				CASE
+												    WHEN RVW_DTL.SCRG = 'ONE' 	THEN 1
+												    WHEN RVW_DTL.SCRG = 'TWO' 	THEN 2
+												    WHEN RVW_DTL.SCRG = 'THREE' THEN 3
+												    WHEN RVW_DTL.SCRG = 'FOUR' 	THEN 4
+												    WHEN RVW_DTL.SCRG = 'FIVE' 	THEN 5
+	                               					ELSE 0
+											   	END
+	                            				) AS SCRG
+										FROM co_dealer_mst as MST
+										JOIN co_dealer_google_dtl as GOOGLE_DTL
+										ON MST.DLR_CD = GOOGLE_DTL.DLR_CD AND GOOGLE_DTL.USE_YN = 'Y'
+										LEFT JOIN co_dealer_google_review_dtl AS RVW_DTL
+										ON MST.DLR_CD = RVW_DTL.DLR_CD
+										WHERE
+											1=1
+											<if test="dlrStatus != ''.toString()">
+											AND MST.USE_YN = #{dlrStatus} 
+											</if>
+											
+										AND FIND_IN_SET(#{asgnTaskCd}, MST.ASGN_TASK)
+									)  BB ON AA.NTN_CD = BB.NTN_CD
+			WHERE
+			  AA.USE_YN ='Y'
+		<!-- <if test="kpiCd == 'KP'.toString()">
+			  AND AA.KPI_USE_YN = 'Y'
+		</if> -->
+		<choose>
+			<when test="kpiCd == 'KP'.toString()">
+				AND AA.KPI_USE_YN = 'Y'
+			</when>
+			<when test="otcCd == 'OTC'.toString()">
+				AND AA.OTHER_CNTRY_YN = 'Y'
+			</when>
+			<otherwise>
+				AND AA.OTHER_CNTRY_YN = 'N'
+			</otherwise>
+		</choose>
+			GROUP BY AA.NTN_CD
+		) TBL ORDER BY RVW_CNT DESC
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getFacebookNatnRvwList
+		설   명 : 지역 본부 관리자 > 모든 국가 대리점 페이스북 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getFacebookNatnRvwList" parameterType="emfMap" resultType="emfMap">
+		select	/*COAMainDAO.getFacebookNatnRvwList*/
+			      AA.NTN_CD
+			    , AA.NTN_CD_NM
+			    , BB.RVW_CNT AS RVW_CNT
+			    , IFNULL(BB.PRCPN_CNT , 0) AS PRCPN_CNT
+			    , IFNULL(BB.POSTIVE_CNT , 0) AS POSTIVE_CNT
+			    , IFNULL(BB.NEGATIVE_CNT ,0) AS NEGATIVE_CNT
+			    ,(SELECT COUNT(*) FROM CO_DEALER_MST WHERE NTN_CD = AA.NTN_CD 
+			    <if test="dlrStatus != ''.toString()">
+				AND USE_YN = #{dlrStatus} 
+				</if>			    
+			    ) AS DEALER_CNT
+		FROM
+			    CO_NATION_MST AA LEFT JOIN
+			    (
+				      SELECT
+					          MST.NTN_CD
+					        , COUNT(RVW_DTL.DLR_CD) AS RVW_CNT
+					        , COUNT(DISTINCT(MST.DLR_CD)) AS PRCPN_CNT
+				  			, SUM(
+				  			  CASE WHEN RVW_DTL.RCMM_YN = '1' THEN 1
+				  			  ELSE 0
+				  			  END
+				  			) AS POSTIVE_CNT
+				  			, SUM(
+				  			  CASE WHEN RVW_DTL.RCMM_YN = '0' THEN 1
+				  			  ELSE 0
+				  			  END
+				  			) AS NEGATIVE_CNT
+				      FROM
+					        CO_DEALER_MST AS MST
+					        JOIN CO_DEALER_FACEBOOK_DTL AS FACEBOOK_DTL
+					        ON MST.DLR_CD = FACEBOOK_DTL.DLR_CD
+					        AND FACEBOOK_DTL.USE_YN = 'Y'
+					        LEFT JOIN CO_DEALER_FACEBOOK_REVIEW_DTL AS RVW_DTL
+					        ON MST.DLR_CD = RVW_DTL.DLR_CD
+					        AND (RVW_DTL.reg_dtm <![CDATA[ >= ]]> CONCAT(#{strtDt}, ' 00:00:00:000') AND RVW_DTL.reg_dtm <![CDATA[ <= ]]> CONCAT(#{endDt}, ' 23:59:59:999'))
+				      WHERE
+				      1=1  
+				      <if test="dlrStatus != ''.toString()">
+				      AND MST.USE_YN = #{dlrStatus}
+				      </if>
+				      AND FIND_IN_SET(#{asgnTaskCd}, MST.ASGN_TASK)
+				      GROUP BY MST.NTN_CD
+			    ) BB
+			    ON AA.NTN_CD = BB.NTN_CD
+		WHERE
+				AA.USE_YN ='Y'
+			<!-- <if test="kpiCd == 'KP'.toString()">
+			  	AND AA.KPI_USE_YN = 'Y'
+			</if> -->
+			<choose>
+				<when test="kpiCd == 'KP'.toString()">
+					AND AA.KPI_USE_YN = 'Y'
+				</when>
+				<when test="otcCd == 'OTC'.toString()">
+					AND AA.OTHER_CNTRY_YN = 'Y'
+				</when>
+				<otherwise>
+					AND AA.OTHER_CNTRY_YN = 'N'
+				</otherwise>
+			</choose>
+				ORDER BY BB.PRCPN_CNT DESC
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getGoogleNatnDlrspRvwList
+		설   명 : 지역 본부 관리자 > 모든 국가 대리점 구글 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getGoogleNatnDlrspRvwList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*COAMainDAO.getGoogleNatnDlrspRvwList*/
+			TBL.*
+		FROM
+			(
+			SELECT
+				AA.DLSP_CD
+				, AA.DLSP_CD_NM AS DLR_NM
+				, IFNULL(sum(RVW_CNT), 0) AS RVW_CNT
+				, COUNT(DISTINCT (BB.DLR_CD)) AS PRCPN_CNT
+				, IFNULL(round(avg(SCRG),1), 0) AS SCRG
+				,(SELECT COUNT(*)
+			FROM CO_DEALER_MST
+			WHERE NTN_CD = AA.NTN_CD
+				AND DLSP_CD = AA.DLSP_CD
+				<if test="dlrStatus != ''.toString()">
+					AND USE_YN = #{dlrStatus}
+				</if>
+				) AS DEALER_CNT
+			FROM CO_DEALERSHIP_MST AA
+			LEFT JOIN (
+				SELECT
+					MST.DLR_CD
+					, MST.DLSP_CD
+					, MST.DLR_NM
+					, GOOGLE_DTL.rvw_cnt AS RVW_CNT
+					, GOOGLE_DTL.avg_val AS SCRG
+				FROM co_dealer_mst AS MST
+					JOIN co_dealer_google_dtl AS GOOGLE_DTL
+						ON MST.DLR_CD = GOOGLE_DTL.DLR_CD
+							AND GOOGLE_DTL.USE_YN = 'Y'
+					JOIN co_dealer_google_review_dtl AS RVW_DTL
+						ON MST.DLR_CD = RVW_DTL.DLR_CD
+				WHERE 1=1
+					<if test="dlrStatus != ''.toString()">
+						AND MST.USE_YN = #{dlrStatus}
+					</if>
+					AND (MST.dlsp_cd = #{searchCd})
+					AND FIND_IN_SET(#{asgnTaskCd}, MST.ASGN_TASK)
+				GROUP BY MST.DLR_CD
+			) BB ON AA.DLSP_CD = BB.DLSP_CD
+		WHERE
+			AA.USE_YN ='Y'
+			AND AA.NTN_CD = LEFT(#{searchCd}, 2)
+		GROUP BY AA.DLSP_CD
+		) TBL ORDER BY RVW_CNT DESC
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getFacebookNatnDlrspRvwList
+		설   명 : 지역 본부 관리자 > 선택한 국가 대리점 페이스북 리뷰
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.02.14     허진영                        최초생성
+    -->
+	<select id ="getFacebookNatnDlrspRvwList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*COAMainDAO.getFacebookNatnDlrspRvwList*/
+			  MST.dlsp_cd
+			  , MST.dlsp_cd_nm AS DLR_NM
+			  , IFNULL(SUM(BB.RVW_CNT),0) AS RVW_CNT
+			  , COUNT(DISTINCT (BB.DLR_CD)) AS PRCPN_CNT
+			  , (SELECT COUNT(*) FROM CO_DEALER_MST WHERE 
+			  NTN_CD = MST.NTN_CD AND DLSP_CD = MST.DLSP_CD 
+			  <if test="dlrStatus != ''.toString()">
+			  AND USE_YN = #{dlrStatus} 
+			  </if>			  
+			  AND FIND_IN_SET(#{asgnTaskCd}, ASGN_TASK)) AS DEALER_CNT
+			  , SUM( CASE WHEN BB.RCMM_YN = '1' THEN 1 ELSE 0 END ) AS POSTIVE_CNT
+			  , SUM( CASE WHEN BB.RCMM_YN = '0' THEN 1 ELSE 0 END ) AS NEGATIVE_CNT
+		FROM
+			  co_dealership_mst as MST LEFT JOIN
+ 			(
+				SELECT
+					DEALER_MST.DLR_CD
+				    , DEALER_MST.DLSP_CD
+				    , DEALER_MST.DLR_NM
+				    , COUNT(RVW_DTL.DLR_CD) AS RVW_CNT
+				    , RVW_DTL.RCMM_YN
+				FROM CO_DEALER_MST AS DEALER_MST LEFT JOIN co_dealer_facebook_dtl AS FACEBOOK_DTL
+				ON DEALER_MST.DLR_CD=FACEBOOK_DTL.DLR_CD AND FACEBOOK_DTL.USE_YN = 'Y'
+				JOIN co_dealer_facebook_review_dtl AS RVW_DTL
+				ON DEALER_MST.DLR_CD=RVW_DTL.DLR_CD AND (RVW_DTL.reg_dtm <![CDATA[ >= ]]> CONCAT(#{strtDt}, ' 00:00:00:000') AND RVW_DTL.reg_dtm <![CDATA[ <= ]]> CONCAT(#{endDt}, ' 23:59:59:999'))
+				WHERE 
+				1=1
+				<if test="dlrStatus != ''.toString()">
+			  	AND DEALER_MST.USE_YN = #{dlrStatus} 
+			  	</if>					
+				AND (DEALER_MST.dlsp_cd = #{searchCd})
+				AND FIND_IN_SET(#{asgnTaskCd}, DEALER_MST.ASGN_TASK)
+				GROUP BY RVW_DTL.DLR_CD
+			)BB ON MST.DLSP_CD=BB.DLSP_CD
+		WHERE
+			  MST.USE_YN = 'Y'
+			  AND MST.NTN_CD = LEFT(#{searchCd},2)
+		GROUP BY MST.dlsp_cd
+		ORDER BY PRCPN_CNT DESC
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnParntHgsiAvgScrg
+		설  명 : HGSI 평균 (나라 상위 - 권역)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnParntHgsiAvgScrg" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnParntHgsiAvgScrg */
+			IFNULL(AVG(AVG_SCRG), 0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST
+		WHERE 1=1
+			AND ASGN_TASK_CD = #{asgnTaskCd}
+			AND SBMT_YN = 'Y'
+			AND SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+			AND SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getDlrspParntHgsiAvgScrg
+		설  명 :  HGSI 평균 (대리점 상위 - 나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getDlrspParntHgsiAvgScrg" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspParntHgsiAvgScrg */
+			IFNULL(AVG(AVG_SCRG), 0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST
+		WHERE 1=1
+			AND ASGN_TASK_CD = #{asgnTaskCd}
+			AND NATN_CD = #{searchCd}
+			AND SBMT_YN = 'Y'
+			AND SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+			AND SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getParntHgsiAvgScrg
+		설  명 :  HGSI 평균 (딜러 상위 - 대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getParntHgsiAvgScrg" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getParntHgsiAvgScrg */
+			IFNULL(AVG(AVG_SCRG), 0) AS AVG_SCRG
+		FROM
+			HG_HGSI_SURVEY_SEND_MST
+		WHERE 1=1
+			AND ASGN_TASK_CD = #{asgnTaskCd}
+			AND NATN_CD = LEFT(#{searchCd}, 2)
+		<choose>
+			<when test="searchDlrCdList != null">
+				<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+					DLR_CD = #{dlrCd}
+				</foreach>
+			</when>
+			<otherwise>
+				/* 대리점에 속한 딜러들 */
+				AND DLRSP_CD = #{searchDlspCd}
+			</otherwise>
+		</choose>
+			AND SBMT_YN = 'Y'
+			AND SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+			AND SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getHgsiSrvyCol
+		설  명 : HGSI 설문 항목
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+   	<select id ="getHgsiSrvyCol" parameterType="emfMap" resultType="emfMap">
+   		SELECT /* COAMainDAO.getHgsiSrvyCol */
+   			TBL.*
+   		FROM (
+   			SELECT
+   				'NPS' AS MENU_NM
+
+   			UNION ALL
+
+	   		SELECT
+	   			MENU_NM
+	   		FROM
+	   			CO_MENU_MST
+	   		WHERE 1=1
+	   		<choose>
+	   			<when test="asgnTaskCd.equalsIgnoreCase('sales')">
+	   				AND PARNT_SEQ = 79
+	   			</when>
+	   			<when test="asgnTaskCd.equalsIgnoreCase('service')">
+					AND PARNT_SEQ = 87
+	   			</when>
+	   			<otherwise>
+	   				AND PARNT_SEQ = -1
+	   			</otherwise>
+	   		</choose>
+   		) TBL
+   	</select>
+
+	<!--
+		쿼리명 : COAMainDAO.getNatnTrackerList
+		설  명 : Country Tracker (나라)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getNatnTrackerList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnTrackerList */
+			M1.NTN_CD
+		    , M1.NTN_CD_NM
+			, IFNULL(V1.FEEDBACK_CNT, 0) AS FEEDBACK_CNT
+		    , IFNULL(V1.HOT_ALERT_CNT, 0) AS HOT_ALERT_CNT
+          	, IFNULL(V1.AVG_SCRG, 0) AS AVG_SCRG
+		    , IFNULL(V2.NPS, 0) AS NPS
+		    , IFNULL(V2.L_CTG_SCRG_1, 0) AS L_CTG_SCRG_1
+		    , IFNULL(V2.L_CTG_SCRG_2, 0) AS L_CTG_SCRG_2
+		    , IFNULL(V2.L_CTG_SCRG_3, 0) AS L_CTG_SCRG_3
+			, IFNULL(V2.L_CTG_SCRG_4, 0) AS L_CTG_SCRG_4
+		    , IFNULL(V2.L_CTG_SCRG_5, 0) AS L_CTG_SCRG_5
+		    , IFNULL(V3.CMPL_RATE, 0) AS CMPL_RATE
+		    , IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+		FROM
+			CO_NATION_MST M1
+			LEFT JOIN (
+				SELECT
+		      		A.NATN_CD
+		      		, COUNT(*) AS FEEDBACK_CNT
+		      		, IFNULL(SUM(IF(EXISTS(SELECT SEND_PDDG FROM HG_HGSI_HOT_ALERT_MST WHERE SEND_PDDG = A.SEND_PDDG AND (STTS_CD = '0' OR (STTS_CD = '1' AND ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))), 1, 0)), 0) AS HOT_ALERT_CNT
+			        , IFNULL(AVG(A.AVG_SCRG), 0) AS AVG_SCRG
+		        FROM
+					HG_HGSI_SURVEY_SEND_MST A
+					JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        WHERE 1=1
+		  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+	    			AND A.SBMT_YN = 'Y'
+	        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+					AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+					<if test="dlrStatus != ''.toString()">
+			  		AND C.USE_YN = #{dlrStatus} 
+			  		</if>					
+				GROUP BY
+					A.NATN_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD
+			LEFT JOIN (
+				SELECT
+		        	T1.NATN_CD
+			        , (((SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)) - SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[<]]> 7, 1, 0))) / SUM(IF(T1.L_CTG_SEQ = 0, 1, 0))) * 100) AS NPS
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_1
+			        <choose>
+               		<when test="nation.indexOf('sca')>-1  || nation.indexOf('easymedia')>-1">	
+			        , (IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 0, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, T2.EX_ANSW * 10, NULL))),NULL) / IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 1, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, 1, 0))),0)) AS L_CTG_SCRG_2
+			        </when>
+			        <otherwise>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_2	
+			        </otherwise>
+			        </choose>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_3
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_4
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_5
+		      	FROM (
+					SELECT
+		        		A.SEND_PDDG
+		        		, A.NATN_CD
+		    			, B.SRVY_SEQ
+		    			, B.QSTN_SORT
+		    			, B.L_CTG_SEQ
+		    			, A.DLRSP_CD
+		    			, A.DLR_CD
+					FROM
+		        		HG_HGSI_SURVEY_SEND_MST A
+		        		JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+		        		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        	WHERE 1=1
+		    			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    			AND A.SBMT_YN = 'Y'
+		        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+		        		AND B.ANSW_ADD_YN = 'N'
+						<if test="dlrStatus != ''.toString()">
+				  		AND C.USE_YN = #{dlrStatus} 
+				  		</if>		        		
+				) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+				JOIN CO_DEALER_MST C ON T1.NATN_CD = C.NTN_CD AND T1.DLRSP_CD = C.DLSP_CD AND T1.DLR_CD = C.DLR_CD
+				WHERE 
+				1=1
+				<if test="dlrStatus != ''.toString()">
+				AND C.USE_YN = #{dlrStatus} 
+				</if>				
+		        GROUP BY
+					T1.NATN_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD
+			LEFT JOIN (
+				SELECT
+	        		A.NATN_CD
+	        		, ((IFNULL(SUM((SELECT EX_ANSW FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) / COUNT(*)) * 100) AS CMPL_RATE
+	        	FROM
+	        		RC_RSC_SURVEY_SEND_MST A
+					JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+					JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+	        	WHERE 1=1
+	   	    		AND A.SRVY_TYPE_CD = 'STC2'
+	   	    		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+              		AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+     	    		AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+	        		AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2')
+	        		<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus} 
+					</if>	        		
+		        GROUP BY
+					A.NATN_CD
+			) V3 ON M1.NTN_CD = V3.NATN_CD
+			ORDER BY
+				DATA_SORT, AVG_SCRG DESC, M1.NTN_CD_NM
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getDlrspTrackerList
+		설   명 : Distributor Tracker (대리점)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getDlrspTrackerList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getDlrspTrackerList */
+			M1.DLSP_CD
+		    , M1.DLSP_CD_NM
+			, IFNULL(V1.FEEDBACK_CNT, 0) AS FEEDBACK_CNT
+		    , IFNULL(V1.HOT_ALERT_CNT, 0) AS HOT_ALERT_CNT
+          	, IFNULL(V1.AVG_SCRG, 0) AS AVG_SCRG
+		    , IFNULL(V2.NPS, 0) AS NPS
+		    , IFNULL(V2.L_CTG_SCRG_1, 0) AS L_CTG_SCRG_1
+		    , IFNULL(V2.L_CTG_SCRG_2, 0) AS L_CTG_SCRG_2
+		    , IFNULL(V2.L_CTG_SCRG_3, 0) AS L_CTG_SCRG_3
+			, IFNULL(V2.L_CTG_SCRG_4, 0) AS L_CTG_SCRG_4
+		    , IFNULL(V2.L_CTG_SCRG_5, 0) AS L_CTG_SCRG_5
+		    , IFNULL(V3.CMPL_RATE, 0) AS CMPL_RATE
+		    , IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+		FROM
+			CO_DEALERSHIP_MST M1
+			LEFT JOIN (
+				SELECT
+		      		A.NATN_CD
+	        		, A.DLRSP_CD
+		      		, COUNT(*) AS FEEDBACK_CNT
+		      		, IFNULL(SUM(IF(EXISTS(SELECT SEND_PDDG FROM HG_HGSI_HOT_ALERT_MST WHERE SEND_PDDG = A.SEND_PDDG AND (STTS_CD = '0' OR (STTS_CD = '1' AND ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))), 1, 0)), 0) AS HOT_ALERT_CNT
+			        , IFNULL(AVG(A.AVG_SCRG), 0) AS AVG_SCRG
+		        FROM
+		          	HG_HGSI_SURVEY_SEND_MST A
+		          	JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        WHERE 1=1
+		  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+	    			AND A.SBMT_YN = 'Y'
+	        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+					AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus} 
+					</if>
+					
+				GROUP BY
+					A.NATN_CD, A.DLRSP_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD
+			LEFT JOIN (
+				SELECT
+		        	T1.NATN_CD
+		          	, T1.DLRSP_CD
+			        , (((SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)) - SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[<]]> 7, 1, 0))) / SUM(IF(T1.L_CTG_SEQ = 0, 1, 0))) * 100) AS NPS
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_1
+			        <choose>
+               		<when test="nation.indexOf('sca')>-1 || nation.indexOf('easymedia')>-1">	
+			        , (IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 0, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, T2.EX_ANSW * 10, NULL))),NULL) / IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 1, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, 1, 0))),0)) AS L_CTG_SCRG_2
+			        </when>
+			        <otherwise>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_2	
+			        </otherwise>
+			        </choose>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_3
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_4
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_5
+		      	FROM (
+					SELECT
+		        		A.SEND_PDDG
+		        		, A.NATN_CD
+		        		, A.DLRSP_CD
+		    			, B.SRVY_SEQ
+		    			, B.QSTN_SORT
+		    			, B.L_CTG_SEQ
+		    			, A.DLR_CD
+					FROM
+		        		HG_HGSI_SURVEY_SEND_MST A
+		        		JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+		        		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        	WHERE 1=1
+		    			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    			AND A.SBMT_YN = 'Y'
+		        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+		        		AND B.ANSW_ADD_YN = 'N'
+		        		<if test="dlrStatus != ''.toString()">
+						AND C.USE_YN = #{dlrStatus} 
+						</if>
+				) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		        JOIN CO_DEALER_MST C ON T1.NATN_CD = C.NTN_CD AND T1.DLRSP_CD = C.DLSP_CD AND T1.DLR_CD = C.DLR_CD
+		        GROUP BY
+					T1.NATN_CD, T1.DLRSP_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD
+			LEFT JOIN (
+				SELECT
+	        		A.NATN_CD
+	        		, A.DLRSP_CD
+	        		, ((IFNULL(SUM((SELECT EX_ANSW FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) / COUNT(*)) * 100) AS CMPL_RATE
+	        	FROM
+	        		RC_RSC_SURVEY_SEND_MST A
+					JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+	        		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+	        	WHERE 1=1
+	   	    		AND A.SRVY_TYPE_CD = 'STC2'
+	   	    		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+              		AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+     	    		AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+	        		AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2')
+	        		<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus} 
+					</if>
+		        GROUP BY
+					A.NATN_CD, A.DLRSP_CD
+			) V3 ON M1.NTN_CD = V3.NATN_CD AND M1.DLSP_CD = V3.DLRSP_CD
+			WHERE 1=1
+				AND M1.NTN_CD = #{searchCd}
+			ORDER BY
+				DATA_SORT, AVG_SCRG DESC, M1.DLSP_CD_NM
+	</select>
+
+	<!--
+		쿼리명  : COAMainDAO.getTrackerList
+		설   명 : Dealer Tracker (딜러)
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.02.14    허진영       최초생성
+    -->
+	<select id ="getTrackerList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getTrackerList */
+			M1.DLR_CD
+		    , M1.DLR_NM
+			, IFNULL(V1.FEEDBACK_CNT, 0) AS FEEDBACK_CNT
+		    , IFNULL(V1.HOT_ALERT_CNT, 0) AS HOT_ALERT_CNT
+          	, IFNULL(V1.AVG_SCRG, 0) AS AVG_SCRG
+		    , IFNULL(V2.NPS, 0) AS NPS
+		    , IFNULL(V2.L_CTG_SCRG_1, 0) AS L_CTG_SCRG_1
+		    , IFNULL(V2.L_CTG_SCRG_2, 0) AS L_CTG_SCRG_2
+		    , IFNULL(V2.L_CTG_SCRG_3, 0) AS L_CTG_SCRG_3
+			, IFNULL(V2.L_CTG_SCRG_4, 0) AS L_CTG_SCRG_4
+		    , IFNULL(V2.L_CTG_SCRG_5, 0) AS L_CTG_SCRG_5
+		    , IFNULL(V3.CMPL_RATE, 0) AS CMPL_RATE
+		    , IF(V1.AVG_SCRG IS NULL, 1, 0) AS DATA_SORT
+		FROM
+			CO_DEALER_MST M1
+			LEFT JOIN (
+				SELECT
+		      		A.NATN_CD
+	        		, A.DLRSP_CD
+	        		, A.DLR_CD
+		      		, COUNT(*) AS FEEDBACK_CNT
+		      		, IFNULL(SUM(IF(EXISTS(SELECT SEND_PDDG FROM HG_HGSI_HOT_ALERT_MST WHERE SEND_PDDG = A.SEND_PDDG AND (STTS_CD = '0' OR (STTS_CD = '1' AND ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))), 1, 0)), 0) AS HOT_ALERT_CNT
+			        , IFNULL(AVG(A.AVG_SCRG), 0) AS AVG_SCRG
+		        FROM
+		          	HG_HGSI_SURVEY_SEND_MST A
+		          	JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        WHERE 1=1
+		  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+	    			AND A.SBMT_YN = 'Y'
+	        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+					AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+					<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus} 
+					</if>
+				GROUP BY
+					A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+			) V1 ON M1.NTN_CD = V1.NATN_CD AND M1.DLSP_CD = V1.DLRSP_CD AND M1.DLR_CD = V1.DLR_CD
+			LEFT JOIN (
+				SELECT
+		        	T1.NATN_CD
+		          	, T1.DLRSP_CD
+		          	, T1.DLR_CD
+			        , (((SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[>]]> 8, 1, 0)) - SUM(IF(T1.L_CTG_SEQ = 0 AND T2.EX_ANSW <![CDATA[<]]> 7, 1, 0))) / SUM(IF(T1.L_CTG_SEQ = 0, 1, 0))) * 100) AS NPS
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 80 OR T1.L_CTG_SEQ = 88) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_1
+			        <choose>
+               		<when test="nation.indexOf('sca')>-1 || nation.indexOf('easymedia')>-1">
+			        , (IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 0, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, T2.EX_ANSW * 10, NULL))),NULL) / IFNULL(SUM(IF(T1.L_CTG_SEQ = 81 AND T2.SCRG = 0 AND T2.EX_ANSW = 1, 1, IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG > 0, 1, 0))),0)) AS L_CTG_SCRG_2
+			        </when>
+			        <otherwise>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 81 OR T1.L_CTG_SEQ = 89) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_2	
+			        </otherwise>
+			        </choose>
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 82 OR T1.L_CTG_SEQ = 90) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_3
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 83 OR T1.L_CTG_SEQ = 91) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_4
+			        , (IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, T2.EX_ANSW * 10, 0)), 0) / IFNULL(SUM(IF((T1.L_CTG_SEQ = 84 OR T1.L_CTG_SEQ = 92) AND T2.SCRG <![CDATA[>]]> 0, 1, 0)), 0)) AS L_CTG_SCRG_5
+		      	FROM (
+					SELECT
+		        		A.SEND_PDDG
+		        		, A.NATN_CD
+		        		, A.DLRSP_CD
+		        		, A.DLR_CD
+		    			, B.SRVY_SEQ
+		    			, B.QSTN_SORT
+		    			, B.L_CTG_SEQ
+					FROM
+		        		HG_HGSI_SURVEY_SEND_MST A
+		        		JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+		        		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+		        	WHERE 1=1
+		    			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+		    			AND A.SBMT_YN = 'Y'
+		        		AND A.SBMT_DTM <![CDATA[>=]]> CONCAT(#{strtDt}, ' 00:00:00:000')
+						AND A.SBMT_DTM <![CDATA[<=]]> CONCAT(#{endDt}, ' 23:59:59:999')
+		        		AND B.ANSW_ADD_YN = 'N'
+		        		<if test="dlrStatus != ''.toString()">
+						AND C.USE_YN = #{dlrStatus} 
+						</if>
+				) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+		        JOIN CO_DEALER_MST C ON T1.NATN_CD = C.NTN_CD AND T1.DLRSP_CD = C.DLSP_CD AND T1.DLR_CD = C.DLR_CD
+		        GROUP BY
+					T1.NATN_CD, T1.DLRSP_CD, T1.DLR_CD
+			) V2 ON M1.NTN_CD = V2.NATN_CD AND M1.DLSP_CD = V2.DLRSP_CD AND M1.DLR_CD = V2.DLR_CD
+			LEFT JOIN (
+				SELECT
+	        		A.NATN_CD
+	        		, A.DLRSP_CD
+	        		, A.DLR_CD
+	        		, ((IFNULL(SUM((SELECT EX_ANSW FROM RC_RSC_ANSWER_DTL WHERE SRVY_TYPE_CD = A.SRVY_TYPE_CD AND INSD_SEND_SEQ = A.INSD_SEND_SEQ AND QSTN_SORT = B.QSTN_SORT)), 0) / COUNT(*)) * 100) AS CMPL_RATE
+	        	FROM
+	        		RC_RSC_SURVEY_SEND_MST A
+					JOIN SM_SURVEY_QUESTION_DTL B ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.LGUG_CD = B.LGUG_CD
+	        		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+	        	WHERE 1=1
+	   	    		AND A.SRVY_TYPE_CD = 'STC2'
+	   	    		AND A.ASGN_TASK_CD = #{asgnTaskCd}
+              		AND A.SEQN_YM <![CDATA[>=]]> #{strtYm}
+     	    		AND A.SEQN_YM <![CDATA[<=]]> #{endYm}
+	        		AND (A.SRVY_STTS_CD = '1' OR A.SRVY_STTS_CD = '2')
+	        		<if test="dlrStatus != ''.toString()">
+					AND C.USE_YN = #{dlrStatus} 
+					</if>
+		        GROUP BY
+					A.NATN_CD, A.DLRSP_CD, A.DLR_CD
+			) V3 ON M1.NTN_CD = V3.NATN_CD AND M1.DLSP_CD = V3.DLRSP_CD AND M1.DLR_CD = V3.DLR_CD
+			WHERE 1=1
+				AND M1.NTN_CD = LEFT(#{searchCd}, 2)
+			<choose>
+				<when test="searchDlrCdList != null">
+					<foreach collection="searchDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+						M1.DLR_CD = #{dlrCd}
+					</foreach>
+				</when>
+				<otherwise>
+					/* 대리점에 속한 딜러들 */
+					AND M1.DLSP_CD = #{searchDlspCd}
+				</otherwise>
+			</choose>
+	  	  		AND FIND_IN_SET(#{asgnTaskCd}, M1.ASGN_TASK)
+	  	  		
+	  	  		<if test="dlrStatus != ''.toString()">
+				AND M1.USE_YN = #{dlrStatus} 
+				</if>
+	  	  		
+			ORDER BY
+				DATA_SORT, AVG_SCRG DESC, M1.DLR_NM
+	</select>
+	
+	<!--
+		쿼리명  : COAMainDAO.getNatnConfig
+		설   명 : 국가 설정 조회
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2019.05.28    허진영       최초생성
+    -->
+	<select id ="getNatnConfig" parameterType="java.lang.String" resultType="emfMap">
+		SELECT /* COAMainDAO.getNatnConfig */
+			RSC_USE_YN
+			, MYS_USE_YN
+			, KPI_USE_YN
+		FROM 
+			CO_NATION_MST
+		WHERE 1=1
+			AND NTN_CD = LEFT(#{searchCd}, 2)
+	</select>
+	
+	<!--
+		쿼리명 : COAMainDAO.getSearchDlrList
+		설  명 : 딜러명 or 딜러코드(현대딜러코드)로 검색하기 위한 모든 딜러List
+	           수정일    		   수정자      		 수정내용
+        ==========   =======   ==============
+        2019.07.01         조현일   		  최초생성
+    -->
+	<select id ="getSearchDlrList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COAMainDAO.getSearchDlrList */
+			 A.DLR_CD
+			,A.OUT_DLR_CD
+			,A.DLR_NM
+			,(SELECT NTN_CD_NM FROM CO_NATION_MST WHERE NTN_CD = A.NTN_CD) AS NTN_CD_NM
+  		FROM
+			CO_DEALER_MST A
+		WHERE
+			1=1
+			<if test="admAuthCd >= 30">
+				AND A.NTN_CD = #{admNatnCd}
+				AND A.DLSP_CD = #{admDlspCd}
+			</if>
+		<!-- AND
+			A.USE_YN = 'Y' -->
+			<if test="dlrStatus != ''.toString()">	
+			AND A.USE_YN = #{dlrStatus}
+			</if>
+	</select>
+	
+	<!--
+		쿼리명 : COAMainDAO.selectSurveyListExcel
+		설   명 : Survey Response 엑셀 조회
+                수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.03.07     안진용                        최초생성      
+    -->
+   
+     <select id ="selectSurveyListExcel" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	<choose>
+	    	<when test="admAuthCd >= 43 ">
+		    	{ 
+		    		CALL SP_COASurveyResponseListExcel_Tune2023_OTHERS(
+			    		#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admDlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    				#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+			    	)
+			    		
+		    	}
+	    	</when>
+	    	<otherwise>
+	    		{ 
+		    		CALL SP_COASurveyResponseListExcel_Tune2023_OTHERS(
+			    		#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{ntnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{dlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    				#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    				#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+	    				#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+			    	)
+			    		
+		    	}
+	    	</otherwise>
+    	</choose>
+    </select>
+    
+    <!--
+		쿼리명 : COAMainDAO.selectSurveyMonthlyListExcel
+		설   명 : Survey Response 엑셀 조회
+                수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2021.12.09     김두환                        최초생성      
+    -->
+        
+    <select id ="selectSurveyMonthlyListExcel" parameterType="emfMap"  resultType="emfMap" statementType="CALLABLE">
+    	<choose>
+	    	<when test="admAuthCd >= 43 ">
+		    	{ 
+		    		CALL SP_COASurveyResponseMonthlyListExcel_OTHERS(
+			    		#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+			    	)
+			    		
+		    	}
+	    	</when>
+	    	<otherwise>
+	    		{ 
+		    		CALL SP_COASurveyResponseMonthlyListExcel_OTHERS(
+			    		#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+		    			#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{searchCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{kpiCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{otcCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+			    		#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+			    	)
+			    		
+		    	}
+	    	</otherwise>
+    	</choose>
+    </select>
+
+	<!--
+		쿼리명 : COAMainDAO.getAnnualTrgt
+		설   명 : ANNUAL TARGET 값 가져오기
+                수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2020.04.08     신혜정                        최초생성      
+    -->
+     <select id ="getAnnualTrgt" parameterType="emfMap" resultType="emfMap">
+     	SELECT /* COAMainDAO.getAnnualTrgt */
+     		CASE WHEN COUNT(T1.TRGT_VAL) = 0 THEN ''
+			    ELSE T1.TRGT_VAL END AS TRGT_VAL
+			    FROM
+			    (
+					SELECT TRGT_VAL
+			     	FROM 
+			     		CO_NATION_TARGET_DTL
+			     	WHERE 1=1
+				     	AND ASGN_TASK_CD = #{asgnTaskCd}
+				     	AND ANNUAL_TRGT_TYPE_CD = #{annualTrgtTypeCd}
+			     		AND NTN_CD = LEFT(#{searchCd},2)
+			     		AND YEAR = DATE_FORMAT(#{endDt}, '%Y')
+			     )T1
+     </select>
+     
+     <!--
+		쿼리명 : COAMainDAO.getDealerAnnualTrgt
+		설   명 : ANNUAL TARGET 값 가져오기
+                수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2021.03.08     김한나                        최초생성      
+    -->
+     <select id ="getDealerAnnualTrgt" parameterType="emfMap" resultType="emfMap">
+     	SELECT /* COAMainDAO.getDealerAnnualTrgt */
+     		CASE WHEN COUNT(T1.TRGT_VAL) = 0 THEN ''
+			    ELSE T1.TRGT_VAL END AS TRGT_VAL
+			    FROM
+			    (
+					SELECT TRGT_VAL
+			     	FROM 
+			     		CO_DEALER_TARGET_DTL
+			     	WHERE 1=1
+				     	AND LOWER(ASGN_TASK_CD) = #{asgnTaskCd}
+				     	AND ANNUAL_TRGT_TYPE_CD = #{annualTrgtTypeCd}
+			     		AND NTN_CD = LEFT(#{searchCd},2)
+			     		AND DLR_CD = #{searchCd}
+			     		AND YEAR = DATE_FORMAT(#{endDt}, '%Y')
+			     )T1
+     </select>
+     
+     <!--
+		쿼리명 : COAMainDAO.getKpiCdNmList
+		설   명 : kpi 항목 가져오기
+                수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2020.12.04     김한나                        최초생성      
+    -->
+     <select id ="getKpiCdNmList" parameterType="emfMap" resultType="emfMap">
+     	SELECT /* COAMainDAO.getKpiCdNmList */
+     		A.CD_ID 
+     		, A.CD 
+     		, <choose>
+     			 <when test="siteLanguage == 'en'">
+     			 	A.CD_NM
+     			 </when>
+     			 <otherwise>
+     			 	B.CD_NM
+     			 </otherwise>
+     		  </choose>CD_NM 
+     		, A.CD_DSC 
+     		, A.CD_ORD
+		 FROM CO_CD_DTL A JOIN CO_CD_NM_DTL B ON A.CD_ID = B.CD_ID AND A.CD = B.CD
+		 WHERE USE_YN = 'Y' 
+		 AND A.CD_ID = #{cdDtl}
+  	   	 ORDER BY A.CD_ORD
+     </select>
+     
+     
+     <!-- selectDeliveredPkgInfo -->
+     <!--
+		쿼리명 : JSBJobScheduleDAO.selectDeliveredPkgInfo
+		설   명 : smsWhatsappDeliveredPkg 스케쥴 최근 이력 정보
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2022.12.19     김두환                       최초생성
+    -->
+	<select id ="selectDeliveredPkgInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT send_nm, send_cnt, reg_dtm FROM JS_SCHEDULE_LOG_MST
+        WHERE SEND_NM = 'SMSWHATSAPP_DELIVERED_PKG';
+	</select>
+</mapper>

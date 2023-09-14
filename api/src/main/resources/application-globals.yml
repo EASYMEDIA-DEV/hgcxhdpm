@@ -102,6 +102,7 @@ globals:
   my-mailer-identity: admin
   mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
   charcode: UTF-8
+  atch-file-size : 20971520  # 20MB
 
 mail:
   host: 112.175.14.89

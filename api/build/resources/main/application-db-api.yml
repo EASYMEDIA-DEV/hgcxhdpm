@@ -1,0 +1,60 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle10gDialect
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          batch_size: 100
+        ejb:
+          use_class_enhancer: true
+        default_batch_fetch_size: 1000
+  output:
+    ansi:
+      enabled: always
+mybatis:
+  #type-aliases-package: com.easymedia.dto
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: varchar
+    call-setters-on-nulls: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+  type-handlers-package: com.easymedia.dto.*
+  mapper-location: classpath:mappers/*.xml
+  config-location: classpath:mybatis.xml
+  transaction-package-nm: execution(* com.easymedia..*Impl.insert*(..)) or execution(* com.easymedia..*Impl.update*(..)) or execution(* com.easymedia..*Impl.delete*(..))
+log4jdbc:
+  dump:
+    sql:
+      maxlinelength: 0
+
+---
+spring.config.activate.on-profile: dev_hgcx
+spring:
+  hcsdb:
+    datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://192.168.0.12:3306/hcss?allowMultiQueries=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+      username: hcss
+      password: dnfntk1##
+  maildb:
+    datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://s190.mailwings.co:3306/me6?autoReconnect=true&useUnicode=true&characterEncoding=utf8
+      username: easymedia
+      password: easymedia!@#
+---
+spring.config.activate.on-profile: stg_hgcx
+spring:
+  datasource:
+    jndi-name: hcsDS
+---
+spring.config.activate.on-profile: prod_hgcx
+spring:
+  datasource:
+    jndi-name: hcsDS
