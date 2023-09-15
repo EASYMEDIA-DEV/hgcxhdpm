@@ -23,6 +23,7 @@ import java.util.Map;
 public enum Site implements DatabaseCodeCommonType {
     API("API", "A", null, "API"),
     MNGWSERC("관리자", "M", null, "관리자"),
+    MNGWSERCTEMP("임시 관리자", "TM", null, "임시 관리자"),
     FRONT("사용자", "F", null, "사용자"),
     ;
 

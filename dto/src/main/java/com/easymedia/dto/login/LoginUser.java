@@ -1,5 +1,6 @@
 package com.easymedia.dto.login;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,62 +17,41 @@ import java.util.Objects;
 @AllArgsConstructor
 public class LoginUser implements UserDetails {
 
-    private static final String _EMPTY_PASSWORD = "";
-
     @Getter
+    @Schema(title="관리자 순번")
     private int admSeq;
-
     @Getter
-    private String memberId;
-
+    @Schema(title="회원 ID")
+    private String id;
     @Getter
-    private String memberEmail;
-
+    @Schema(title="이름")
+    private String name;
     @Getter
-    private String memberPassword;
-
+    @Schema(title="비밀번호",description = "임시 비밀번호 변경시만 사용")
+    private String password;
     @Getter
-    private String memberName;
-
+    @Schema(title="국가 코드")
+    private String natnCd;
     @Getter
-    private long companyId;
-
+    @Schema(title="대리점 코드")
+    private String dlspCd;
     @Getter
-    private String companyName;
-
+    @Schema(title="딜러 코드")
+    private String dlrCd;
     @Getter
-    private long groupId;
-
+    @Schema(title="딜러 코드 리스트")
+    private List<String> dlrCdList;
     @Getter
-    private String tel;
-
+    private String loginIp;
     @Getter
-    private boolean isApi;
-    @Getter
-    private String companyCd;
-
-    @Getter String loginIp;
-
-
-    private List<GrantedAuthority> authorities;
-
-    /**
-     * 비밀번호변경일시
-     */
-    private LocalDateTime passwordChangeDateTime;
-
-    /**
-     * 비밀번호연장일시
-     */
-    private LocalDateTime passwordExtendDateTime;
-
-    @Getter
-    private LocalDateTime lastLoginDateTime;
-
+    @Schema(title="담당 업무 코드")
+    private String asgnTaskCd;
     /**
      * 임시비밀번호여부
      */
-    private boolean isTemporaryPassword;
+    @Getter
+    @Builder.Default
+    private boolean isTemporaryPassword = false;
 
     /**
      * 로그인실패횟수
@@ -88,6 +68,8 @@ public class LoginUser implements UserDetails {
      */
     private boolean useYn;
 
+    private List<GrantedAuthority> authorities;
+
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
         return authorities;
@@ -95,12 +77,12 @@ public class LoginUser implements UserDetails {
 
     @Override
     public String getPassword() {
-        return memberPassword;
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return memberId;
+        return id;
     }
 
     @Override

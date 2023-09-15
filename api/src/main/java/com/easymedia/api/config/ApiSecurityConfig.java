@@ -50,9 +50,16 @@ public class ApiSecurityConfig {
         return (web) -> web.ignoring().antMatchers(
                         "/error",
                         "/v3/api-docs",
-                        "/api/v1/setLogin",
-                        "/api/v1/setLogout"
-                        ,"/api/v1/getLastLgnInfo")
+                        "/api/v1/login/setLogin",
+                        "/api/v1/login/setLogout"
+                        ,"/api/v1/login/getLastLgnInfo"
+                        ,"/api/v1/login/actionLgnFail"
+                        ,"/api/v1/login/actionLgnFailReset"
+                        ,"/api/v1/login/setPwdChng"
+                        ,"/api/v1/login/sendMailResetPwd"
+                        ,"/api/v1/login/getEmailUuid"
+                        ,"/api/v1/login/resetPwd"
+                        )
                 .mvcMatchers("/*.*",
                         "/files/**",
                         "/swagger-ui/**",
@@ -75,7 +82,6 @@ public class ApiSecurityConfig {
         http
         .authorizeRequests()
         .anyRequest().authenticated();
-
         http.addFilterBefore(new JwtRequestFilter(_jwtProperties, _apiJwtTokenProvider, Site.MNGWSERC), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

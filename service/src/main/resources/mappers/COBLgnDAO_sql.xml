@@ -11,7 +11,7 @@
     -->
 	<select id="actionLogin" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
 		SELECT /* actionLogin */
-			A.ADM_SEQ
+			  A.ADM_SEQ
 			, A.AUTH_CD
 			, A.ID
 			, A.NAME
@@ -140,7 +140,7 @@
 			, TMP_PWD_YN = 'N'
 			, LAST_PWD_MOD_DTM = NOW()
 		WHERE
-			ID = #{id}
+			ID = #{id} AND ADM_SEQ = #{admSeq}
 	</update>
 
 	<!--
@@ -433,6 +433,65 @@
 			, SESSION_ID = NULL
 		WHERE
 			ID = #{admId}
+	</update>
+
+	<!--
+         쿼리명 : logInsertErrLog
+         설  명 : 이메일 초기화 정보
+       	  수정일	 수정자     수정내용
+        ==========   ======   =============
+        2023.09.15    박주석     최초생성
+    -->
+	<insert id="insertEmailReset" parameterType="EmfMap">
+		insert /* insertemailreset */ into co_adm_reset_email_dtl
+		(
+			  id
+			, pddg
+			, use_yn
+			, reg_id
+			, reg_ip
+			, reg_dtm
+		)
+		values
+		(
+			  #{id}
+			, #{pddg}
+			, 'N'
+			, #{id}
+			, #{ip}
+			, now()
+		)
+	</insert>
+
+	<!--
+		쿼리명 : getEmailReset
+		설  명 : 이메일 초기화 정보 조회
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2023.09.15    박주석     최초생성
+    -->
+	<select id="getEmailResetUuid" parameterType="EmfMap" resultType="EmfMap">
+		select /* getEmailResetUuid */
+			id, pddg, reg_dtm
+		from co_adm_reset_email_dtl
+		where pddg = #{pddg} and use_yn = 'N'
+		order by reg_dtm desc
+		limit 1
+	</select>
+
+	<!--
+		쿼리명 : updateEmailResetUuid
+		설  명 : 이메일 초기화 사용
+	      수정일      수정자       수정내용
+        ==========   ========   ==============
+        2023.09.15    박주석     최초생성
+    -->
+	<update id="updateEmailResetUuid" parameterType="EmfMap">
+		update /* updateEmailResetUuid */ co_adm_reset_email_dtl
+		set
+			use_yn = 'Y'
+		where
+			pddg = #{pddg}
 	</update>
 
 </mapper>

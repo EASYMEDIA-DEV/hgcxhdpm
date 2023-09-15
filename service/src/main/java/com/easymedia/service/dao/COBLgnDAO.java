@@ -142,6 +142,32 @@ public interface COBLgnDAO {
    	 * @return
    	 * @exception Exception
    	 */
-       public int initSession(EmfMap emfMap) throws Exception;
-       
+    public int initSession(EmfMap emfMap) throws Exception;
+
+	/**
+	 * 비밀번호 초기화
+	 *
+	 * @param emfMap
+	 * @return
+	 * @exception Exception
+	 */
+	public int insertEmailReset(EmfMap emfMap) throws Exception;
+
+	/**
+	 * 이메일 초기화 정보 조회
+	 *
+	 * @param emfMap
+	 * @return
+	 * @exception Exception
+	 */
+	public EmfMap getEmailResetUuid(EmfMap emfMap) throws Exception;
+
+	/**
+	 * 이메일 초기화 사용
+	 *
+	 * @param emfMap
+	 * @return
+	 * @exception Exception
+	 */
+	public int updateEmailResetUuid(EmfMap emfMap) throws Exception;
 }

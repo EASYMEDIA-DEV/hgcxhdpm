@@ -1,7 +1,12 @@
 package com.easymedia.service.impl;
 
 import com.easymedia.dto.EmfMap;
+import com.easymedia.dto.login.LoginUser;
+import com.easymedia.enums.menu.Site;
+import com.easymedia.error.ErrorCode;
 import com.easymedia.error.hotel.utility.sim.SeedCipher;
+import com.easymedia.jwt.JwtTokenProvider;
+import com.easymedia.property.JwtProperties;
 import com.easymedia.service.COBLgnService;
 import com.easymedia.service.COFSysLogService;
 import com.easymedia.service.MailService;
@@ -11,15 +16,20 @@ import com.easymedia.utility.EgovNetworkState;
 import com.easymedia.utility.EgovStringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * <pre>
@@ -63,6 +73,11 @@ public class COBLgnServiceImpl implements COBLgnService {
     /** 메일 서비스 **/
     private final MailService mailService;
 
+	/** 토큰 생성 속성 **/
+	private final JwtProperties _jwtProperties;
+	/** 토큰 제공 **/
+	private final JwtTokenProvider _jwtTokenProvider;
+
 	/**
 	 * 일반 로그인을 처리한다.
 	 *
@@ -70,7 +85,7 @@ public class COBLgnServiceImpl implements COBLgnService {
 	 * @return
 	 * @exception Exception
 	 */
-    public EmfMap actionLogin(EmfMap emfMap, HttpServletRequest request) throws Exception
+    public EmfMap actionLogin(EmfMap emfMap, HttpServletRequest request, HttpServletResponse response) throws Exception
     {
     	EmfMap rtnMap = new EmfMap();
 		rtnMap.put("rtnCode", "success.lgn");
@@ -86,7 +101,6 @@ public class COBLgnServiceImpl implements COBLgnService {
 
     	// 관리자 계정 조회
     	EmfMap info = cOBLgnDAO.actionLogin(emfMap);
-
     	if (info != null)
     	{
     		//권한여부에 따라서 승인이 필요하지 않다.
@@ -101,7 +115,7 @@ public class COBLgnServiceImpl implements COBLgnService {
     		else if (!"Y".equals(info.getString("appvYn")) && (!"0".equals(authCd) && !"10".equals(authCd) && !"20".equals(authCd)))
     		{
     			rtnMap.put("rtnCode", "fail.lgn.appv");
-    			rtnMap.put("rtnUrl", "/mngwsercgateway/getPwdChng.do");
+    			rtnMap.put("rtnUrl", "/getPwdChng");
     		}
     		else
     		{
@@ -148,8 +162,9 @@ public class COBLgnServiceImpl implements COBLgnService {
     			{
     				if(!"Y".equals(info.getString("longTermYn"))){
 	    				// 임시 로그인 세션을 생성한다.
-	    	    		RequestContextHolder.getRequestAttributes().setAttribute("tmpLgnMap", emfMap, RequestAttributes.SCOPE_SESSION);
-	   					rtnMap.put("rtnUrl", "/mngwsercgateway/getPwdChng.do");
+						emfMap.put("admSeq", info.getString("admSeq"));
+						setTempJwtToken(response, emfMap, Site.MNGWSERCTEMP);
+	   					rtnMap.put("rtnUrl", "/getPwdChng");
     				}
    				}
    				else
@@ -289,13 +304,12 @@ public class COBLgnServiceImpl implements COBLgnService {
    	       		    			HttpSession session = request.getSession();
    	       		    			session.setMaxInactiveInterval(3600);
    	       		    			info.put("sessionId", session.getId());
+
+								//API TOKEN
+								setJwtToken(response, info, Site.MNGWSERC);
    	       		    			RequestContextHolder.getRequestAttributes().setAttribute("admLgnMap", info, RequestAttributes.SCOPE_SESSION);
 
-   	       		    			if("1".equals(emfMap.getString("isPwd")))
-   	       		    	    	{
-   	       		    				RequestContextHolder.getRequestAttributes().setAttribute("admLgnMapTrue", info, RequestAttributes.SCOPE_SESSION);
-   	       		    	    	}
-   	        		    			// 로그인 로그를 삽입해준다.
+   	        		    		// 로그인 로그를 삽입해준다.
    	       		    			emfMap.put("srvcNm", "COBLgnController");
    	       		    			emfMap.put("fncNm", "actionLogin");
    	       		    			emfMap.put("trgtMenuNm", "로그인 페이지");
@@ -303,9 +317,7 @@ public class COBLgnServiceImpl implements COBLgnService {
    	       		    			emfMap.put("prcsTime", "100");
    	       		    			emfMap.put("reqnId", info.getString("id"));
    	       		    			emfMap.put("reqnIp", info.getString("loginIp"));
-
 								rtnMap.put("info", info);
-   	       		    			
    	       		    			try
    	       		    			{
    	       		    				cOFSysLogService.logInsertSysLog(emfMap);
@@ -324,13 +336,50 @@ public class COBLgnServiceImpl implements COBLgnService {
     	else
     	{
     		rtnMap.put("rtnCode", "fail.lgn.info");
-    		
     		// 2020.05.22 틀린 횟수 업데이트
     		cOBLgnDAO.updateLgnFail(emfMap);
     	}
 
     	return rtnMap;
     }
+
+	/**
+	 * 로그인 토큰 생성
+	 */
+	private void setJwtToken(HttpServletResponse response, EmfMap loginMap, Site site) throws Exception {
+		//쿠키 굽기
+		LoginUser loginUser = LoginUser.builder()
+				.admSeq(Integer.parseInt(loginMap.getString("admSeq")))
+				.id(loginMap.getString("id"))
+				.name(loginMap.getString("name"))
+				.natnCd(loginMap.getString("ntnCd"))
+				.dlspCd(loginMap.getString("dlspCd"))
+				.dlrCd(loginMap.getString("dlrCd"))
+				.dlrCdList(loginMap.getList("dlrCdList"))
+				.asgnTaskCd(loginMap.getString("asgnTaskCd"))
+				.loginIp(loginMap.getString("loginIp"))
+				.authorities(null)
+				.build();
+		String token = _jwtTokenProvider.createToken(loginUser);
+		_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
+		response.addHeader(_jwtProperties.getTokenHeader() + site.name(), token);
+	}
+
+	/**
+	 * 임시 로그인(비밀번호 변경) 토큰 생성
+	 */
+	private void setTempJwtToken(HttpServletResponse response, EmfMap loginMap, Site site) throws Exception {
+		//쿠키 굽기
+		LoginUser loginUser = LoginUser.builder()
+				.admSeq(Integer.parseInt(loginMap.getString("admSeq")))
+				.id(loginMap.getString("id"))
+				.password(loginMap.getString("password"))
+				.authorities(null)
+				.build();
+		String token = _jwtTokenProvider.createTempToken(loginUser);
+		_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
+		response.addHeader(_jwtProperties.getTokenHeader() + "_" + site.name(), token);
+	}
     
     /* 로그인 실패 처리 */
     @Override
@@ -391,13 +440,23 @@ public class COBLgnServiceImpl implements COBLgnService {
     {
     	EmfMap rtnMap = new EmfMap();
 
-    	// 임시 로그인 세션
-    	EmfMap lgnMap = (EmfMap) RequestContextHolder.getRequestAttributes().getAttribute("tmpLgnMap", RequestAttributes.SCOPE_SESSION);
-
-    	if (lgnMap != null)
+		String token = emfMap.getString("token");
+		if(StringUtil.isBlank(token)){
+			throw new AccessDeniedException(ErrorCode.ACCESS_DENIED.getMessage());
+		}
+		Authentication authentication = _jwtTokenProvider.getTempAuthentication(token);
+		if (authentication == null) {
+			throw new AccessDeniedException(ErrorCode.ACCESS_DENIED.getMessage());
+		}
+		Object principalObj = authentication.getPrincipal();
+		if (!(principalObj instanceof LoginUser)) {
+			throw new AccessDeniedException(ErrorCode.ACCESS_DENIED.getMessage());
+		}
+		LoginUser loginUser = (LoginUser)principalObj;
+    	if (loginUser != null)
     	{
     		// 비밀번호 확인
-        	if (!lgnMap.getString("password").equals(SeedCipher.oneencrypt(emfMap.getString("password"))))
+        	if (!loginUser.getPassword().equals(SeedCipher.oneencrypt(emfMap.getString("password"))))
         	{
         		rtnMap.put("rtnCode", "fail.lgn.pwd.info");
         	}
@@ -408,7 +467,8 @@ public class COBLgnServiceImpl implements COBLgnService {
         	}
         	else
         	{
-        		emfMap.put("id", lgnMap.getString("id"));
+        		emfMap.put("admSeq", loginUser.getAdmSeq());
+        		emfMap.put("id", loginUser.getId());
         		emfMap.put("pwd", SeedCipher.oneencrypt(emfMap.getString("newPassword")));
 
         		// 기존 비밀번호 사용여부 확인
@@ -503,28 +563,44 @@ public class COBLgnServiceImpl implements COBLgnService {
 	@Override
 	public EmfMap sendMailResetPwd(EmfMap emfMap) throws Exception {
 		EmfMap resultMap = new EmfMap();
-		
-		try{
+		try
+		{
 			EmfMap mailMap = new EmfMap();
-			
+			String pddg = UUID.randomUUID().toString();
+			emfMap.put("pddg", pddg);
 			List<EmfMap> toMailList = new ArrayList<EmfMap>();
-			
 			String emailFileNm = "reset_password.html";
 			EmfMap tmpMap = new EmfMap();
 			mailMap.put("title", "["+globalsSiteName+"] Password Reset");
 			tmpMap.put("email", emfMap.getString("id"));
 			tmpMap.put("etc1", httpAdminUrl);
-			tmpMap.put("etc2", httpAdminUrl + "/mngwsercgateway/getPwdChng.do?reset=1&id="+emfMap.getString("id"));
+			tmpMap.put("etc2", httpAdminUrl + "/"+pddg+"/getPwdReset");
 			toMailList.add(tmpMap);
-			
 			mailMap.put("toMailList", toMailList);
+
+			//UUID 저장
+			cOBLgnDAO.insertEmailReset(emfMap);
+
 			mailService.sendEventTempleteMail(mailMap, emailFileNm);
 			resultMap.put("result",true);
-		}catch(Exception e){
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();;
 			resultMap.put("result",false);
 		}
-		
 		return resultMap;
+	}
+
+	/**
+	 *  비밀번호 초기화 UUID 조회
+	 *
+	 * @param emfMap
+	 * @return
+	 * @exception Exception
+	 */
+	public EmfMap getEmailResetUuid(EmfMap emfMap) throws Exception {
+		return cOBLgnDAO.getEmailResetUuid(emfMap);
 	}
 
 	
@@ -541,8 +617,12 @@ public class COBLgnServiceImpl implements COBLgnService {
 		if(emfMap.containsKey("newPassword")){
 			emfMap.put("newPassword", SeedCipher.oneencrypt(emfMap.getString("newPassword")));
 		}
-		
-		return cOBLgnDAO.resetPwd(emfMap);
+		//UUID 사용 처리
+		int cnt = cOBLgnDAO.updateEmailResetUuid(emfMap);
+		if(cnt > 0){
+			cnt = cOBLgnDAO.resetPwd(emfMap);
+		}
+		return cnt;
 	}
 
 	

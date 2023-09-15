@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,10 +27,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashSet;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -47,14 +46,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 토큰을 가져온다. 쿠키에 없을경우 헤더에서 가져온다.
         String header = StringUtils.defaultIfBlank(_jwtTokenProvider.resolveCookie(request, site), request.getHeader(_jwtProperties.getTokenHeader() + "_" + site.name()));
-        log.error("header : {}", header);
+        log.error("SecurityFilterChain Header : {}", header);
         if (isBlank(header) || !header.startsWith(_jwtProperties.getTokenPrefix())) {
 
             setErrorResponse(response, ErrorCode.ACCESS_DENIED);
             return;
         }
         //getAuthentication -> jwt 토큰 만료일 경우 throw new ExpiredJwtException -> catch 처리
-        try {
+        try
+        {
             Authentication authentication = _jwtTokenProvider.getAuthentication(header);
 
             if (authentication == null) {
@@ -86,11 +86,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             if (!_jwtTokenProvider.validateToken(newDate)) {
                 log.error("token refresh");
                 LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-                String convertedLastLoginDateTime = loginUser.getLastLoginDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
-                token = _jwtProperties.getTokenPrefix() + _jwtTokenProvider.createToken(loginUser.getUsername(), loginUser.getMemberEmail(), loginUser.getMemberName(), convertedLastLoginDateTime);
+                token = _jwtProperties.getTokenPrefix() + _jwtTokenProvider.createToken(loginUser);
                 response.addHeader(_jwtProperties.getTokenHeader() + "_" + site.name(), token);
             }
-            _jwtTokenProvider.createCookie(response, token, site);
+            _jwtTokenProvider.createCookie(response, token, Site.MNGWSERC.name());
         }  catch (ExpiredJwtException ex) {
                 setErrorResponse(response, ErrorCode.EXPIRED_TIME);
                 return;
@@ -101,8 +100,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         Collection<String> excludeUrlPatterns = new LinkedHashSet<>();
-        excludeUrlPatterns.add("/api/v1/login");
-        excludeUrlPatterns.add("/api/v1/logout");
         return excludeUrlPatterns.stream().anyMatch(pattern -> new AntPathMatcher().match(pattern, request.getServletPath()));
     }
     private byte[] getSigningKey() {

@@ -35,8 +35,7 @@ public class EgovUserDetailsHelper
 
 		//
 		emfMap.put("admSeq", loginUser.getAdmSeq());
-		emfMap.put("id", loginUser.getMemberId());
-		emfMap.put("loginIp", loginUser.getLoginIp());
+		emfMap.put("id", loginUser.getId());
 
 		return emfMap;
 	}

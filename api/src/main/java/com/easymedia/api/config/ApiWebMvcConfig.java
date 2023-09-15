@@ -58,6 +58,7 @@ public class ApiWebMvcConfig implements WebMvcConfigurer {
                 .allowedOrigins("https://localhost:3000", "https://127.0.0.1:3000")
                 .allowedMethods("GET", "POST", "DELETE", "PUT") // 허용할 HTTP method
                 .allowCredentials(true) // 쿠키 인증 요청 허용
+                .exposedHeaders("Authorization_mngwserctemp", "Authorization_mngwserc")
                 .maxAge(3000); // 원하는 시간만큼 pre-flight 리퀘스트를 캐싱
     }
 

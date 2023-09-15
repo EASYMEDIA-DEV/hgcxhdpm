@@ -3,6 +3,7 @@ package com.easymedia.service;
 import com.easymedia.dto.EmfMap;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public interface COBLgnService {
 	 * @return
 	 * @exception Exception
 	 */
-	public EmfMap actionLogin(EmfMap emfMap, HttpServletRequest request) throws Exception;
+	public EmfMap actionLogin(EmfMap emfMap, HttpServletRequest request, HttpServletResponse response) throws Exception;
 
     /**
 	 * 로그아웃을 처리한다.
@@ -123,4 +124,13 @@ public interface COBLgnService {
 	 * @exception Exception
 	 */
 	public EmfMap sendMailResetPwd(EmfMap emfMap) throws Exception;
+
+	/**
+	 *  비밀번호 초기화 UUID 조회
+	 *
+	 * @param emfMap
+	 * @return
+	 * @exception Exception
+	 */
+	public EmfMap getEmailResetUuid(EmfMap emfMap) throws Exception;
 }

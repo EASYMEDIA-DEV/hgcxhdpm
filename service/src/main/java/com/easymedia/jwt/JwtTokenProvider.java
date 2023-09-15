@@ -35,32 +35,115 @@ public class JwtTokenProvider {
     private final JwtProperties _jwtProperties;
 
     private static final String _TOKEN_TYPE = "type";
-    private static final String _MEMBER_ID = "memberId";
-    private static final String _MEMBER_EMAIL = "memberEmail";
-    private static final String _MEMBER_NAME = "memberName";
+    private static final String _MEMBER_SEQ = "seq";
+    private static final String _MEMBER_ID = "id";
+    private static final String _MEMBER_NAME = "name";
+    private static final String _MEMBER_PWD = "pwd";
+    private static final String _MEMBER_NATN_CD = "natnCd";
+    private static final String _MEMBER_DLSP_CD = "dlspCd";
+    private static final String _MEMBER_DLR_CD = "dlrCd";
+    private static final String _MEMBER_DLR_CD_LIST = "dlrCdList";
+    private static final String _MEMBER_ASGN_TACK_CD = "asgnTaskCd";
     private static final String _AUTHORITIES = "authorities";
-    private static final String _LAST_LOGIN_DATE_TIME = "lastLoginDateTime";
     private static final SignatureAlgorithm _SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
     private static final String _EMPTY_CREDENTIALS = "";
 
-    public String createToken(String memberId, String memberEmail, String memberName, String lastLoginDateTime) {
+    /**
+     * 전달받은 로그인 정보로 TOKEN 생성
+     * @param loginUser
+     * @return
+     */
+    public String createToken(LoginUser loginUser) {
         Instant now = new Date().toInstant();
         String token = Jwts.builder()
                 .signWith(Keys.hmacShaKeyFor(getSigningKey()), _SIGNATURE_ALGORITHM)
                 .setHeaderParam(_TOKEN_TYPE, _jwtProperties.getTokenType())
                 .setExpiration(new Date(System.currentTimeMillis() + _jwtProperties.getExpiration()))
                 .setIssuedAt(Date.from(now))
-                .claim(_MEMBER_ID, memberId)
-                .claim(_MEMBER_EMAIL, memberEmail)
-                .claim(_MEMBER_NAME, memberName)
                 .claim(_AUTHORITIES, null)
-                .claim(_LAST_LOGIN_DATE_TIME, lastLoginDateTime)
+                .claim(_MEMBER_SEQ, loginUser.getAdmSeq())
+                .claim(_MEMBER_ID, loginUser.getId())
+                .claim(_MEMBER_NAME, loginUser.getName())
+                .claim(_MEMBER_NATN_CD, loginUser.getNatnCd())
+                .claim(_MEMBER_DLSP_CD, loginUser.getDlspCd())
+                .claim(_MEMBER_DLR_CD, loginUser.getDlrCd())
+                .claim(_MEMBER_DLR_CD_LIST, loginUser.getDlrCdList())
+                .claim(_MEMBER_ASGN_TACK_CD, loginUser.getAsgnTaskCd())
                 .compact();
         return token;
     }
 
-    public void createCookie(HttpServletResponse response, String token, Site site) {
-        ResponseCookie cookie = ResponseCookie.from(_jwtProperties.getTokenHeader() + "_" + site.name(), StringUtils.replace(token, " ", "%20"))
+    /**
+     * 비밀번호 변경 임시 저장
+     * @param loginUser
+     * @return
+     */
+    public String createTempToken(LoginUser loginUser) {
+        Instant now = new Date().toInstant();
+        String token = Jwts.builder()
+                .signWith(Keys.hmacShaKeyFor(getSigningKey()), _SIGNATURE_ALGORITHM)
+                .setHeaderParam(_TOKEN_TYPE, _jwtProperties.getTokenType())
+                .setExpiration(new Date(System.currentTimeMillis() + (60*1000*60)))
+                .setIssuedAt(Date.from(now))
+                .claim(_AUTHORITIES, null)
+                .claim(_MEMBER_SEQ, loginUser.getAdmSeq())
+                .claim(_MEMBER_ID, loginUser.getId())
+                .claim(_MEMBER_PWD, loginUser.getPassword())
+                .compact();
+        return token;
+    }
+
+    /**
+     * 임시 변경 토큰 파싱
+     * @param tokenHeader
+     * @return
+     */
+    public UsernamePasswordAuthenticationToken getTempAuthentication(String tokenHeader) {
+        if (isBlank(tokenHeader)) return null;
+        try
+        {
+            String token = tokenHeader; //Bearer 삭제
+
+            Jws<Claims> parsedToken = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            Claims claims = parsedToken.getBody();
+            log.error("claims : {}", parsedToken.getBody().toString());
+            if (validateToken(claims.getExpiration()) == false) return null;
+            String memberId = claims.get(_MEMBER_ID, String.class);
+            if (isNotBlank(memberId)) {
+                LoginUser loginUser = LoginUser.builder()
+                        .admSeq(claims.get(_MEMBER_SEQ, Integer.class))
+                        .id(claims.get(_MEMBER_ID, String.class))
+                        .password(claims.get(_MEMBER_PWD, String.class))
+                        .authorities(null)
+                        .build();
+                return new UsernamePasswordAuthenticationToken(loginUser, _EMPTY_CREDENTIALS, loginUser.getAuthorities());
+            }
+
+        } catch (ExpiredJwtException ex) {
+            throw ex;
+//            log.warn(ex.getMessage());
+        } catch (UnsupportedJwtException ex) {
+            log.warn(ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            log.warn(ex.getMessage());
+        } catch (Exception ex) {
+            log.warn(ex.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * 토큰 쿠키 전달
+     * @param response
+     * @param token
+     * @param site
+     */
+    public void createCookie(HttpServletResponse response, String token, String site) {
+        ResponseCookie cookie = ResponseCookie.from(_jwtProperties.getTokenHeader() + "_" + site, StringUtils.replace(token, " ", "%20"))
                 .httpOnly(true)
                 .sameSite("Lax")
                 .secure(true)
@@ -106,6 +189,11 @@ public class JwtTokenProvider {
         return null;
     }
 
+    /**
+     * 전달 받은 토큰 LoginUser 변환
+     * @param tokenHeader
+     * @return
+     */
     public UsernamePasswordAuthenticationToken getAuthentication(String tokenHeader) {
         if (isBlank(tokenHeader)) return null;
         try {
@@ -117,18 +205,17 @@ public class JwtTokenProvider {
             Claims claims = parsedToken.getBody();
             if (validateToken(claims.getExpiration()) == false) return null;
             String memberId = claims.get(_MEMBER_ID, String.class);
-            String memberEmail = claims.get(_MEMBER_EMAIL, String.class);
-            String memberName = claims.get(_MEMBER_NAME, String.class);
-            String lastLoginDateTime = claims.get(_LAST_LOGIN_DATE_TIME, String.class);
-            if (isNotBlank(memberEmail)) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-                LocalDateTime localDateTime = LocalDateTime.parse(lastLoginDateTime, formatter);
+            if (isNotBlank(memberId)) {
                 LoginUser loginUser = LoginUser.builder()
-                        .memberId(memberId)
-                        .memberEmail(memberEmail)
-                        .memberName(memberName)
+                        .admSeq(claims.get(_MEMBER_SEQ, Integer.class))
+                        .id(claims.get(_MEMBER_ID, String.class))
+                        .name(claims.get(_MEMBER_NAME, String.class))
+                        .natnCd(claims.get(_MEMBER_NATN_CD, String.class))
+                        .dlspCd(claims.get(_MEMBER_DLSP_CD, String.class))
+                        .dlrCd(claims.get(_MEMBER_DLR_CD, String.class))
+                        .asgnTaskCd(claims.get(_MEMBER_ASGN_TACK_CD, String.class))
+                        .dlrCdList(claims.get(_MEMBER_DLR_CD_LIST, List.class))
                         .authorities(null)
-                        .lastLoginDateTime(localDateTime)
                         .build();
                 return new UsernamePasswordAuthenticationToken(loginUser, _EMPTY_CREDENTIALS, loginUser.getAuthorities());
             }
@@ -169,6 +256,22 @@ public class JwtTokenProvider {
             log.error("Exception");
             return false;
         }
+    }
+
+    /**
+     * 리플레시 토큰 생성
+     */
+    // jwt refresh 토큰 생성
+    public String createRefreshToken() {
+        Instant now = new Date().toInstant();
+        String token = Jwts.builder()
+                .signWith(Keys.hmacShaKeyFor(getSigningKey()), _SIGNATURE_ALGORITHM)
+                .setHeaderParam(_TOKEN_TYPE, _jwtProperties.getTokenType())
+                .setExpiration(new Date(System.currentTimeMillis() + _jwtProperties.getExpiration()))
+                .setIssuedAt(Date.from(now))
+                .compact();
+        log.error("refreshToken : {}", token);
+        return token;
     }
 
     /**

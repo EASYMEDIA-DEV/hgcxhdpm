@@ -23,6 +23,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <pre>
@@ -46,7 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/login")
 public class COBLgnController {
 
 	/** 로그인 서비스 **/
@@ -71,16 +72,12 @@ public class COBLgnController {
 	@Value("${globals.http-hdpm-port}")
 	private String httpHdpmPort;
 
-    /**
-	 * 로그인을 처리한다.
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@Operation(summary = "로그인", description = "로그인")
-    @RequestMapping(value="/setLogin", method=RequestMethod.POST)
-    public EmfMap actionLogin(@ApiData EmfMap emfMap, HttpServletRequest request) throws Exception
+	@Operation(summary = "로그인", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+    @PostMapping(value="/setLogin")
+    public EmfMap actionLogin(@RequestBody @ApiData EmfMap emfMap, HttpServletRequest request, HttpServletResponse response) throws Exception
     {
 		try
 		{
@@ -99,23 +96,19 @@ public class COBLgnController {
 			throw he;
 		}
 
-		return  cOBLgnService.actionLogin(emfMap, request);
+		return  cOBLgnService.actionLogin(emfMap, request, response);
 	}
 
-    /**
-	 * 로그아웃을 처리한다.
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @exception Exception
-	 */
+	@Operation(summary = "로그아웃", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @RequestMapping(value="/setLogout")
     public String actionLogout(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
     {
     	try
     	{
     		cOBLgnService.actionLogout(emfMap, request);
-
     		// 보안 처리(로그인 세션 변경)
     		if (request.getSession() != null)
     		{
@@ -186,8 +179,12 @@ public class COBLgnController {
 	 * @return String View URL
 	 * @throws Exception
 	 */
-    @RequestMapping(value="/mngwsercgateway/actionLgnFail.ajax", method=RequestMethod.POST)
-    public String actionLgnFail(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
+	@Operation(summary = "비밀번호 오류 처리", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/actionLgnFail")
+    public void actionLgnFail(@RequestBody @ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
     {
     	try
     	{
@@ -201,8 +198,6 @@ public class COBLgnController {
             }
 			throw he;
 		}
-
-    	return "jsonView";
     }
     
     /**
@@ -212,8 +207,12 @@ public class COBLgnController {
 	 * @return String View URL
 	 * @throws Exception
 	 */
-    @RequestMapping(value="/mngwsercgateway/actionLgnFailReset.ajax", method=RequestMethod.POST)
-    public String actionLgnFailReset(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
+	@Operation(summary = "비밀번호 실패 카운트 초기화", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/actionLgnFailReset")
+    public void actionLgnFailReset(@RequestBody @ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
     {
     	try
     	{
@@ -227,8 +226,6 @@ public class COBLgnController {
             }
 			throw he;
 		}
-
-    	return "jsonView";
     }
 
 	@Operation(summary = "마지막 접속 정보", description = "")
@@ -238,7 +235,6 @@ public class COBLgnController {
     @PostMapping(value="/getLastLgnInfo")
     public EmfMap getLastLgnInfo(@Parameter @RequestBody @ApiData EmfMap emfMap, HttpServletRequest request) throws Exception
     {
-		log.error("emfMap : {}", emfMap);
 		EmfMap infoMap = null;
 		try
     	{
@@ -263,14 +259,14 @@ public class COBLgnController {
 	 * @return String View URL
    	 * @throws Exception
    	 */
-   	@RequestMapping(value="/mngwsercgateway/getPwdChng.do")
-   	public String getPwdChngPage(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+   	@RequestMapping(value="/login/getPwdChng")
+   	public EmfMap getPwdChngPage(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
    	{
    		String url = "";
-
+		EmfMap lgnMap = null;
 		try
 		{
-			EmfMap lgnMap = (EmfMap) RequestContextHolder.getRequestAttributes().getAttribute("tmpLgnMap", RequestAttributes.SCOPE_SESSION);
+			lgnMap = (EmfMap) RequestContextHolder.getRequestAttributes().getAttribute("tmpLgnMap", RequestAttributes.SCOPE_SESSION);
 
 			if (lgnMap != null && !emfMap.containsKey("reset"))
 			{
@@ -278,6 +274,7 @@ public class COBLgnController {
 			}
 			else
 			{
+				//비밀번호 초기화
 				if(emfMap.containsKey("reset")){
 					url = "mngwserc/co/cob/COBPwdConfirm";
 					modelMap.addAttribute("id",emfMap.getString("id"));
@@ -295,23 +292,20 @@ public class COBLgnController {
 			throw he;
 		}
 
-		return url;
+		return lgnMap;
    	}
 
-   	/**
-   	 * 비밀번호를 변경한다.
-   	 *
-   	 * @param emfMap
-	 * @return String View URL
-   	 * @throws Exception
-   	 */
-   	@RequestMapping(value="/mngwsercgateway/setPwdChng.ajax")
-   	public String updatePwd(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+	@Operation(summary = "비밀번호 변경", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/setPwdChng")
+   	public EmfMap updatePwd(@RequestBody @ApiData EmfMap emfMap, HttpServletRequest request) throws Exception
    	{
+		EmfMap rtnMap = null;
    		try
    		{
-   			modelMap.addAttribute("rtnData", cOBLgnService.updatePwd(emfMap));
-   			
+			rtnMap = cOBLgnService.updatePwd(emfMap);
    		}
    		catch (Exception he)
 		{
@@ -322,22 +316,68 @@ public class COBLgnController {
 			throw he;
 		}
 
-		return "jsonView";
+		return rtnMap;
    	}
-   	
-   	/**
-   	 * 비밀번호를 변경한다. 2 _ reset 에서 넘어간 경우
-   	 *
-   	 * @param emfMap
-	 * @return String View URL
-   	 * @throws Exception
-   	 */
-   	@RequestMapping(value="/mngwsercgateway/resetPwd.ajax")
-   	public String resetPwd(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+
+	@Operation(summary = "비밀번호 초기화 이메일 발송", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/sendMailResetPwd")
+	public EmfMap sendMailResetPwd(@RequestBody @ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		EmfMap rtnMap = null;
+		try
+		{
+			rtnMap = cOBLgnService.sendMailResetPwd(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+
+		return rtnMap;
+	}
+
+	@Operation(summary = "비밀번호 초기화 이메일 경로 UUID 조회", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/getEmailUuid")
+	public EmfMap getEmailUuid(@RequestBody @ApiData EmfMap emfMap, HttpServletRequest request) throws Exception
+	{
+		EmfMap rtnMap = null;
+		try
+		{
+			rtnMap = cOBLgnService.getEmailResetUuid(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+
+		return rtnMap;
+	}
+
+	@Operation(summary = "비밀번호 초기화 변경", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/resetPwd")
+   	public EmfMap resetPwd(@RequestBody @ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
    	{
+		   EmfMap rtnMap = new EmfMap();
    		try
    		{
-   			modelMap.addAttribute("rtnData",cOBLgnService.resetPwd(emfMap));
+			rtnMap.put("cnt", cOBLgnService.resetPwd(emfMap));
    		}
    		catch (Exception he)
 		{
@@ -347,8 +387,7 @@ public class COBLgnController {
             }
 			throw he;
 		}
-
-		return "jsonView";
+		   return rtnMap;
    	}
 
    	/**
@@ -443,7 +482,7 @@ public class COBLgnController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value="/auth/{pddg}/set-admin-login.ajax", method=RequestMethod.GET)
-	public String setAdmin(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request, @PathVariable String pddg) throws Exception
+	public String setAdmin(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request, HttpServletResponse response, @PathVariable String pddg) throws Exception
 	{
 		EmfMap rtnMap = null;
 		String url = "error/blank.error";
@@ -461,7 +500,7 @@ public class COBLgnController {
     		if(authPddgMap.getString("pddg").equals(pddg))
     		{
     			emfMap.put("authPddg", authPddgMap.getString("pddg"));
-    			rtnMap = cOBLgnService.actionLogin(emfMap, request);
+    			rtnMap = cOBLgnService.actionLogin(emfMap, request, response);
     			modelMap.addAttribute("rtnData", rtnMap);
     		}
     		else
@@ -491,65 +530,8 @@ public class COBLgnController {
 
 		return "redirect:" + rtnMap.getString("rtnUrl");
 	}
-	
-	
-	/**
-	 * 비밀번호 초기화 페이지
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-    @RequestMapping(value="/mngwsercgateway/getResetPwdPage.do")
-	public String getResetPwdPage(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
-    {
-    	try
-		{
-    		// 보안 처리(로그인 세션 변경)
- 			if (request.getSession(false) != null)
- 			{
- 				request.getSession().invalidate();
- 			}
-		}
-		catch (Exception he)
-		{
-			if (log.isDebugEnabled())
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-    	return "mngwserc/co/cob/COBResetPwd";
-	}
-    
-    /**
-	 * 비밀번호 초기화 이메일 발송
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/mngwsercgateway/sendMailResetPwd.ajax", method=RequestMethod.POST)
-	public String sendMailResetPwd(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		EmfMap rtnMap = null;
-		String url = "/mngwsercgateway/getLogin.do";
-		try
-		{
-			modelMap.addAttribute("rtnData", cOBLgnService.sendMailResetPwd(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isDebugEnabled())
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 	
 	/**
 	 * DB에 저장된 세션 날리기
