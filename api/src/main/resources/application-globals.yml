@@ -3,18 +3,18 @@ spring.config.activate.on-profile: dev_hgcx
 globals:
   excel-sample-file-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\customer\
   file-store-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\
-  http-admin-url: http://jadmin.easymedia.co.kr:8455
-  https-admin-url: http://jadmin.easymedia.co.kr:8455
-  http-hdpm-admin-url: http://admin.hdpm.easymedia.kr
+  http-admin-url: https://127.0.0.1:3000
+  https-admin-url: https://127.0.0.1:3000
+  http-hdpm-admin-url: https://127.0.0.1:3000
   http-hdpm-port: 8503
-  http-url: http://juser.easymedia.co.kr:8455
-  https-url: http://juser.easymedia.co.kr:8455
-  http-web-source-url: http://hmccx.easymedia.kr
+  http-url: https://127.0.0.1:3000
+  https-url: https://127.0.0.1:3000
+  http-web-source-url: https://127.0.0.1:3000
   server-ip: 127.0.0.1
   site-name: Hyundai Global Customer Experience
   from-user: hyundai@hyundaiglobalcx.com
   my-mailer-identity: admin
-  mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
+  mail-tmpl-file-path: D:\EGOVFRAME\project\2023\hgcxhdpm\api\src\main\webapp\WEB-INF\template\email\
   charcode: UTF-8
 
 
