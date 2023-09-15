@@ -52,7 +52,12 @@ public class ApiSecurityConfig {
                         "/v3/api-docs",
                         "/api/v1/setLogin",
                         "/api/v1/setLogout"
-                        ,"/api/v1/getLastLgnInfo")
+                        ,"/api/v1/getLastLgnInfo"
+                        ,"/api/v1/hs/hsa/cstmr-list"
+                        ,"/api/v1/co/**"
+                        ,"/api/v1/mngwserc/co/**"
+                ,"/api/v1/mngwserc/sb/sba/**"
+                        )
                 .mvcMatchers("/*.*",
                         "/files/**",
                         "/swagger-ui/**",
