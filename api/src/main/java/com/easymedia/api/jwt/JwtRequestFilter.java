@@ -46,9 +46,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 토큰을 가져온다. 쿠키에 없을경우 헤더에서 가져온다.
         String header = StringUtils.defaultIfBlank(_jwtTokenProvider.resolveCookie(request, site), request.getHeader(_jwtProperties.getTokenHeader() + "_" + site.name()));
-        log.error("SecurityFilterChain Header : {}", header);
         if (isBlank(header) || !header.startsWith(_jwtProperties.getTokenPrefix())) {
-
             setErrorResponse(response, ErrorCode.ACCESS_DENIED);
             return;
         }
@@ -67,6 +65,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 return;
             }
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            /*
             //2023.06.05
             //1.jwt 토큰만료시간(Expiration) 보다 쿠기 삭제시간(CookieMaxAge)을 더 짧게 설정해야된다.
             //2.그 차이만큼 토큰재생성주기로 설정
@@ -90,6 +89,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 response.addHeader(_jwtProperties.getTokenHeader() + "_" + site.name(), token);
             }
             _jwtTokenProvider.createCookie(response, token, Site.MNGWSERC.name());
+            */
         }  catch (ExpiredJwtException ex) {
                 setErrorResponse(response, ErrorCode.EXPIRED_TIME);
                 return;

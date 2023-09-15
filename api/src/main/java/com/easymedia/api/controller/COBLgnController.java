@@ -2,6 +2,7 @@ package com.easymedia.api.controller;
 
 import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
+import com.easymedia.dto.login.LoginUser;
 import com.easymedia.error.ErrorResponse;
 import com.easymedia.service.COBLgnService;
 import com.easymedia.service.COCAdmService;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
@@ -24,6 +26,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * <pre>
@@ -567,9 +570,7 @@ public class COBLgnController {
             }
 			throw he;
 		}
-
 		return "jsonView";
 	}
-	
-	
+
 }

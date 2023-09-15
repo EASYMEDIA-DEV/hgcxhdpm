@@ -287,7 +287,6 @@ public class COBLgnServiceImpl implements COBLgnService {
    	               			}
    	       					else
    	       					{
-   	       						
    	       						// 로그인 IP를 삽입해준다.
    	       		    			info.put("loginIp", EgovNetworkState.getMyIPaddress(request));
    	       		    			emfMap.put("loginIp", info.getString("loginIp"));
@@ -318,6 +317,9 @@ public class COBLgnServiceImpl implements COBLgnService {
    	       		    			emfMap.put("reqnId", info.getString("id"));
    	       		    			emfMap.put("reqnIp", info.getString("loginIp"));
 								rtnMap.put("info", info);
+
+								//메뉴리스트
+								rtnMap.put("menuList", menuList);
    	       		    			try
    	       		    			{
    	       		    				cOFSysLogService.logInsertSysLog(emfMap);
@@ -347,22 +349,9 @@ public class COBLgnServiceImpl implements COBLgnService {
 	 * 로그인 토큰 생성
 	 */
 	private void setJwtToken(HttpServletResponse response, EmfMap loginMap, Site site) throws Exception {
-		//쿠키 굽기
-		LoginUser loginUser = LoginUser.builder()
-				.admSeq(Integer.parseInt(loginMap.getString("admSeq")))
-				.id(loginMap.getString("id"))
-				.name(loginMap.getString("name"))
-				.natnCd(loginMap.getString("ntnCd"))
-				.dlspCd(loginMap.getString("dlspCd"))
-				.dlrCd(loginMap.getString("dlrCd"))
-				.dlrCdList(loginMap.getList("dlrCdList"))
-				.asgnTaskCd(loginMap.getString("asgnTaskCd"))
-				.loginIp(loginMap.getString("loginIp"))
-				.authorities(null)
-				.build();
-		String token = _jwtTokenProvider.createToken(loginUser);
-		_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
-		response.addHeader(_jwtProperties.getTokenHeader() + site.name(), token);
+		String token = _jwtTokenProvider.createToken(loginMap);
+		//_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
+		response.addHeader(_jwtProperties.getTokenHeader() + "_" + site.name(), token);
 	}
 
 	/**
@@ -377,7 +366,7 @@ public class COBLgnServiceImpl implements COBLgnService {
 				.authorities(null)
 				.build();
 		String token = _jwtTokenProvider.createTempToken(loginUser);
-		_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
+		//_jwtTokenProvider.createCookie(response, _jwtProperties.getTokenPrefix() + token, site.name());
 		response.addHeader(_jwtProperties.getTokenHeader() + "_" + site.name(), token);
 	}
     

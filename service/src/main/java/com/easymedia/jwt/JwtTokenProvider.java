@@ -1,5 +1,6 @@
 package com.easymedia.jwt;
 
+import com.easymedia.dto.EmfMap;
 import com.easymedia.dto.login.LoginUser;
 import com.easymedia.enums.menu.Site;
 import com.easymedia.property.JwtProperties;
@@ -44,6 +45,10 @@ public class JwtTokenProvider {
     private static final String _MEMBER_DLR_CD = "dlrCd";
     private static final String _MEMBER_DLR_CD_LIST = "dlrCdList";
     private static final String _MEMBER_ASGN_TACK_CD = "asgnTaskCd";
+    private static final String _MEMBER_AUTH_CD = "authCd";
+    private static final String _MEMBER_RSC_USE_YN = "rscUseYn";
+    private static final String _MEMBER_MYS_USE_YN = "mysUseYn";
+    private static final String _MEMBER_KPI_USE_YN = "kpiUseYn";
     private static final String _AUTHORITIES = "authorities";
     private static final SignatureAlgorithm _SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
     private static final String _EMPTY_CREDENTIALS = "";
@@ -53,7 +58,7 @@ public class JwtTokenProvider {
      * @param loginUser
      * @return
      */
-    public String createToken(LoginUser loginUser) {
+    public String createToken(EmfMap loginUser) {
         Instant now = new Date().toInstant();
         String token = Jwts.builder()
                 .signWith(Keys.hmacShaKeyFor(getSigningKey()), _SIGNATURE_ALGORITHM)
@@ -61,14 +66,18 @@ public class JwtTokenProvider {
                 .setExpiration(new Date(System.currentTimeMillis() + _jwtProperties.getExpiration()))
                 .setIssuedAt(Date.from(now))
                 .claim(_AUTHORITIES, null)
-                .claim(_MEMBER_SEQ, loginUser.getAdmSeq())
-                .claim(_MEMBER_ID, loginUser.getId())
-                .claim(_MEMBER_NAME, loginUser.getName())
-                .claim(_MEMBER_NATN_CD, loginUser.getNatnCd())
-                .claim(_MEMBER_DLSP_CD, loginUser.getDlspCd())
-                .claim(_MEMBER_DLR_CD, loginUser.getDlrCd())
-                .claim(_MEMBER_DLR_CD_LIST, loginUser.getDlrCdList())
-                .claim(_MEMBER_ASGN_TACK_CD, loginUser.getAsgnTaskCd())
+                .claim(_MEMBER_SEQ, loginUser.getString("admSeq"))
+                .claim(_MEMBER_ID, loginUser.getString("id"))
+                .claim(_MEMBER_NAME, loginUser.getString("name"))
+                .claim(_MEMBER_NATN_CD, loginUser.getString("ntnCd"))
+                .claim(_MEMBER_DLSP_CD, loginUser.getString("dlspCd"))
+                .claim(_MEMBER_DLR_CD, loginUser.getString("dlrCd"))
+                .claim(_MEMBER_DLR_CD_LIST, loginUser.getList("dlrCdList"))
+                .claim(_MEMBER_ASGN_TACK_CD, loginUser.getString("asgnTaskCd"))
+                .claim(_MEMBER_AUTH_CD, loginUser.getString("authCd"))
+                .claim(_MEMBER_RSC_USE_YN, loginUser.getString("rscUseYn"))
+                .claim(_MEMBER_MYS_USE_YN, loginUser.getString("mysUseYn"))
+                .claim(_MEMBER_KPI_USE_YN, loginUser.getString("kpiUseYn"))
                 .compact();
         return token;
     }
@@ -207,7 +216,7 @@ public class JwtTokenProvider {
             String memberId = claims.get(_MEMBER_ID, String.class);
             if (isNotBlank(memberId)) {
                 LoginUser loginUser = LoginUser.builder()
-                        .admSeq(claims.get(_MEMBER_SEQ, Integer.class))
+                        .admSeq(Integer.parseInt(claims.get(_MEMBER_SEQ, String.class)))
                         .id(claims.get(_MEMBER_ID, String.class))
                         .name(claims.get(_MEMBER_NAME, String.class))
                         .natnCd(claims.get(_MEMBER_NATN_CD, String.class))
@@ -215,6 +224,10 @@ public class JwtTokenProvider {
                         .dlrCd(claims.get(_MEMBER_DLR_CD, String.class))
                         .asgnTaskCd(claims.get(_MEMBER_ASGN_TACK_CD, String.class))
                         .dlrCdList(claims.get(_MEMBER_DLR_CD_LIST, List.class))
+                        .authCd(claims.get(_MEMBER_AUTH_CD, String.class))
+                        .rscUseYn(claims.get(_MEMBER_RSC_USE_YN, String.class))
+                        .mysUseYn(claims.get(_MEMBER_MYS_USE_YN, String.class))
+                        .kpiUseYn(claims.get(_MEMBER_KPI_USE_YN, String.class))
                         .authorities(null)
                         .build();
                 return new UsernamePasswordAuthenticationToken(loginUser, _EMPTY_CREDENTIALS, loginUser.getAuthorities());

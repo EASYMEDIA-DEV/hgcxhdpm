@@ -150,7 +150,7 @@
         ==========   ========   ==============
         2019.01.15    허진영       최초생성
     -->
-	<select id="getMenuList" parameterType="com.easymedia.dto.EmfMap" resultType="com.easymedia.dto.EmfMap">
+	<select id="getMenuList" parameterType="EmfMap" resultType="EmfMap">
 		<choose>
 			<when test="authCd eq '0'.toString()">
 				SELECT /* getMenuList */
@@ -162,9 +162,9 @@
 					, A.DPTH
 					, A.MENU_GB
 					, CASE WHEN NULLIF(B.MENU_NM, '') IS NULL THEN
-		             A.MENU_NM
+		             	A.MENU_NM
 		            ELSE
-		             B.MENU_NM
+		             	B.MENU_NM
 		            END
 		            AS MENU_NM
 					, A.MENU_ICON
@@ -174,8 +174,9 @@
       			ON B.MENU_SEQ = A.MENU_SEQ   AND B.LGUG_CD = #{siteLanguage} 
 				WHERE 1=1
 					AND USER_USE_YN = 'Y'
-				   	AND LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
-				   	AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
+				   	AND LFT_VAL <![CDATA[>=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
+				   	AND RHT_VAL <![CDATA[<=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2)
+				    AND A.MENU_SEQ != 2
 			 	ORDER BY
 			 		LFT_VAL
 			</when>
@@ -214,8 +215,8 @@
 		      			ON B.MENU_SEQ = A.MENU_SEQ   AND B.LGUG_CD = #{siteLanguage}  
 		      			, CO_NATION_MST C
 		      			WHERE A.USER_USE_YN = 'Y' AND A.DPTH <![CDATA[>]]> 1
-		      			<if test="ntnCd != null and ntnCd != ''">
-		      			AND C.NTN_CD= #{ntnCd}
+		      			<if test="natnCd != null and natnCd != ''">
+		      			AND C.NTN_CD= #{natnCd}
 		      			</if>
 		      			<!-- 194= Survey results upload 는 active한 국가만 표출-->
         				AND (A.MENU_NM != 'Survey Upload' OR (A.MENU_NM = 'Survey Upload' AND C.SUR_USE_YN='Y'))

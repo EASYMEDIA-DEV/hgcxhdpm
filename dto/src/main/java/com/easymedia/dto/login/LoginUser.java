@@ -1,5 +1,6 @@
 package com.easymedia.dto.login;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +29,7 @@ public class LoginUser implements UserDetails {
     private String name;
     @Getter
     @Schema(title="비밀번호",description = "임시 비밀번호 변경시만 사용")
+    @JsonIgnore
     private String password;
     @Getter
     @Schema(title="국가 코드")
@@ -46,6 +48,19 @@ public class LoginUser implements UserDetails {
     @Getter
     @Schema(title="담당 업무 코드")
     private String asgnTaskCd;
+    /** 2023.09.15 **/
+    @Getter
+    @Schema(title="권한 코드")
+    private String authCd;
+    @Getter
+    @Schema(title="rsc 사용 여부")
+    private String rscUseYn;
+    @Getter
+    @Schema(title="mys 사용 여부")
+    private String mysUseYn;
+    @Getter
+    @Schema(title="kpi 사용 여부")
+    private String kpiUseYn;
     /**
      * 임시비밀번호여부
      */
