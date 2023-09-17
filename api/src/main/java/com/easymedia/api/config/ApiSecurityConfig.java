@@ -82,6 +82,7 @@ public class ApiSecurityConfig {
         http
         .authorizeRequests()
         .anyRequest().authenticated();
+
         http.addFilterBefore(new JwtRequestFilter(_jwtProperties, _apiJwtTokenProvider, Site.MNGWSERC), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

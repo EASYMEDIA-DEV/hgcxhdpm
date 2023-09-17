@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.SBACountryDAO">
+
+	<!--
+		쿼리명 : SBACountryDAO.selectCountryList
+		설   명 : 국가관리 List
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+        2020.01.20     김한나                        수정
+    -->
+	<select id="selectCountryList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SBACountryDAO.selectCountryList */
+			A.*
+      	FROM (
+			SELECT
+				NTN_CD
+				,(SELECT COUNT(*) FROM CO_DEALERSHIP_MST WHERE NTN_CD = A.NTN_CD AND USE_YN='Y') AS DEALERSHIP_CNT
+				,(SELECT COUNT(*) FROM CO_DEALER_MST WHERE NTN_CD = A.NTN_CD AND USE_YN='Y') AS DEALER_CNT
+				,NTN_CD_NM
+				,OUT_NATN_CD				
+				,LGUG_CD
+				,LGUG_NM
+		        ,(
+		            SELECT
+		              GROUP_CONCAT(IFNULL((SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID='LGUG_CD' AND CD = AA.LGUG_CD),'') SEPARATOR ', ') AS LGUG_NM
+		            FROM CO_NATION_LGUG_DTL AA
+		            WHERE
+		              AA.NTN_CD = A.NTN_CD
+		        ) AS GRP_LGUG_NM
+				,STANDARD_TIME
+				,NTN_NO
+				,USE_YN
+				,RSC_USE_YN
+				,KPI_USE_YN
+				,MYS_USE_YN
+				,SUR_USE_YN
+				,WHATSAPP_USE_YN
+			FROM
+				CO_NATION_MST A
+			<include refid="selectCountryListWhereSql" />
+			ORDER BY 
+				REG_DTM DESC
+			LIMIT 
+				#{firstIndex}, #{recordCountPerPage}
+		) A
+	</select>	 
+	
+	<!--
+		쿼리명 : SBACountryDAO.selectCountryListTotCnt
+		설   명 : 국가관리 Total Count
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="selectCountryListTotCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* SBACountryDAO.selectCountryListTotCnt */
+			COUNT(*) AS TOT_CNT	   
+		FROM 
+			CO_NATION_MST
+		<include refid="selectCountryListWhereSql" />
+	</select>
+	
+	<!--
+		쿼리명 : SBACountryDAO.excelCountryList
+		설   명 : 국가관리 List ( 엑셀 다운로드 )
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.04.25     김진수                        최초생성
+    -->
+	<select id="excelCountryList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SBACountryDAO.excelCountryList */
+			NTN_CD
+			,(SELECT COUNT(*) FROM CO_DEALERSHIP_MST WHERE NTN_CD = A.NTN_CD AND USE_YN='Y') AS DEALERSHIP_CNT
+			,(SELECT COUNT(*) FROM CO_DEALER_MST WHERE NTN_CD = A.NTN_CD AND USE_YN='Y') AS DEALER_CNT
+			,NTN_CD_NM
+			,OUT_NATN_CD				
+			,LGUG_CD
+			,LGUG_NM
+	        ,(
+	            SELECT
+	              GROUP_CONCAT(IFNULL((SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID='LGUG_CD' AND CD = AA.LGUG_CD),'') SEPARATOR ', ') AS LGUG_NM
+	            FROM CO_NATION_LGUG_DTL AA
+	            WHERE
+	              AA.NTN_CD = A.NTN_CD
+	        ) AS GRP_LGUG_NM
+			,STANDARD_TIME
+			,NTN_NO
+			,USE_YN
+			,RSC_USE_YN
+			,KPI_USE_YN
+			,MYS_USE_YN
+			,SUR_USE_YN
+			,WHATSAPP_USE_YN
+		FROM
+			CO_NATION_MST A
+		<include refid="selectCountryListWhereSql" />
+		ORDER BY 
+			REG_DTM DESC
+	</select>
+	
+   	<!--
+		쿼리명 : selectCountryListWhereSql
+		설   명 : 국가관리 조건문 SQL
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+   	<sql id="selectCountryListWhereSql">
+   		<where>
+   			<if test="q != null and q != ''">
+				AND NTN_CD_NM LIKE CONCAT('%', #{q} , '%')
+		  	</if>
+   		</where>
+   	</sql>
+   	
+   	
+   	
+   	
+   	<!--
+		쿼리명 : SBACountryDAO.getNtnCdCnt
+		설   명 : 국가관리 등록된 국가가 있는지 조회
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="getNtnCdCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /*SBACountryDAO.getNtnCdCnt*/ COUNT(*) AS CNT FROM CO_NATION_MST WHERE NTN_CD = #{ntnCd}
+	</select>	
+   	
+   	
+   	<!--
+		쿼리명 : SBACountryDAO.selectCountryDtl
+		설   명 : 국가관리  Details
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="selectCountryDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SBACountryDAO.selectCountryDtl */
+			  NTN_CD
+			, NTN_CD_NM
+			, OUT_NATN_CD
+			, LGUG_CD
+			, LGUG_NM
+			, STANDARD_TIME
+			, NTN_NO
+			, USE_YN
+			, RSC_USE_YN
+			, KPI_USE_YN
+			, MYS_USE_YN
+			, SUR_USE_YN
+			,WHATSAPP_USE_YN
+		FROM 
+			  CO_NATION_MST A
+		WHERE 
+			NTN_CD = #{detailsKey}
+	</select> 	
+	
+	
+	<!--
+		쿼리명 : SBACountryDAO.selectTrgtList
+		설   명 : 해당 국가에 엮인 Annual Target 리스트 조회
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="selectTrgtList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SBACountryDAO.selectTrgtList */
+			YEAR, TRGT_VAL, ASGN_TASK_CD, ANNUAL_TRGT_TYPE_CD
+		FROM CO_NATION_TARGET_DTL 
+		WHERE 1=1
+			AND NTN_CD = #{detailsKey}
+			AND ANNUAL_TRGT_TYPE_CD = #{annualTrgtTypeCd}
+			AND ASGN_TASK_CD = #{asgnTaskCd}
+			AND YEAR != 0
+		ORDER BY REG_DTM DESC, YEAR ASC
+		LIMIT 0, 5
+	</select> 	
+	
+	
+   	<!--
+		쿼리명 : SBACountryDAO.selectCountryLgugList
+		설   명 : 해당 국가에 엮인 언어 리스트 조회
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="selectCountryLgugList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*SBACountryDAO.selectCountryLgugList*/
+		  NTN_CD
+		  ,LGUG_CD
+		  ,(SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'LGUG_CD' AND USE_YN = 'Y' AND CD = LGUG_CD) AS LGUG_NM
+		  ,SORT
+		FROM 
+		  CO_NATION_LGUG_DTL
+		WHERE 1=1
+			AND USE_YN = 'Y'
+   			<choose>
+				<when test="type == 'survey'.toString()">
+		  		 AND NTN_CD =#{sNtnCd}
+		  		 AND LGUG_CD != (SELECT LGUG_CD FROM CO_NATION_MST WHERE NTN_CD = #{sNtnCd})
+				</when>
+				<otherwise>
+				  AND NTN_CD =#{detailsKey}
+				</otherwise>
+			</choose>
+		ORDER BY LGUG_CD ASC
+	</select> 	
+
+ 	<!--
+		쿼리명 : SBACountryDAO.selectCountryAnnualTargetList
+		설   명 : 해당 국가에 엮인 언어 리스트 조회
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="selectCountryAnnualTargetList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*SBACountryDAO.selectCountryAnnualTargetList*/
+		  NTN_CD
+		  ,LGUG_CD
+		  ,(SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'LGUG_CD' AND USE_YN = 'Y' AND CD = LGUG_CD) AS LGUG_NM
+		  ,SORT
+		FROM 
+		  CO_NATION_LGUG_DTL
+		WHERE 1=1
+			AND USE_YN = 'Y'
+   			<choose>
+				<when test="type == 'survey'.toString()">
+		  		 AND NTN_CD =#{sNtnCd}
+		  		 AND LGUG_CD != (SELECT LGUG_CD FROM CO_NATION_MST WHERE NTN_CD = #{sNtnCd})
+				</when>
+				<otherwise>
+				  AND NTN_CD =#{detailsKey}
+				</otherwise>
+			</choose>
+		ORDER BY LGUG_CD ASC
+	</select> 	
+
+
+	<!--
+		쿼리명 : SBACountryDAO.insertCountry
+		설   명 : 국가관리 Insert
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<insert id="insertCountry" parameterType="emfMap">
+		INSERT /* SBACountryDAO.insertCountry */ INTO CO_NATION_MST
+			(
+				NTN_CD
+				,NTN_CD_NM
+				,OUT_NATN_CD
+				,LGUG_CD
+				,LGUG_NM
+				,STANDARD_TIME
+				,NTN_NO
+				,USE_YN
+				,RSC_USE_YN
+				,KPI_USE_YN
+				,MYS_USE_YN
+				,SUR_USE_YN
+				,WHATSAPP_USE_YN
+				,REG_ID
+				,REG_DTM
+	  		)
+		VALUES        
+			( 
+				#{ntnCd}
+				,#{ntnCdNm}
+				,#{outNatnCd}
+				,#{lgugCd}
+				,#{lgugNm}
+				,#{standardTime}
+				,#{ntnNo}
+				,#{useYn}
+				,#{rscUseYn}
+				,#{kpiUseYn}
+				,#{mysUseYn}
+				,#{surUseYn}
+				,#{whatsappUseYn}
+				,#{regId}
+				, NOW()
+			)
+ 	</insert>
+ 	
+ 	
+	<!--
+		쿼리명 : SBACountryDAO.insertCountryLgug
+		설   명 : 해당 국가에 엮인 언어 Insert
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<insert id="insertCountryLgug" parameterType="emfMap">
+ 	INSERT /*"SBACountryDAO.insertCountryLgug"*/ INTO CO_NATION_LGUG_DTL
+ 	(
+ 		NTN_CD
+ 		,LGUG_CD
+ 		,USE_YN
+ 		,SORT
+ 		,REG_ID
+ 		,REG_DTM
+ 		,MOD_ID
+ 		,MOD_DTM
+ 	)
+ 	VALUES
+ 	(
+ 		#{ntnCd}
+ 		,#{lgugCd}
+ 		,'Y'
+ 		,#{sort}
+		,#{regId}
+		, NOW()
+		,#{modId}
+		, NOW()
+ 	)
+ 	</insert>
+ 	
+ 	
+ 	
+ 	<!--
+		쿼리명 : SBACountryDAO.updateCountry
+		설   명 : 국가관리 update
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<update id="updateCountry" parameterType="emfMap">
+		UPDATE /*SBACountryDAO.updateCountry*/ CO_NATION_MST
+		SET
+			STANDARD_TIME = #{standardTime}
+			<if test="lgugCd != null and lgugCd != ''">
+			,LGUG_CD = #{lgugCd}
+			,LGUG_NM = #{lgugNm}
+			</if>
+			,USE_YN = #{useYn}
+			,RSC_USE_YN = #{rscUseYn}
+			,KPI_USE_YN = #{kpiUseYn}
+			,MYS_USE_YN = #{mysUseYn}
+			,SUR_USE_YN = #{surUseYn}
+			,WHATSAPP_USE_YN = #{whatsappUseYn}
+			,MOD_ID = #{modId}
+			,MOD_DTM = NOW()
+		WHERE
+			NTN_CD = #{detailsKey}
+	</update>
+	
+	
+	<!--
+		쿼리명 : SBACountryDAO.deleteCountryLgug
+		설   명 : 해당 국가에 엮인 언어 Delete
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<delete id="deleteCountryLgug" parameterType="emfMap">
+ 		DELETE /*SBACountryDAO.deleteCountryLgug*/ FROM CO_NATION_LGUG_DTL WHERE NTN_CD = #{detailsKey}
+	</delete>
+	
+	
+	
+	
+	<!--
+		쿼리명 : SBACountryDAO.getCountryList
+		설   명 : 국가관리 > 등록된 리스트 조회
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+	<select id="getCountryList" parameterType="emfMap" resultType="emfMap">
+			SELECT /*SBACountryDAO.getCountryList*/
+				NTN_CD
+				,NTN_CD_NM
+				,OUT_NATN_CD				
+				,LGUG_CD
+				,LGUG_NM
+				,STANDARD_TIME
+				,NTN_NO
+				,USE_YN
+				,RSC_USE_YN
+				,KPI_USE_YN
+				,MYS_USE_YN
+				,SUR_USE_YN
+				,WHATSAPP_USE_YN
+			FROM
+				CO_NATION_MST A
+			WHERE
+				USE_YN = 'Y'
+				<if test="sNtnCd != null and sNtnCd != ''">
+				AND NTN_CD = #{sNtnCd}
+				</if>
+			ORDER BY NTN_CD_NM ASC		
+	</select>
+	
+	
+	<!--
+		쿼리명 : SBACountryDAO.insertCountryTarget
+		설   명 : Annual Target Insert or Update
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<insert id="insertCountryTarget" parameterType="emfMap">
+		INSERT /* SBACountryDAO.insertCountryTarget */ INTO CO_NATION_TARGET_DTL
+			(
+				  NTN_CD
+				, YEAR
+				, ASGN_TASK_CD
+				, ANNUAL_TRGT_TYPE_CD
+				, TRGT_VAL
+				, REG_ID
+				, REG_DTM
+				, MOD_ID
+				, MOD_DTM
+	  		)
+		VALUES        
+			( 
+				  #{ntnCd}
+				, #{year}
+				, #{asgnTaskCd}
+				, #{annualTrgtTypeCd}
+				, #{trgtVal}
+				, #{regId}
+				, NOW()
+				, #{regId}
+				, NOW()
+			)
+		ON DUPLICATE KEY
+		UPDATE
+			  TRGT_VAL = #{trgtVal}
+			, MOD_ID = #{modId}
+			, MOD_DTM = NOW()
+ 	</insert>
+ 	
+ 	<!--
+		쿼리명 : SBACountryDAO.deleteTargetVal
+		설   명 : 해당 국가에 엮인 Target Delete
+	                    수정일                     수정자                         수정내용 
+        ==========   =======   ============== 
+        2019.01.09     안진용                        최초생성      
+    -->
+ 	<delete id="deleteTargetVal" parameterType="emfMap">
+ 		DELETE /*SBACountryDAO.deleteTargetVal*/ 
+ 		FROM CO_NATION_TARGET_DTL 
+ 		WHERE NTN_CD = #{ntnCd}
+	</delete>
+</mapper>

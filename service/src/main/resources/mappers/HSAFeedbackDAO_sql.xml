@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="HSAFeedbackDAO">
+
+    <!--
+		쿼리명 : HSAFeedbackDAO.selectDlrList
+		설  명 : 딜러 List
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+
+	<select id="HSAFeedbackDAO.HSAFeedbackList" parameterType="emfMap" resultType="emfMap" statementType="CALLABLE">	
+		<choose>
+			<when test="admAuthCd gte 30">
+				<choose>
+					<when test="gubun == 'dealer' "><!-- dealer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admDlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admDlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+					<when test="gubun == 'customer' "><!-- customer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.admDlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+					<when test="gubun == 'customerAll' "><!-- customer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admDlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admDlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+				</choose>
+				
+			</when>
+			<otherwise>
+				<choose>
+					<when test="gubun == 'dealer' "><!-- dealer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN,  jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{ntnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+					<when test="gubun == 'customer' "><!-- customer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN,  jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.natnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.natnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.dlrspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrSrchInfo.dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+					<when test="gubun == 'customerAll' "><!-- customer List -->
+						{
+							CALL SP_HSAFeedbackList
+							(
+								#{gubun, mode=IN,  jdbcType=VARCHAR, javaType=string},
+								#{asgnTaskCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{strtDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{endDt, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admNatnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{ntnCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlspCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{f,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{q,mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{firstIndex, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{recordCountPerPage, mode=IN, jdbcType=VARCHAR, javaType=integer},
+								#{excelYn, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admAuthCd, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{admSeq, mode=IN, jdbcType=VARCHAR, javaType=string},
+								#{dlrStatus, mode=IN, jdbcType=VARCHAR, javaType=string}
+							)
+						}
+					</when>
+				</choose>	
+				
+			</otherwise>
+		</choose>
+	</select>
+	
+    <!--
+		쿼리명 : HSAFeedbackDAO.selectDlrListTotCnt
+		설  명 : 딜러 TotCnt
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+	<select id="HSAFeedbackDAO.selectDlrListTotCnt" parameterType="emfMap" resultType="java.lang.Integer">	
+		SELECT /* HSAFeedbackDAO.selectDlrListTotCnt */
+			COUNT(*) AS TOT_CNT
+		FROM (
+			SELECT 
+				A.NATN_CD
+				, A.DLRSP_CD
+				, A.DLR_CD
+			FROM 
+				HG_HGSI_SURVEY_SEND_MST A
+			    JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+			<include refid="selectDlrListWhereSql" />
+			GROUP BY 
+      			A.NATN_CD, A.DLRSP_CD, A.DLR_CD 
+		) T
+	</select>
+	
+    <!--
+		쿼리명 : selectDlrListWhereSql
+		설  명 : 딜러 Where Sql
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+   	<sql id="selectDlrListWhereSql">
+   		<where>
+   			<choose>
+  				<when test="admAuthCd >= 30">
+  					AND A.NATN_CD = #{admNatnCd}
+  					AND A.DLRSP_CD = #{admDlspCd}
+  					<if test="admAuthCd > 40">
+  						<foreach collection="admDlrCdList" item="dlrCd" index="index" separator=" OR " open="AND (" close=")">
+							A.DLR_CD = #{dlrCd}
+						</foreach>
+  					</if>
+  				</when>
+  				<otherwise>
+  					<if test="ntnCd != null and ntnCd != ''">
+		   				AND A.NATN_CD = #{ntnCd}
+		   			</if>
+		   			<if test="dlspCd != null and dlspCd != ''">
+		   				AND A.DLRSP_CD = #{dlspCd}
+		   			</if>
+		   			<if test="dlrCd != null and dlrCd != ''">
+		   				AND A.DLR_CD = #{dlrCd}
+		   			</if>
+  				</otherwise>
+  			</choose>
+  			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+  			/*AND A.SBMT_YN = 'Y'*/
+  			<if test="dlrStatus != null and dlrStatus != ''">
+				AND C.USE_YN = #{dlrStatus}  			
+  			</if>
+   			<if test="strtDt != null and strtDt != ''">			
+				AND DATE_FORMAT(A.REG_DTM,'%Y%m%d') <![CDATA[>=]]> STR_TO_DATE(#{strtDt}, '%m/%d/%Y')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND DATE_FORMAT(A.REG_DTM,'%Y%m%d') <![CDATA[<=]]> STR_TO_DATE(#{endDt}, '%m/%d/%Y')
+			</if>
+   			<if test="q != null and q != ''">
+   				<choose>
+   					<when test="f == 1">
+   						AND (A.DLR_CD LIKE CONCAT('%', #{q} , '%') OR C.OUT_DLR_CD LIKE CONCAT('%', #{q} , '%'))
+   					</when>
+   					<when test="f == 2">
+   						AND C.DLR_NM LIKE CONCAT('%', #{q} , '%')
+   					</when>
+   					<otherwise>
+   						AND (A.DLR_CD LIKE CONCAT('%', #{q} , '%') OR C.DLR_NM LIKE CONCAT('%', #{q} , '%') OR C.OUT_DLR_CD LIKE CONCAT('%', #{q} , '%'))
+   					</otherwise>
+   				</choose>
+		  	</if>
+   		</where>
+   	</sql>
+   	
+    <!--
+		쿼리명 : HSAFeedbackDAO.selectCstmrListTotCnt
+		설  명 : 고객 Total Count
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+	<select id="HSAFeedbackDAO.selectCstmrListTotCnt" parameterType="emfMap" resultType="java.lang.Integer">	
+		SELECT /* HSAFeedbackDAO.selectCstmrListTotCnt */
+			COUNT(*) AS TOT_CNT
+		FROM 
+			HG_HGSI_SURVEY_SEND_MST A
+		    LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+		    LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+		    JOIN CO_DEALER_MST E ON A.NATN_CD = E.NTN_CD AND A.DLRSP_CD = E.DLSP_CD AND A.DLR_CD = E.DLR_CD
+		    <if test="dlrStatus != null and dlrStatus != ''">
+				AND E.USE_YN = #{dlrStatus}		    
+		    </if> 
+		<include refid="selectCstmrListWhereSql" />
+	</select>
+	
+	<!--
+		쿼리명 : selectCstmrListWhereSql
+		설  명 : 고객 Where Sql
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+   	<sql id="selectCstmrListWhereSql">
+   		<where>
+   			<include refid="setFeedbackAuthWhereSql" />
+			AND A.ASGN_TASK_CD = #{asgnTaskCd}
+			AND A.SBMT_YN = 'Y'
+			AND C.USE_YN = 'Y'
+			AND D.USE_YN = 'Y'
+   			<if test="strtDt != null and strtDt != ''">			
+				AND DATE_FORMAT(A.REG_DTM,'%Y%m%d') <![CDATA[>=]]> STR_TO_DATE(#{strtDt}, '%m/%d/%Y')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND DATE_FORMAT(A.REG_DTM,'%Y%m%d') <![CDATA[<=]]> STR_TO_DATE(#{endDt}, '%m/%d/%Y')
+			</if>
+   			<if test="q != null and q != ''">
+   				<choose>
+   					<when test="f == 1">
+   						AND C.NM LIKE CONCAT('%', #{q} , '%')
+   					</when>
+   					<when test="f == 2">
+   						AND D.SERVICE_ASGNR LIKE CONCAT('%', #{q} , '%')
+   					</when>
+   					<otherwise>
+   						AND (C.NM LIKE CONCAT('%', #{q} , '%') OR D.SERVICE_ASGNR LIKE CONCAT('%', #{q} , '%'))
+   					</otherwise>
+   				</choose>
+		  	</if>
+   		</where>
+   	</sql>
+   	
+   	<!--
+		쿼리명 : HSAFeedbackDAO.getCstmrSttsCnt
+		설  명 : 고객 Status Count
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+	<select id="HSAFeedbackDAO.getCstmrSttsCnt" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* HSAFeedbackDAO.getCstmrSttsCnt */
+			(
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ 
+				<include refid="selectCstmrListWhereSql" />) AS TOT_CNT
+				
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ 
+				<include refid="selectCstmrListWhereSql" /> AND A.CSTMR_SRVY_OPN_YN = 'Y') AS READ_TOT_CNT
+			
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ 
+				<include refid="selectCstmrListWhereSql" /> AND A.CSTMR_SRVY_OPN_YN = 'N') AS UNREAD_TOT_CNT
+			
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+				<include refid="selectCstmrListWhereSql" /> AND B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))) AS NEW_TOT_CNT
+			
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+				<include refid="selectCstmrListWhereSql" /> AND B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[>=]]> DATE_FORMAT(NOW(), '%Y-%m-%d')) AS IN_PROGRESS_TOT_CNT
+			
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+			 	<include refid="selectCstmrListWhereSql" /> AND ((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY)))
+															 OR  (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))) AS OVER_DUE_TOT_CNT
+			
+			, (
+				SELECT 
+					COUNT(*) 
+				FROM 
+					HG_HGSI_SURVEY_SEND_MST A 
+					JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+					LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+					LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ 
+				<include refid="selectCstmrListWhereSql" /> AND B.STTS_CD = '2') AS CLOSED_TOT_CNT
+	</select>
+	
+	<!--
+		쿼리명 : HSAFeedbackDAO.selectCstmrDtl
+		설  명 : 고객 Details
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.25    허진영       최초생성      
+    -->
+    <select id="HSAFeedbackDAO.selectCstmrDtl" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* HSAFeedbackDAO.selectCstmrDtl */
+			A.SEND_PDDG
+			, A.NATN_CD
+			, A.DLRSP_CD
+			, A.DLR_CD
+			, A.VHCLT_NO
+			, A.VHCLT_SORT
+			, A.AVG_SCRG
+			, A.CSTMR_ALERT_CD
+			, B.ACPT_DTM
+			, B.ACPT_END_DT
+			, B.STTS_CD
+			, CASE WHEN ((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))) OR (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d'))) THEN 'Y'
+			 	   ELSE 'N'
+			 	    END OVER_DUE_YN
+			, (SELECT COUNT(*) FROM HG_HGSI_HOT_ALERT_NOTI_DTL WHERE SEND_PDDG = A.SEND_PDDG) AS RMNDR_CNT
+			, C.NM
+			, C.HP
+			, C.URN_CD
+			, (SELECT MDL FROM CO_VEHICLES_MST WHERE VHCLS_SEQ = C.VHCLS_SEQ) AS MDL
+			, D.ASGN_TASK_CD
+			, D.SERVICE_ASGNR
+			, A.SBMT_DTM
+			, D.SERVICE_DT
+    	FROM 
+    		HG_HGSI_SURVEY_SEND_MST A
+		    LEFT JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+		    LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+		    LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+		WHERE 1=1
+			AND A.SEND_PDDG = #{sendPddg}
+			AND A.VHCLT_NO = #{vhcltNo}
+			AND A.VHCLT_SORT = #{vhcltSort}
+		<include refid="setFeedbackAuthWhereSql" />
+    </select>
+	
+	<!--
+		쿼리명 : HSAFeedbackDAO.selectCstmrBscSrvyAnsw
+		설  명 : 고객 기본 설문 답변
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.28    허진영       최초생성      
+    -->
+    <select id="HSAFeedbackDAO.selectCstmrBscSrvyAnsw" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* HSAFeedbackDAO.selectCstmrBscSrvyAnsw */
+    		MAX(TBL.L_CTG_SEQ) AS L_CTG_SEQ
+  			, (SELECT CASE
+                      WHEN NULLIF(B.MENU_NM, '') IS NULL THEN A.MENU_NM
+                      ELSE B.MENU_NM
+                      END AS MENU_NM 
+              FROM CO_MENU_MST A LEFT JOIN CO_MENU_NM_DTL B ON A.MENU_SEQ=B.MENU_SEQ
+              AND B.LGUG_CD = #{siteLanguage}
+              WHERE A.MENU_SEQ = MAX(TBL.L_CTG_SEQ)) AS CTG_NM
+  			, TBL.QSTN
+  			, MAX(IF(TBL.ANSW_ADD_YN = 'N', IFNULL(TBL.EX_ANSW, 0), 0)) AS EX_ANSW
+  			, SUM(IF(TBL.ANSW_ADD_YN = 'N', IFNULL(TBL.SCRG, 0), 0)) AS SCRG
+  			, CASE WHEN MAX(TBL.L_CTG_SEQ) = 81 AND SUM(IF(TBL.ANSW_ADD_YN = 'N', IFNULL(TBL.SCRG, 0), 0)) = 0 THEN GROUP_CONCAT(IF(TBL.ANSW_ADD_YN = 'N', TBL.EX_ANSW, NULL) SEPARATOR ',')
+  			 	   ELSE GROUP_CONCAT(IF(TBL.ANSW_ADD_YN = 'Y', TBL.EX, NULL) SEPARATOR ',') 
+  			 	   END EX
+            , TBL.EX_ANSW_DSC
+		FROM (
+  			SELECT 
+    			T1.*
+    			, T2.EX_ANSW
+    			, T2.EX_ANSW_DSC
+    			, T2.SCRG
+    			, (SELECT EX FROM SM_SURVEY_QUESTION_EXAMPLE_DTL WHERE SRVY_TYPE_CD = T1.SRVY_TYPE_CD AND SRVY_SEQ = T1.SRVY_SEQ AND LGUG_CD = #{siteLanguage} AND QSTN_SORT = T1.QSTN_SORT AND EX_SORT = T2.EX_ANSW) AS EX
+    			, IFNULL(CASE T1.ANSW_ADD_YN WHEN 'N' THEN T1.QSTN_SORT ELSE T2.PRNT_SORT END, 0) AS SORT
+  			FROM (
+    			SELECT 
+      				A.SEND_PDDG
+      				, B.SRVY_TYPE_CD
+      				, B.SRVY_SEQ
+      				, B.LGUG_CD
+      				, B.QSTN_SORT
+      				, B.QSTN
+      				, B.L_CTG_SEQ
+      				, B.ANSW_ADD_YN
+    			FROM 
+      				HG_HGSI_SURVEY_SEND_MST A
+      				JOIN SM_SURVEY_QUESTION_DTL B ON B.SRVY_TYPE_CD = 'STC1' AND A.SRVY_SEQ = B.SRVY_SEQ 
+		            AND B.LGUG_CD = #{siteLanguage}
+  			) T1 LEFT JOIN HG_HGSI_SURVEY_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.SRVY_SEQ = T2.SRVY_SEQ AND T1.QSTN_SORT = T2.QSTN_SORT
+  			WHERE 
+    			T1.SEND_PDDG = #{sendPddg}
+		) TBL
+		WHERE 
+			SORT <![CDATA[>]]> 0 
+		GROUP BY 
+			SORT
+    </select>
+    
+    <!--
+		쿼리명 : HSAFeedbackDAO.selectCstmrAddSrvyAnsw
+		설  명 : 고객 추가 설문 답변
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.28    허진영       최초생성      
+    -->
+    <select id="HSAFeedbackDAO.selectCstmrAddSrvyAnsw" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* HSAFeedbackDAO.selectCstmrAddSrvyAnsw */
+  			MAX(TBL.L_CTG_SEQ) AS L_CTG_SEQ
+  			, (SELECT CASE
+                      WHEN NULLIF(B.MENU_NM, '') IS NULL THEN A.MENU_NM
+                      ELSE B.MENU_NM
+                      END AS MENU_NM 
+              FROM CO_MENU_MST A LEFT JOIN CO_MENU_NM_DTL B ON A.MENU_SEQ=B.MENU_SEQ
+              AND B.LGUG_CD = #{siteLanguage}
+              WHERE A.MENU_SEQ = MAX(TBL.L_CTG_SEQ)) AS CTG_NM
+  			, TBL.QSTN_TYPE_CD
+  			, TBL.QSTN
+  			, (SELECT GROUP_CONCAT(CONCAT(EX_SORT, '_', EX, '_', TXTQY_YN) SEPARATOR ',') FROM SM_SURVEY_ADD_QUESTION_EXAMPLE_DTL WHERE ADD_SRVY_TYPE_CD = TBL.ADD_SRVY_TYPE_CD AND ADD_SRVY_SEQ = TBL.ADD_SRVY_SEQ AND LGUG_CD = 'en' AND QSTN_SORT = TBL.QSTN_SORT) AS EX_LIST 
+  			, CASE TBL.QSTN_TYPE_CD WHEN 'QTC1' THEN SUM(IF(TBL.ANSW_ADD_YN = 'N', IFNULL(TBL.EX_ANSW, 0), 0))
+                              		ELSE CONVERT(GROUP_CONCAT(TBL.EX_ANSW SEPARATOR ','), CHAR)
+                               	 	 END EX_ANSW
+  			, TBL.EX_ANSW_DSC
+			, CASE TBL.QSTN_TYPE_CD WHEN 'QTC1' THEN GROUP_CONCAT(IF(TBL.ANSW_ADD_YN = 'Y', TBL.EX, NULL) SEPARATOR ',') ELSE GROUP_CONCAT(TBL.EX SEPARATOR ',') END EX
+		FROM (
+  			SELECT 
+  				T1.*
+	          	, (SELECT EX FROM SM_SURVEY_ADD_QUESTION_EXAMPLE_DTL WHERE ADD_SRVY_TYPE_CD = T1.ADD_SRVY_TYPE_CD AND ADD_SRVY_SEQ = T1.ADD_SRVY_SEQ AND LGUG_CD = 'en' AND QSTN_SORT = T1.QSTN_SORT AND EX_SORT = T2.EX_ANSW) AS EX
+	          	, T2.EX_ANSW
+	          	, T2.EX_ANSW_DSC
+	    		, IFNULL(CASE T1.ANSW_ADD_YN WHEN 'N' THEN T1.QSTN_SORT ELSE T2.PRNT_SORT END, 0) AS SORT
+	    		, T2.USE_YN
+  			FROM (
+    			SELECT 
+      				A.SEND_PDDG
+      				, B.ADD_SRVY_TYPE_CD
+      				, B.ADD_SRVY_SEQ
+      				, B.LGUG_CD
+      				, B.QSTN_SORT
+              		, B.QSTN_TYPE_CD
+      				, B.QSTN
+      				, B.L_CTG_SEQ
+      				, B.ANSW_ADD_YN
+    			FROM 
+    				HG_HGSI_SURVEY_SEND_MST A
+      				JOIN SM_SURVEY_ADD_QUESTION_DTL B ON B.ADD_SRVY_TYPE_CD = 'STC1' AND A.ADD_SRVY_SEQ = B.ADD_SRVY_SEQ AND B.LGUG_CD = 'en' AND B.USE_YN = 'Y'
+  			) T1 LEFT JOIN HG_HGSI_SURVEY_ADD_ANSWER_DTL T2 ON T1.SEND_PDDG = T2.SEND_PDDG AND T1.ADD_SRVY_SEQ = T2.ADD_SRVY_SEQ AND T1.QSTN_SORT = T2.ADD_QSTN_SORT
+  			WHERE 
+    			T1.SEND_PDDG = #{sendPddg}
+		) TBL
+		WHERE 
+			SORT <![CDATA[>]]> 0 
+			AND TBL.USE_YN = 'Y'
+		GROUP BY 
+			SORT
+    </select>
+    
+    <!--
+		쿼리명 : HSAFeedbackDAO.updateCstmrSrvyOpnYn
+		설  명 : 고객 설문 오픈 여부 Update
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.02.14    허진영       최초생성      
+    -->
+    <update id="HSAFeedbackDAO.updateCstmrSrvyOpnYn" parameterType="emfMap">
+    	UPDATE /* HSAFeedbackDAO.updateCstmrSrvyOpnYn */ HG_HGSI_SURVEY_SEND_MST
+    	SET
+    		CSTMR_SRVY_OPN_YN = 'Y'
+    		, MOD_DTM = NOW()
+		WHERE 1=1
+			AND SEND_PDDG = #{sendPddg}
+    </update>
+    
+    <!--
+		쿼리명 : HSAFeedbackDAO.excelCstmrList
+		설  명 : 엑셀다운로드
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.01.21    허진영       최초생성      
+    -->
+	<select id="HSAFeedbackDAO.excelCstmrList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* HSAFeedbackDAO.excelCstmrList */
+			T.*
+			, (SELECT DLR_NM FROM CO_DEALER_MST WHERE NTN_CD = T.NATN_CD AND DLSP_CD = T.DLRSP_CD AND DLR_CD = T.DLR_CD) AS DLR_NM
+			, CASE WHEN ((T.STTS_CD = '0' AND T.ACPT_DTM <![CDATA[<]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))) OR (T.STTS_CD = '1' AND T.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d'))) THEN 'Y'
+			 	   ELSE 'N'
+			 	    END OVER_DUE_YN
+      	FROM (
+			SELECT
+				A.SEND_PDDG
+				, A.NATN_CD
+				, A.DLRSP_CD
+				, A.DLR_CD
+				, A.VHCLT_NO
+				, A.VHCLT_SORT
+				, A.AVG_SCRG
+			    , C.NM
+			    , D.SERVICE_ASGNR
+			    , A.CSTMR_SRVY_OPN_YN
+			    , B.ACPT_DTM
+				, B.ACPT_END_DT
+			    , B.STTS_CD
+			    , A.SBMT_DTM
+			FROM
+			    HG_HGSI_SURVEY_SEND_MST A
+			    LEFT JOIN HG_HGSI_HOT_ALERT_MST B ON A.SEND_PDDG = B.SEND_PDDG
+			    LEFT JOIN CO_DEALER_CUSTOMER_DTL C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD AND A.VHCLT_NO = C.VHCLT_NO AND A.VHCLT_SORT = C.VHCLT_SORT
+			    LEFT JOIN CO_DEALER_CUSTOMER_LOG D ON A.NATN_CD = D.NTN_CD AND A.DLRSP_CD = D.DLSP_CD AND A.DLR_CD = D.DLR_CD AND A.VHCLT_NO = D.VHCLT_NO AND A.VHCLT_SORT = D.VHCLT_SORT AND A.LOG_SEQ = D.LOG_SEQ
+			<include refid="selectCstmrListWhereSql" />
+			<if test="status != null and status != '' and status != 'total'.toString()">
+		  		<if test="status == 'read'.toString()">
+		  			AND A.CSTMR_SRVY_OPN_YN = 'Y'
+			  	</if>
+			  	<if test="status == 'unread'.toString()">
+			  		AND A.CSTMR_SRVY_OPN_YN = 'N'
+			  	</if>
+			  	<if test="status == 'new'.toString()">
+			  		AND B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[>=]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))
+			  	</if>
+			  	<if test="status == 'inProgress'.toString()">
+			  		AND B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[>=]]> DATE_FORMAT(NOW(), '%Y-%m-%d')
+			  	</if>
+			  	<if test="status == 'overDue'.toString()">
+			  		AND ((B.STTS_CD = '0' AND B.ACPT_DTM <![CDATA[<]]> DATE(DATE_ADD(NOW(), INTERVAL -5 DAY))) 
+			  		 OR  (B.STTS_CD = '1' AND B.ACPT_END_DT <![CDATA[<]]> DATE_FORMAT(NOW(), '%Y-%m-%d')))
+			  	</if>
+			  	<if test="status == 'closed'.toString()">
+			  		AND B.STTS_CD = '2'
+			  	</if>
+		  	</if>
+		) T
+		ORDER BY 
+			T.SBMT_DTM DESC
+	</select>	 
+    
+    <!--
+		쿼리명 : setFeedbackAuthWhereSql
+		설  명 : Feedback 권한 조건
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        2019.02.14    허진영       최초생성      
+    -->
+	<sql id="setFeedbackAuthWhereSql">
+		<choose>
+			<when test="admAuthCd >= 50">
+				AND NATN_CD = #{admNatnCd}
+				AND DLRSP_CD = #{dlrSrchInfo.dlrspCd}
+			</when>
+ 			<when test="admAuthCd >= 30">
+ 				AND A.NATN_CD = #{admNatnCd}
+ 				AND A.DLRSP_CD = #{admDlspCd}
+ 			</when>
+ 			<when test="gubun == 'customerAll' ">
+ 				AND A.NATN_CD = #{ntnCd}
+ 			</when>
+ 			<otherwise>
+ 				AND A.NATN_CD = #{dlrSrchInfo.natnCd}
+ 				AND A.DLRSP_CD = #{dlrSrchInfo.dlrspCd}
+ 			</otherwise>
+ 		</choose>
+ 		<if test="gubun != 'customerAll' ">
+			AND A.DLR_CD = #{dlrSrchInfo.dlrCd}
+		</if>
+	</sql>
+	
+	
+	<!--
+		쿼리명 : HSAFeedbackDAO.selectSrvyWeakList
+		설  명 : 설문 취약점 문항 리스트 조회
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        20120.01.15    신혜정       최초생성      
+    -->
+    <select id="HSAFeedbackDAO.selectSrvyWeakList" parameterType="emfMap" resultType="emfMap">
+    	SELECT  /* HSAFeedbackDAO.selectSrvyWeakList */
+    		 DISTINCT T1.L_CTG_SEQ, T1.EX, T2.CNT, 
+    		 (SELECT CASE
+                     WHEN NULLIF(B.MENU_NM, '') IS NULL THEN A.MENU_NM
+                     ELSE B.MENU_NM
+                     END AS MENU_NM 
+              FROM CO_MENU_MST A LEFT JOIN CO_MENU_NM_DTL B ON A.MENU_SEQ=B.MENU_SEQ
+              <choose>
+              	<when test="siteLanguage != null">
+              		AND B.LGUG_CD = #{siteLanguage}
+              	</when>
+              	<otherwise>
+              		AND B.LGUG_CD = 'en'
+              	</otherwise>
+              </choose>
+              WHERE A.MENU_SEQ = T1.L_CTG_SEQ) AS CTG_NM
+    	FROM(
+    		SELECT
+	    		  A.L_CTG_SEQ
+	    		, B.EX
+	    	FROM
+	    		SM_SURVEY_QUESTION_DTL A JOIN SM_SURVEY_QUESTION_EXAMPLE_DTL B
+	    			ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.QSTN_SORT = B.QSTN_SORT AND A.LGUG_CD = B.LGUG_CD
+	    	WHERE A.SRVY_TYPE_CD = 'STC1'
+	    	AND A.SRVY_SEQ = (
+	    							SELECT 
+	    								SRVY_SEQ 
+	    							FROM 
+	    								SM_SURVEY_DISTRIBUTE_MST 
+	    							WHERE SRVY_TYPE_CD = 'STC1'
+	    							AND ASGN_TASK_CD = #{asgnTaskCd}
+	    							AND USE_YN = 'Y'
+	    							AND SEND_YN = 'Y'
+	    							<choose>
+	    								<when test="gubun == 'customer'.toString()">
+	    									<choose>
+	    										<when test="(dlrSrchInfo.natnCd == null || dlrSrchInfo.natnCd == '') and (dlrSrchInfo.admNatnCd == null || dlrSrchInfo.admNatnCd == '')">
+	    											<if test="nation.indexOf('sca')> 0 || nation.indexOf('easymedia')> 0">
+	    												AND NATN_CD = 'CL'
+	    											</if>
+	    											<if test="nation.indexOf('mea')> 0">
+	    												AND NATN_CD = 'AE'
+	    											</if>
+	    											<if test="nation.indexOf('ap')> 0">
+	    												AND NATN_CD = 'PH'
+	    											</if>
+	    											<if test="nation.indexOf('r1')> 0">
+	    												AND NATN_CD = 'KZ'
+	    											</if>
+	    										</when>
+	    										<when test="dlrSrchInfo.natnCd == null || dlrSrchInfo.natnCd == ''">AND NATN_CD = #{dlrSrchInfo.admNatnCd}</when>
+	    										<otherwise>AND NATN_CD = #{dlrSrchInfo.natnCd}</otherwise>
+	    									</choose>
+	    									
+	    								</when>
+	    								<otherwise>
+	    									<choose>
+	    										<when test="(ntnCd == null || ntnCd == '') and (admNatnCd == null || admNatnCd == '')">
+	    											<if test="nation.indexOf('sca')> 0 || nation.indexOf('easymedia')> 0">
+	    												AND NATN_CD = 'CL'
+	    											</if>
+	    											<if test="nation.indexOf('mea')> 0">
+	    												AND NATN_CD = 'AE'
+	    											</if>
+	    											<if test="nation.indexOf('ap')> 0">
+	    												AND NATN_CD = 'PH'
+	    											</if>
+	    											<if test="nation.indexOf('r1')> 0">
+	    												AND NATN_CD = 'KZ'
+	    											</if>
+	    										</when>
+	    										<when test="ntnCd == null || ntnCd == ''">AND NATN_CD = #{admNatnCd}</when>
+	    										<otherwise>AND NATN_CD = #{ntnCd}</otherwise>
+	    									</choose>
+	    								</otherwise>
+	    							</choose>
+	    							LIMIT 0,1
+	    					  )
+	    	<choose>
+              	<when test="siteLanguage != null">
+              		AND A.LGUG_CD = #{siteLanguage}
+              	</when>
+              	<otherwise>
+              		AND A.LGUG_CD = 'en'
+              	</otherwise>
+            </choose>
+	    	) AS T1 JOIN
+	    	(
+    		SELECT
+	    		   A.L_CTG_SEQ, COUNT(*) AS CNT
+	    	FROM
+	    		SM_SURVEY_QUESTION_DTL A JOIN SM_SURVEY_QUESTION_EXAMPLE_DTL B
+	    			ON A.SRVY_TYPE_CD = B.SRVY_TYPE_CD AND A.SRVY_SEQ = B.SRVY_SEQ AND A.QSTN_SORT = B.QSTN_SORT AND A.LGUG_CD = B.LGUG_CD
+	    	WHERE A.SRVY_TYPE_CD = 'STC1'
+	    	AND A.SRVY_SEQ = (
+	    							SELECT 
+	    								SRVY_SEQ 
+	    							FROM 
+	    								SM_SURVEY_DISTRIBUTE_MST 
+	    							WHERE SRVY_TYPE_CD = 'STC1'
+	    							AND ASGN_TASK_CD = #{asgnTaskCd}
+	    							AND USE_YN = 'Y'
+	    							AND SEND_YN = 'Y'
+	    							<choose>
+	    								<when test="gubun == 'customer'.toString()">
+	    									<choose>
+	    										<when test="(dlrSrchInfo.natnCd == null || dlrSrchInfo.natnCd == '') and (dlrSrchInfo.admNatnCd == null || dlrSrchInfo.admNatnCd == '')">
+	    											<if test="nation.indexOf('sca')> 0 || nation.indexOf('easymedia')> 0">
+	    												AND NATN_CD = 'CL'
+	    											</if>
+	    											<if test="nation.indexOf('mea')> 0">
+	    												AND NATN_CD = 'AE'
+	    											</if>
+	    											<if test="nation.indexOf('ap')> 0">
+	    												AND NATN_CD = 'PH'
+	    											</if>
+	    											<if test="nation.indexOf('r1')> 0">
+	    												AND NATN_CD = 'KZ'
+	    											</if>
+	    										</when>
+	    										<when test="dlrSrchInfo.natnCd == null || dlrSrchInfo.natnCd == ''">AND NATN_CD = #{dlrSrchInfo.admNatnCd}</when>
+	    										<otherwise>AND NATN_CD = #{dlrSrchInfo.natnCd}</otherwise>
+	    									</choose>
+	    								</when>
+	    								<otherwise>
+	    									<choose>
+	    										<when test="(ntnCd == null || ntnCd == '') and (admNatnCd == null || admNatnCd == '')">
+	    											<if test="nation.indexOf('sca')> 0 || nation.indexOf('easymedia')> 0">
+	    												AND NATN_CD = 'CL'
+	    											</if>
+	    											<if test="nation.indexOf('mea')> 0">
+	    												AND NATN_CD = 'AE'
+	    											</if>
+	    											<if test="nation.indexOf('ap')> 0">
+	    												AND NATN_CD = 'PH'
+	    											</if>
+	    											<if test="nation.indexOf('r1')> 0">
+	    												AND NATN_CD = 'KZ'
+	    											</if>
+	    										</when>
+	    										<when test="ntnCd == null || ntnCd == ''">AND NATN_CD = #{admNatnCd}</when>
+	    										<otherwise>AND NATN_CD = #{ntnCd}</otherwise>
+	    									</choose>
+	    								</otherwise>
+	    							</choose>
+	    							LIMIT 0,1
+	    					  )
+	    	AND A.LGUG_CD = 'en'
+	    	GROUP BY A.L_CTG_SEQ) AS T2 ON T1.L_CTG_SEQ = T2.L_CTG_SEQ
+	    	
+    </select>
+    
+    <!--
+		쿼리명 : HSAFeedbackDAO.getAddAnswList
+		설  명 : 추가질문 답변 가져오기
+	      수정일      수정자       수정내용 
+        ==========   ========   ============== 
+        20120.01.15    신혜정       최초생성      
+    -->
+    <select id="HSAFeedbackDAO.getAddAnswList" parameterType="emfMap" resultType="emfMap">
+    	SELECT  /* HSAFeedbackDAO.getAddAnswList */
+    		  A.DLR_CD
+    		, B.ADD_QSTN_SORT
+    		, B.EX_ANSW
+    		, B.EX_ANSW_DSC
+    		, COUNT(EX_ANSW) AS CNT
+    		, A.SEND_PDDG
+    	FROM HG_HGSI_SURVEY_SEND_MST A JOIN HG_HGSI_SURVEY_ADD_ANSWER_DTL B ON A.SEND_PDDG = B.SEND_PDDG <!-- AND A.ADD_SRVY_SEQ = B.ADD_SRVY_SEQ -->
+    		JOIN CO_DEALER_MST C ON A.NATN_CD = C.NTN_CD AND A.DLRSP_CD = C.DLSP_CD AND A.DLR_CD = C.DLR_CD
+    	WHERE 1=1
+    		AND A.REG_DTM <![CDATA[>=]]> STR_TO_DATE(#{strtDt}, '%m/%d/%Y')
+    		AND A.REG_DTM <![CDATA[<]]> STR_TO_DATE(#{endDt}, '%m/%d/%Y')
+    		AND A.SBMT_YN = 'Y'
+    		AND B.ADD_QSTN_SORT != 2
+    		<if test="dlrStatus != null and dlrStatus != ''">
+				AND C.USE_YN = #{dlrStatus}    		
+    		</if>
+    		AND A.ASGN_TASK_CD =#{asgnTaskCd}
+    		<if test="gubun != 'dealer'.toString() and gubun != 'customerAll'.toString() ">AND A.DLR_CD= #{dlrSrchInfo.dlrCd}</if>
+    		<if test="gubun == 'customerAll'.toString() "><choose><when test="admAuthCd gte 30">AND A.NATN_CD = #{admNatnCd}</when><otherwise>AND A.NATN_CD = #{ntnCd}</otherwise></choose></if>
+    	GROUP BY 
+    		<choose>
+    			<when test="gubun == 'dealer'.toString() ">A.DLR_CD</when>
+    			<otherwise>A.SEND_PDDG</otherwise>
+    		</choose>
+    		, B.ADD_QSTN_SORT 
+    		, B.EX_ANSW
+    	ORDER BY A.DLR_CD, B.ADD_QSTN_SORT
+    	
+    </select>
+</mapper>
