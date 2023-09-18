@@ -2,26 +2,32 @@ package com.easymedia.api.controller;
 
 import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
+import com.easymedia.dto.login.LoginUser;
+import com.easymedia.error.ErrorResponse;
 import com.easymedia.service.EgovCmmUseService;
 import com.easymedia.utility.EgovFileMngUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <pre>
@@ -163,20 +169,19 @@ public class COCommonController {
 
 
 
-    /**
-     * 뱃지 조회
-     *
-     * @param emfMap
-     * @return String View URL
-     * @throws Exception
-     */
-    @RequestMapping(value="/mngwserc/co/get-badge-list.ajax")
-    public String getBadgeList(EmfMap emfMap, ModelMap model) throws Exception
+    @Operation(summary = "뱃지 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+    @GetMapping(value="/get-badge-list")
+    public List<EmfMap> getBadgeList(@ApiData EmfMap emfMap, @AuthenticationPrincipal LoginUser loginUser) throws Exception
     {
+        List<EmfMap> rtnList = null;
         try
         {
-            emfMap.put("list", cmmUseService.getBadgeList(emfMap));
-            model.put("rtnData", emfMap);
+            emfMap.put("dlspCd", loginUser.getDlspCd());
+            emfMap.put("dlrCdList", loginUser.getDlrCdList());
+            rtnList = cmmUseService.getBadgeList(emfMap);
         }
         catch (Exception he)
         {
@@ -186,7 +191,7 @@ public class COCommonController {
             }
             throw he;
         }
-        return "jsonView";
+        return rtnList;
     }
 
     /**
