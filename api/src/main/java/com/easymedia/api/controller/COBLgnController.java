@@ -1,6 +1,7 @@
 package com.easymedia.api.controller;
 
 import com.easymedia.api.annotation.ApiData;
+import com.easymedia.common.utility.CONetworkUtil;
 import com.easymedia.dto.EmfMap;
 import com.easymedia.dto.login.LoginUser;
 import com.easymedia.error.ErrorResponse;
@@ -107,7 +108,7 @@ public class COBLgnController {
 			@ApiResponse(responseCode = "200", description = "성공"),
 			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @RequestMapping(value="/setLogout")
-    public String actionLogout(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
+    public void actionLogout(@ApiData EmfMap emfMap, ModelMap modelMap, HttpServletRequest request) throws Exception
     {
     	try
     	{
@@ -126,8 +127,6 @@ public class COBLgnController {
             }
 			throw he;
 		}
-
-    	return "redirect:/mngwsercgateway/getLogin.do";
     }
     
     /**
@@ -430,14 +429,21 @@ public class COBLgnController {
 	 * @return String View URL
 	 * @throws Exception
 	 */
-	@RequestMapping(value="/mngwserc/**/profile.ajax", method=RequestMethod.POST)
-	public String updatePrsnData(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+	@Operation(summary = "내 정보 변경", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/profile")
+	public int updatePrsnData(@RequestBody @ApiData EmfMap emfMap, @AuthenticationPrincipal LoginUser loginUser, HttpServletRequest request) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
 			emfMap.put("isAdmMng", "N");
-
-			modelMap.addAttribute("actCnt", cOCAdmService.updatePrsnData(emfMap));
+			emfMap.put("detailsKey", loginUser.getAdmSeq());
+			emfMap.put("modId", loginUser.getId());
+			emfMap.put("modIp", CONetworkUtil.getMyIPaddress(request));
+			actCnt = cOCAdmService.updatePrsnData(emfMap);
 		}
 		catch (Exception he)
 		{
@@ -448,7 +454,7 @@ public class COBLgnController {
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 
 	/**

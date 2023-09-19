@@ -392,10 +392,6 @@ public class COBLgnServiceImpl implements COBLgnService {
 	 */
     public void actionLogout(EmfMap emfMap, HttpServletRequest request) throws Exception
     {
-    	
-    	// 로그인 세션을 삭제한다.
-    	RequestContextHolder.getRequestAttributes().setAttribute("admLgnMap", null, RequestAttributes.SCOPE_SESSION);
-
     	// 로그아웃 로그를 삽입해준다.
     	emfMap.put("srvcNm", "COBLgnController");
     	emfMap.put("fncNm", "actionLogout");

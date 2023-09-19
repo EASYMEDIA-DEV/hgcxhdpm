@@ -181,6 +181,7 @@ public class COCommonController {
         {
             emfMap.put("dlspCd", loginUser.getDlspCd());
             emfMap.put("dlrCdList", loginUser.getDlrCdList());
+            emfMap.put("authCd", loginUser.getAuthCd());
             rtnList = cmmUseService.getBadgeList(emfMap);
         }
         catch (Exception he)

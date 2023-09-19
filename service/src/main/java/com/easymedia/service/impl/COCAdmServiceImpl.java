@@ -217,20 +217,12 @@ public class COCAdmServiceImpl implements COCAdmService {
      */
 	public int updatePrsnData(EmfMap emfMap) throws Exception
 	{
-		EmfMap lgnMap = (EmfMap) EgovUserDetailsHelper.getAuthenticatedUser();
-
-		// 순번
-		emfMap.put("detailsKey", lgnMap.getString("admSeq"));
-
 		// 비밀번호
 		String password = emfMap.getString("pwd");
 		if (!"".equals(password) && password.length() >= 6)
 		{
 			emfMap.put("pwd", SeedCipher.oneencrypt(password));
 		}
-
-		emfMap.put("modId", lgnMap.getString("id"));
-		emfMap.put("modIp", lgnMap.getString("loginIp"));
 
 		return cOCAdmDAO.updateAdm(emfMap);
 	}
