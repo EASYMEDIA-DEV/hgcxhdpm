@@ -422,13 +422,6 @@ public class COBLgnController {
 		return "mngwserc/co/coc/COCPrsnDataChng";
 	}
 
-	/**
-	 * 관리자 내정보변경을 한다.
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
 	@Operation(summary = "내 정보 변경", description = "")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "성공"),
