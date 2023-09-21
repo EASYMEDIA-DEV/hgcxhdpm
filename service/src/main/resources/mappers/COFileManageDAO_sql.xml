@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.easymedia.service.dao.COFileManageDAO">
+
+	<!--
+		 쿼리명 : selectFileInfs
+         설  명 : 파일 목록을 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<select id="selectFileInfs" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectFileInfs */
+			   A.ATCH_FILE_ID
+			   , B.FILE_SEQ
+			   , B.PHY_PATH
+			   , B.REAL_FILE_NM
+			   , B.SAVE_FILE_NM
+			   , B.FILE_EXTN
+			   , B.FILE_SIZE
+			   , B.FILE_DSC
+			   , B.WEB_PATH
+			   , A.REG_DTM
+		  FROM CO_FILE_MST A, CO_FILE_DTL B
+		 WHERE A.ATCH_FILE_ID = B.ATCH_FILE_ID
+		   AND A.ATCH_FILE_ID = #{atchFileId}
+		   AND A.USE_YN = 'Y'
+		   AND B.USE_YN = 'Y'
+		ORDER BY B.FILE_SEQ
+ 	</select>
+
+	<!--
+		 쿼리명 : selectFileInf
+         설  명 : 파일 상세를 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<select id="selectFileInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectFileInf */
+			   ATCH_FILE_ID
+			   , FILE_DSC
+			   , FILE_SEQ
+			   , PHY_PATH
+			   , REAL_FILE_NM
+			   , SAVE_FILE_NM
+			   , FILE_EXTN
+			   , FILE_SIZE
+			   , WEB_PATH
+		  FROM CO_FILE_DTL
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+		   AND FILE_SEQ = #{fileSeq}
+		   AND USE_YN = 'Y'
+ 	</select>
+
+ 	<!--
+		 쿼리명 : insertFileMaster
+         설  명 : 파일 마스터를 등록한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<insert id="insertFileMaster" parameterType="emfMap">
+		INSERT /*insertFileMaster*/ INTO CO_FILE_MST
+			(ATCH_FILE_ID
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{atchFileId}
+			, 'Y'
+			, #{regId}
+			, #{regIp}
+			, NOW()
+			, #{modId}
+			, #{modIp}
+			, NOW()
+			)
+	</insert>
+
+	<!--
+         쿼리명 : insertFileDetail
+         설  명 : 파일 상세정보를 등록한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<insert id="insertFileDetail" parameterType="emfMap">
+		INSERT /*insertFileDetail*/ INTO CO_FILE_DTL
+			(ATCH_FILE_ID
+			, FILE_SEQ
+			, PHY_PATH
+			, REAL_FILE_NM
+			, SAVE_FILE_NM
+			, FILE_EXTN
+			, FILE_SIZE
+			, FILE_DSC
+			, WEB_PATH
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{atchFileId}
+			, #{fileSeq}
+			, #{phyPath}
+			, #{realFileNm}
+			, #{saveFileNm}
+			, #{fileExtn}
+			, #{fileSize}
+			, #{fileDsc, jdbcType=VARCHAR}
+			, #{webPath, jdbcType=VARCHAR}
+			, 'Y'
+			, #{regId}
+			, #{regIp}
+			, NOW()
+			, #{modId}
+			, #{regIp}
+			, NOW()
+			)
+		ON DUPLICATE KEY UPDATE
+		      PHY_PATH = #{phyPath}
+			, REAL_FILE_NM = #{realFileNm}
+			, SAVE_FILE_NM = #{saveFileNm}
+			, FILE_EXTN = #{fileExtn}
+			, FILE_SIZE = #{fileSize}
+			, FILE_DSC = #{fileDsc, jdbcType=VARCHAR}
+			, WEB_PATH = #{webPath, jdbcType=VARCHAR}
+			, MOD_ID = #{modId}
+			, MOD_IP = #{regIp}
+			, MOD_DTM = NOW()
+	</insert>
+
+	<!--
+         쿼리명 : updateFileDetail
+         설  명 : 파일 상세를 수정한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<update id="updateFileDetail" parameterType="emfMap" >
+		UPDATE /* updateFileDetail */ CO_FILE_DTL
+		   SET FILE_DSC = #{fileDsc}
+		       , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = NOW()
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+		   AND FILE_SEQ = #{fileSeq}
+	</update>
+
+	<!--
+         쿼리명 : deleteFileDetail
+         설  명 : 파일을 삭제한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<delete id="deleteFileDetail" parameterType="emfMap">
+		DELETE /* deleteFileDetail */
+		  FROM CO_FILE_DTL
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+		   AND FILE_SEQ = #{fileSeq}
+	</delete>
+
+	<!--
+         쿼리명 : deleteFileDetail2
+         설  명 : 파일을 삭제한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.02.20   허진영       최초생성
+    -->
+	<delete id="deleteFileDetail2" parameterType="emfMap">
+		DELETE /* deleteFileDetail2 */
+		  FROM CO_FILE_DTL
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+		   AND FILE_SEQ IN
+		<foreach collection="delFileSeqArr" item="fileSeq" index="index" separator=", " open="(" close=")">
+            #{fileSeq}
+        </foreach>
+	</delete>
+
+	<!--
+         쿼리명 : deleteAllFileInf
+         설  명 : 전체 파일을 삭제한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<update id="deleteAllFileInf" parameterType="emfMap">
+		UPDATE /* deleteAllFileInf */ CO_FILE_MST
+		  SET USE_YN = 'N'
+		WHERE ATCH_FILE_ID = #{atchFileId}
+	</update>
+
+	<!--
+		쿼리명 : FileMnageDAO.deleteFileInf
+        설  명 : 파일 삭제 flag 변화
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<update id="deleteFileInf" parameterType="emfMap">
+		UPDATE /* FileMnageDAO.deleteFileInf */ CO_FILE_DTL
+		   SET USE_YN = 'N'
+		   	   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = NOW()
+ 		 WHERE ATCH_FILE_ID = #{atchFileId}
+ 		   AND FILE_SEQ = #{fileSeq}
+ 	</update>
+
+ 	<!--
+         쿼리명 : selectParentFileCnt
+         설  명 : 파일 구분자에 대한 최대값을 구한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="selectParentFileCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT /* selectParentFileCnt */
+			   COUNT(*)
+		  FROM CO_FILE_MST
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+	</select>
+
+	<!--
+         쿼리명 : selectFileListByFileNm
+         설  명 : 파일명 검색에 대한 목록을 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<select id="selectFileListByFileNm" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectFileListByFileNm */
+ 			   TBL.*
+		FROM (
+			SELECT ROWNUM RNUM, T1.*
+			FROM (
+				SELECT A.ATCH_FILE_ID
+					   , B.FILE_SEQ
+					   , B.PHY_PATH
+					   , B.REAL_FILE_NM
+					   , B.SAVE_FILE_NM
+					   , B.FILE_EXTN
+					   , B.FILE_SIZE
+					   , B.FILE_DSC
+					   , A.REG_DTM
+			      FROM CO_FILE_MST A, CO_FILE_DTL B
+	   			 WHERE A.ATCH_FILE_ID = B.ATCH_FILE_ID
+		 	 	   AND A.USE_YN = 'Y'
+				<if test="searchWrd != null and searchWrd != ''">
+					<![CDATA[	AND (B.SAVE_FILE_NM LIKE CONCAT('%' , #{searchWrd} , '%') OR B.REAL_FILE_NM LIKE CONCAT('%' , #{searchWrd} ,'%') )	]]>
+				</if>
+	   		     ORDER BY A.ATCH_FILE_ID, B.FILE_SEQ
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+ 	</select>
+
+ 	<!--
+         쿼리명 : selectImageFileList
+         설  명 : 이미지 파일에 대한 목록을 조회한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+  	<select id="selectImageFileList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectImageFileList */
+			   A.ATCH_FILE_ID
+			   , B.FILE_SEQ
+			   , B.PHY_PATH
+			   , B.REAL_FILE_NM
+			   , B.SAVE_FILE_NM
+			   , B.FILE_EXTN
+			   , B.FILE_SIZE
+			   , B.FILE_DSC
+			   , A.REG_DTM
+		  FROM CO_FILE_MST A, CO_FILE_DTL B
+		 WHERE A.ATCH_FILE_ID = B.ATCH_FILE_ID
+		   AND A.ATCH_FILE_ID = #{atchFileId}
+		   AND A.USE_YN = 'Y'
+		   AND UPPER(B.FILE_EXTN) IN('GIF','JPG','BMP','PNG')
+		 ORDER BY B.FILE_SEQ
+ 	</select>
+
+ 	<!--
+         쿼리명 : getParntFileCnt
+         설  명 : 파일 마스터에 데이터가 있는지 확인한다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<select id="getParntFileCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT /* getParntFileCnt */
+			   COUNT(*)
+	      FROM CO_FILE_MST
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+ 	</select>
+
+	<!--
+         쿼리명 : getMaxFileSeq
+         설  명 : 파일ID에 대한 최대 파일순번을 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+	<select id="getMaxFileSeq" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT /* getMaxFileSeq */
+			   IFNULL(MAX(FILE_SEQ), 0) + 1 AS FILE_SEQ
+		  FROM CO_FILE_DTL
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+	</select>
+
+	<!--
+         쿼리명 : getFileListCnt
+         설  명 : 파일의 갯수를 가져온다.
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2017.04.03   허진영       최초생성
+    -->
+ 	<select id="getFileListCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT /* getFileListCnt */
+			   COUNT(ATCH_FILE_ID)
+		  FROM CO_FILE_DTL
+		 WHERE ATCH_FILE_ID = #{atchFileId}
+		   AND USE_YN = 'Y'
+ 	</select>
+
+</mapper>

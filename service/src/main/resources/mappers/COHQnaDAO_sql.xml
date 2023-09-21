@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easymedia.service.dao.COHQnaDAO">
+	<!--
+		쿼리명 : selectAncmQnaList
+		설   명 : 공지 조회
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+	<select id="selectAncmQnaList" parameterType="emfMap" resultType="emfMap">
+		SELECT  /* selectAncmQnaList */
+			  a.qstn_seq
+		  	, a.titl
+		  	, a.ancm_yn
+		  	, a.reg_id
+		  	, a.reg_dtm
+		FROM
+			co_qna_mst a
+		WHERE ANCM_YN = 'Y'
+		ORDER BY
+			a.REG_DTM DESC
+	</select>
+
+	<!--
+		쿼리명 : selectQnaList
+		설   명 : Sample List
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+	<select id="selectQnaList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectQnaList */
+			  A.*
+      	FROM (
+			SELECT
+				  a.qstn_seq
+			  	, a.titl
+			  	, a.reg_id
+			  	, a.reg_dtm
+			FROM
+				co_qna_mst a
+				<include refid="selectQnaListWhereSql" />
+			ORDER BY
+				a.REG_DTM DESC
+			LIMIT
+				#{firstIndex}, #{recordCountPerPage}
+		) A
+	</select>
+
+	<!--
+		쿼리명 : selectQnaListTotCnt
+		설   명 : Sample Total Count
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+	<select id="selectQnaListTotCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* selectQnaListTotCnt */
+			COUNT(*) AS TOT_CNT
+		FROM
+			co_qna_mst a
+		<include refid="selectQnaListWhereSql" />
+	</select>
+
+   	<!--
+		쿼리명 : selectQnaListWhereSql
+		설   명 : Sample Where Sql
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+   	<sql id="selectQnaListWhereSql">
+   		<where>
+   			a.ancm_yn = 'N'
+   			<if test="admAuthCd >= 30">
+	    		and a.reg_id = #{regId}
+	    	</if>
+   		</where>
+   	</sql>
+
+   	<!--
+		쿼리명 : selectQnaDtl
+		설   명 : 상세
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+	<select id="selectQnaDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* selectQnaDtl */
+			  a.titl
+			, a.cntn
+			, a.atch_file_id
+			, a.qstn_seq
+			, a.ancm_yn
+			, a.reg_id
+		FROM
+			co_qna_mst a
+	    <where>
+	    	a.qstn_seq = #{detailsKey}
+	    	<if test="admAuthCd >= 30">
+	    		and (a.reg_id = #{regId} OR a.ancm_yn = 'Y')
+	    	</if>
+   		</where>
+	</select>
+
+
+	<!--
+		쿼리명 : insertQnaDtl
+		설   명 : 게시글 등록
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.17     김진수                        최초생성
+    -->
+ 	<insert id="insertQnaDtl" parameterType="emfMap">
+		INSERT /* insertQnaDtl */ INTO co_qna_mst
+	  		(
+		  		 qstn_seq
+				,titl
+				,cntn
+				,atch_file_id
+				,ancm_yn
+				,reg_id
+				,reg_dtm
+				,mod_id
+				,mod_dtm
+			)
+		VALUES
+			(
+			  #{qstnSeq}
+			, #{titl}
+			, #{cntn}
+			, #{atchFileId}
+			, #{ancmYn}
+			, #{regId}
+			, NOW()
+			, #{modId}
+			, NOW()
+			)
+ 	</insert>
+
+ 	<!--
+		쿼리명 : updateQnaDtl
+		설   명 : 게시글 수정
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.17     김진수                        최초생성
+    -->
+ 	<update id="updateQnaDtl" parameterType="emfMap">
+		UPDATE /* updateQnaDtl */ co_qna_mst
+		SET  titl = #{titl}
+		   , cntn = #{cntn}
+		   , atch_file_id = #{atchFileId}
+		   , ancm_yn = #{ancmYn}
+		   , mod_id = #{modId}
+		   , mod_dtm = NOW()
+		WHERE qstn_seq = #{detailsKey}
+		<if test="admAuthCd >= 30">
+    		and reg_id = #{regId}
+    	</if>
+ 	</update>
+
+
+ 	<!--
+		쿼리명 : getQnaCommentList
+		설   명 : Sample List
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.09     박주석                        최초생성
+    -->
+	<select id="getQnaCommentList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* getQnaCommentList */
+			  B.qstn_seq
+			, B.rply_seq
+			, B.titl
+			, B.reg_id
+			, (SELECT NAME FROM co_adm_mst WHERE ID = B.reg_id LIMIT 1) as REG_NM
+			, B.reg_dtm
+			, B.REG_ID
+		FROM
+		co_qna_mst A JOIN co_qna_comment_dtl B
+		ON A.qstn_seq = B.qstn_seq
+		WHERE
+		B.qstn_seq = #{detailsKey}
+		<if test="admAuthCd >= 30">
+    		and A.reg_id = #{regId}
+    	</if>
+		ORDER BY B.REG_DTM ASC
+	</select>
+
+
+	<!--
+		쿼리명 : insertQnaComment
+		설   명 : 댓글 등록
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.17     김진수                        최초생성
+    -->
+ 	<insert id="insertQnaComment" parameterType="emfMap">
+		INSERT /* insertQnaComment */ INTO co_qna_comment_dtl
+	  		(
+		  		 qstn_seq
+		  		,rply_seq
+				,titl
+				,reg_id
+				,reg_dtm
+				,mod_id
+				,mod_dtm
+			)
+		VALUES
+			(
+			  #{detailsKey}
+			, #{rplySeq}
+			, #{titl}
+			, #{regId}
+			, NOW()
+			, #{regId}
+			, NOW()
+			)
+ 	</insert>
+
+
+ 	<!--
+		쿼리명 : deleteQnaComment
+		설   명 : 댓글 삭제
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.17     김진수                        최초생성
+    -->
+ 	<delete id="deleteQnaComment" parameterType="emfMap">
+		DELETE FROM /* deleteQnaComment */ co_qna_comment_dtl
+		WHERE qstn_seq = #{detailsKey} AND rply_seq = #{rplySeq}
+		<if test="admAuthCd >= 30">
+    		and reg_id = #{regId}
+    	</if>
+ 	</delete>
+
+ 	<!--
+		쿼리명 : deleteQna
+		설   명 : QNA 삭제
+	                    수정일                     수정자                         수정내용
+        ==========   =======   ==============
+        2019.01.17     김진수                        최초생성
+    -->
+ 	<delete id="deleteQna" parameterType="emfMap">
+		DELETE FROM /* deleteQna */ co_qna_mst
+		WHERE qstn_seq = #{detailsKey}
+		<if test="admAuthCd >= 30">
+    		and reg_id = #{regId}
+    	</if>
+ 	</delete>
+
+</mapper>

@@ -66,7 +66,9 @@ public class ApiSecurityConfig {
                         "/swagger-resources/**",
                         "/swagger**",
                         "/api-docs/**",
-                        "/api/v1/sample/**");
+                        "/api/v1/sample/**",
+                        //첨부파일 이미지?
+                        "/image/**");
     }
 
     @Bean

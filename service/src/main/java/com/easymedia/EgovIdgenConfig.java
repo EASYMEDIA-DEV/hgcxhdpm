@@ -152,4 +152,30 @@ public class EgovIdgenConfig {
                 .setCipers(13)
                 .build();
     }
+
+    /** QNA
+     * @return
+     */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl qstnIdgen() {
+        return new EgovIdGnrBuilder().setDataSource(dataSource).setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+                .setBlockSize(1)
+                .setTable("CO_SEQ_MST")
+                .setTableName("QSTN_SEQ")
+                .setCipers(13)
+                .build();
+    }
+
+    /** RPLY_SEQ
+     * @return
+     */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl rplyIdgen() {
+        return new EgovIdGnrBuilder().setDataSource(dataSource).setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+                .setBlockSize(1)
+                .setTable("CO_SEQ_MST")
+                .setTableName("RPLY_SEQ")
+                .setCipers(13)
+                .build();
+    }
 }
