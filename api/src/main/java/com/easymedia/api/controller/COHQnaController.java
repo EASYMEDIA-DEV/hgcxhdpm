@@ -5,9 +5,7 @@ import com.easymedia.dto.EmfMap;
 import com.easymedia.error.ErrorCode;
 import com.easymedia.error.ErrorResponse;
 import com.easymedia.error.exception.BusinessException;
-import com.easymedia.service.COHQnaService;
-import com.easymedia.service.EgovCmmUseService;
-import com.easymedia.service.MailService;
+import com.easymedia.service.*;
 import com.easymedia.utility.EgovFileMngUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,9 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpSession;
@@ -60,7 +56,7 @@ public class COHQnaController {
 
    	private final EgovFileMngUtil fileUtil;
 
-    //private final EgovFileMngService fileMngService;
+    private final EgovFileMngService fileMngService;
 
 	@Value("${globals.qna-to-user}")
 	private String globalsToUser;
@@ -94,16 +90,14 @@ public class COHQnaController {
 		return rtnData;
 	}
 
-	/**
-	 * 리스트 Ajax
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-view.do")
-	public String selectDealershipView(EmfMap emfMap, ModelMap modelMap, HttpSession session) throws Exception
+	@Operation(summary = "리스트 상세", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@GetMapping(value="/view")
+	public EmfMap selectDealershipView(@ApiData  EmfMap emfMap, ModelMap modelMap, HttpSession session) throws Exception
 	{
+		EmfMap rtnData = null;
 		String detailsKey = emfMap.getString("detailsKey");
 		
 		if("".equals(detailsKey))
@@ -115,7 +109,7 @@ public class COHQnaController {
 		}
 		try
 		{
-			EmfMap rtnData = cOHQnaService.selectQnaDtl(emfMap);
+			rtnData = cOHQnaService.selectQnaDtl(emfMap);
 			if(rtnData.get("info") == null)
 			{
 				throw new BusinessException(ErrorCode.NOT_FOUND);
@@ -124,7 +118,7 @@ public class COHQnaController {
 			{
 				EmfMap fileMap = new EmfMap();
 				fileMap.put("atchFileId", ((EmfMap)rtnData.get("info")).getString("atchFileId"));
-				//emfMap.put("atchFile", fileMngService.selectFileInfs(fileMap));
+				emfMap.put("atchFile", fileMngService.selectFileInfs(fileMap));
 			}
 			modelMap.addAttribute("rtnData", rtnData);
 		}
@@ -137,7 +131,130 @@ public class COHQnaController {
 			throw he;
 		}
 
-		return "mngwserc/co/coh/COHQnaView";
+		return rtnData;
+	}
+
+	@Operation(summary = "QNA 삭제", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@GetMapping(value="/delete")
+	public int delQna(@ApiData EmfMap emfMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			actCnt = cOHQnaService.deleteQna(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isErrorEnabled())
+			{
+				log.error(he.getMessage());
+			}
+			throw he;
+		}
+
+		return actCnt;
+	}
+
+	@Operation(summary = "QNA 댓글 조회", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@GetMapping(value="/comment/list")
+	public List<EmfMap> getQnaCommentList(@ApiData EmfMap emfMap) throws Exception
+	{
+		List<EmfMap> rtnData = null;
+		try
+		{
+			rtnData = cOHQnaService.getQnaCommentList(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isErrorEnabled())
+			{
+				log.error(he.getMessage());
+			}
+			throw he;
+		}
+
+		return rtnData;
+	}
+
+	@Operation(summary = "QNA 댓글 삭제", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@GetMapping(value="/comment/delete")
+	public int delComment(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			actCnt = cOHQnaService.deleteQnaComment(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isErrorEnabled())
+			{
+				log.error(he.getMessage());
+			}
+			throw he;
+		}
+		return actCnt;
+	}
+
+	@Operation(summary = "QNA 댓글 등록", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/comment/insert")
+	public String setComment(@RequestBody  @ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			//이메일 발송
+			actCnt = cOHQnaService.insertQnaComment(emfMap);
+			if(actCnt > 0)
+			{
+				//누가 썼는지 확인해서 보낼야 할 사람 정함
+				List<EmfMap> list = new ArrayList<EmfMap>();
+				EmfMap mailMap = new EmfMap();
+				mailMap.setCamelYn("N");
+				emfMap.put("admId", AuthChecker.getLoginUser().getId());
+				emfMap.put("admName", AuthChecker.getLoginUser().getName());
+				if(!emfMap.getString("admId").equals(emfMap.getString("dtlRegId")))
+				{
+					mailMap.put("email", emfMap.getString("dtlRegId"));
+					mailMap.put("etc2" , globalsToUser);
+				}
+				else
+				{
+					mailMap.put("email", globalsToUser);
+					mailMap.put("etc2" , emfMap.getString("admId") + "(" + emfMap.getString("admName") + ")");
+				}
+				mailMap.put("etc1" , httpAdminUrl);
+				mailMap.put("etc3" , emfMap.getString("titl"));
+				list.add(mailMap);
+				emfMap.put("toMailList", list);
+				emfMap.put("title", "[Hyundai Global Customer Experience] New Q&A comment has been added");
+				mailService.sendEventTempleteMail(emfMap, "COHQnaWrite.html");
+			}
+			modelMap.addAttribute("actCnt", actCnt);
+		}
+		catch (Exception he)
+		{
+			if (log.isErrorEnabled())
+			{
+				log.error(he.getMessage());
+			}
+			he.printStackTrace();
+			modelMap.addAttribute("actCnt", actCnt);
+		}
+
+		return "jsonView";
 	}
 
 
@@ -276,134 +393,11 @@ public class COHQnaController {
 	}
 
 
-	/**
-	 * 리스트 Ajax
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-comment-list.ajax")
-	public String getQnaCommentList(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("list", cOHQnaService.getQnaCommentList(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isErrorEnabled())
-			{
-				log.error(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "mngwserc/co/coh/COHQnaCommentList";
-	}
 
-	/**
-	 * 댓글 등록
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-comment-insert.ajax")
-	public String setComment(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		int actCnt = 0;
-		try
-		{
-			//이메일 발송
-			actCnt = cOHQnaService.insertQnaComment(emfMap);
-			if(actCnt > 0)
-			{
-				//누가 썼는지 확인해서 보낼야 할 사람 정함
-				List<EmfMap> list = new ArrayList<EmfMap>();
-				EmfMap mailMap = new EmfMap();
-				mailMap.setCamelYn("N");
-				if(!emfMap.getString("admId").equals(emfMap.getString("dtlRegId")))
-				{
-					mailMap.put("email", emfMap.getString("dtlRegId"));
-					mailMap.put("etc2" , globalsToUser);
-				}
-				else
-				{
-					mailMap.put("email", globalsToUser);
-					mailMap.put("etc2" , emfMap.getString("admId") + "(" + emfMap.getString("admName") + ")");
-				}
-				mailMap.put("etc1" , httpAdminUrl);
-				mailMap.put("etc3" , emfMap.getString("titl"));
-				list.add(mailMap);
-				emfMap.put("toMailList", list);
-				emfMap.put("title", "[Hyundai Global Customer Experience] New Q&A comment has been added");
-				mailService.sendEventTempleteMail(emfMap, "COHQnaWrite.html");
-			}
-			modelMap.addAttribute("actCnt", actCnt);
-		}
-		catch (Exception he)
-		{
-			if (log.isErrorEnabled())
-			{
-				log.error(he.getMessage());
-            }
-			he.printStackTrace();
-			modelMap.addAttribute("actCnt", actCnt);
-		}
 
-		return "jsonView";
-	}
 
-	/**
-	 * QNA 삭제
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-delete.ajax")
-	public String delQna(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cOHQnaService.deleteQna(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isErrorEnabled())
-			{
-				log.error(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 
-	/**
-	 * 댓글 삭제
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-comment-delete.ajax")
-	public String delComment(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cOHQnaService.deleteQnaComment(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isErrorEnabled())
-			{
-				log.error(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 }

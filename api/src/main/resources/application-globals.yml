@@ -2,7 +2,7 @@
 spring.config.activate.on-profile: dev_hgcx
 globals:
   excel-sample-file-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\customer\
-  file-store-path: D:\EGOVFRAME\project\HCS\workspace\uploadfiles\
+  file-store-path: D:/EGOVFRAME/project/uploadfiles/
   http-admin-url: https://127.0.0.1:3000
   https-admin-url: https://127.0.0.1:3000
   http-hdpm-admin-url: https://127.0.0.1:3000

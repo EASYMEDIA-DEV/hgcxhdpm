@@ -1,6 +1,7 @@
 package com.easymedia.service.impl;
 
 import com.easymedia.dto.EmfMap;
+import com.easymedia.service.AuthChecker;
 import com.easymedia.service.COHQnaService;
 import com.easymedia.service.dao.COHQnaDAO;
 import com.easymedia.utility.COJsonUtil;
@@ -36,10 +37,10 @@ import java.util.List;
 public class COHQnaServiceImpl implements COHQnaService {
 
     private final COHQnaDAO cOHQnaDAO;
-
+	/*게시글 시퀀스*/
 	private final EgovTableIdGnrServiceImpl qstnIdgen;
-
-	private EgovTableIdGnrServiceImpl rplyIdgen;
+	/*댓글 시퀀스*/
+	private final EgovTableIdGnrServiceImpl rplyIdgen;
 
 
 	/**
@@ -137,6 +138,7 @@ public class COHQnaServiceImpl implements COHQnaService {
     	if (!"".equals(emfMap.getString("detailsKey")))
     	{
     		//상세 조회
+			emfMap.put("regId", AuthChecker.getLoginUser().getId());
     		commentList = cOHQnaDAO.getQnaCommentList(emfMap);
     	}
     	return commentList;
@@ -151,6 +153,7 @@ public class COHQnaServiceImpl implements COHQnaService {
      */
     public int insertQnaComment(EmfMap emfMap) throws Exception
     {
+		emfMap.put("regId", AuthChecker.getLoginUser().getId());
     	int rplySeq = rplyIdgen.getNextIntegerId();
     	emfMap.put("rplySeq", rplySeq);
     	return cOHQnaDAO.insertQnaComment(emfMap);
@@ -165,6 +168,7 @@ public class COHQnaServiceImpl implements COHQnaService {
      */
     public int deleteQna(EmfMap emfMap) throws Exception
     {
+		emfMap.put("regId", AuthChecker.getLoginUser().getId());
     	return cOHQnaDAO.deleteQna(emfMap);
     }
 

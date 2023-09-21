@@ -174,7 +174,7 @@
 			, B.rply_seq
 			, B.titl
 			, B.reg_id
-			, (SELECT NAME FROM co_adm_mst WHERE ID = B.reg_id) as REG_NM
+			, (SELECT NAME FROM co_adm_mst WHERE ID = B.reg_id LIMIT 1) as REG_NM
 			, B.reg_dtm
 			, B.REG_ID
 		FROM
@@ -214,7 +214,7 @@
 			, #{titl}
 			, #{regId}
 			, NOW()
-			, #{modId}
+			, #{regId}
 			, NOW()
 			)
  	</insert>
@@ -243,7 +243,7 @@
         2019.01.17     김진수                        최초생성
     -->
  	<delete id="deleteQna" parameterType="emfMap">
-		DELETE FROM /* deleteQnaComment */ co_qna_mst
+		DELETE FROM /* deleteQna */ co_qna_mst
 		WHERE qstn_seq = #{detailsKey}
 		<if test="admAuthCd >= 30">
     		and reg_id = #{regId}
