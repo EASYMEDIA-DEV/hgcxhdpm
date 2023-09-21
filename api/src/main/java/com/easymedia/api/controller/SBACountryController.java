@@ -12,10 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 /**
@@ -78,7 +75,7 @@ public class SBACountryController {
 	 * @return String View URL
 	 */
 	@PostMapping(value="/list-axios")
-	public EmfMap selectCountryListAjax(@ApiData EmfMap emfMap) throws Exception {
+	public EmfMap selectCountryListAjax(@ApiData @RequestBody EmfMap emfMap) throws Exception {
 		EmfMap emfMap1;
 		try {
 			emfMap1 = sBACountryService.selectCountryList(emfMap);
@@ -149,12 +146,13 @@ public class SBACountryController {
 	 * @param emfMap 데이터
 	 * @return String View URL
 	 */
-	@RequestMapping(value="/update.ajax", method=RequestMethod.POST)
-	public String updateCountry(EmfMap emfMap, ModelMap modelMap) throws Exception
+	@RequestMapping(value="/update", method=RequestMethod.POST)
+	public void updateCountry(@ApiData @RequestBody EmfMap emfMap) throws Exception
 	{
+		System.out.println("emfMap:::"+emfMap);
 		try
 		{
-			modelMap.addAttribute("actCnt", sBACountryService.updateCountry(emfMap));
+			sBACountryService.updateCountry(emfMap);
 		}
 		catch (Exception he) 
 		{
@@ -165,7 +163,6 @@ public class SBACountryController {
 			throw new Exception(he.getMessage());
 		}
 
-		return "jsonView";
 	}		
 	
 	/**

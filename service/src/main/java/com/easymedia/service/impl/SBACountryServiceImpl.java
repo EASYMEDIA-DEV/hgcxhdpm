@@ -215,18 +215,31 @@ public class SBACountryServiceImpl  implements SBACountryService {
 			if(!"".equals(emfMap.getString("detailsKey")))
 			{
 				EmfMap lgnMap = (EmfMap) EgovUserDetailsHelper.getAuthenticatedUser();
-				List<String> lgugCdArr = emfMap.getList("lgugCd");	 		//언어리스트
-				List<String> sortArr = emfMap.getList("sort");	 			//언어 정렬리스트
-				List<String> hS1TrgtYearArr = emfMap.getList("hS1Year");	// HGSI Sales Year 리스트
-				List<String> hS2TrgtYearArr = emfMap.getList("hS2Year");	// HGSI Service Year 리스트
-				List<String> hS1TrgtArr = emfMap.getList("hS1Trgt");		// HGSI Sales Target 값 리스트
-				List<String> hS2TrgtArr = emfMap.getList("hS2Trgt");		// HGSI Service Target 값 리스트
-				
-				List<String> nS1TrgtYearArr = emfMap.getList("nS1Year");	// NPS Sales Year 리스트
-				List<String> nS2TrgtYearArr = emfMap.getList("nS2Year");	// NPS Service Year 리스트
-				List<String> nS1TrgtArr = emfMap.getList("nS1Trgt");		// NPS Sales Target 값 리스트
-				List<String> nS2TrgtArr = emfMap.getList("nS2Trgt");		// NPS Service Target 값 리스트
-				
+				List<String> lgugCdArr = (List<String>) emfMap.get("lgugCd");
+				List<String> sortArr = (List<String>)emfMap.get("sort");	 			//언어 정렬리스트
+				List<String> hS1TrgtYearArr = (List<String>)emfMap.get("hS1Year");	// HGSI Sales Year 리스트
+				List<String> hS2TrgtYearArr = (List<String>)emfMap.get("hS2Year");	// HGSI Service Year 리스트
+				List<String> hS1TrgtArr = (List<String>)emfMap.get("hS1Trgt");		// HGSI Sales Target 값 리스트
+				List<String> hS2TrgtArr = (List<String>)emfMap.get("hS2Trgt");		// HGSI Service Target 값 리스트
+
+				List<String> nS1TrgtYearArr = (List<String>)emfMap.get("nS1Year");	// NPS Sales Year 리스트
+				List<String> nS2TrgtYearArr = (List<String>)emfMap.get("nS2Year");	// NPS Service Year 리스트
+				List<String> nS1TrgtArr = (List<String>)emfMap.get("nS1Trgt");		// NPS Sales Target 값 리스트
+				List<String> nS2TrgtArr = (List<String>)emfMap.get("nS2Trgt");		// NPS Service Target 값 리스트
+
+				System.out.println(lgugCdArr);
+//				List<String> lgugCdArr = emfMap.getList("lgugCd");	 		//언어리스트
+//				List<String> sortArr = emfMap.getList("sort");	 			//언어 정렬리스트
+//				List<String> hS1TrgtYearArr = emfMap.getList("hS1Year");	// HGSI Sales Year 리스트
+//				List<String> hS2TrgtYearArr = emfMap.getList("hS2Year");	// HGSI Service Year 리스트
+//				List<String> hS1TrgtArr = emfMap.getList("hS1Trgt");		// HGSI Sales Target 값 리스트
+//				List<String> hS2TrgtArr = emfMap.getList("hS2Trgt");		// HGSI Service Target 값 리스트
+//
+//				List<String> nS1TrgtYearArr = emfMap.getList("nS1Year");	// NPS Sales Year 리스트
+//				List<String> nS2TrgtYearArr = emfMap.getList("nS2Year");	// NPS Service Year 리스트
+//				List<String> nS1TrgtArr = emfMap.getList("nS1Trgt");		// NPS Sales Target 값 리스트
+//				List<String> nS2TrgtArr = emfMap.getList("nS2Trgt");		// NPS Service Target 값 리스트
+//
 				emfMap.put("ntnCd", emfMap.getString("detailsKey"));
 				emfMap.put("regId", lgnMap.get("id"));
 				emfMap.put("regIp", lgnMap.get("loginIp"));
