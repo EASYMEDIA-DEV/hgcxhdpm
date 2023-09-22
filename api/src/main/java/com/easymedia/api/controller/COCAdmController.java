@@ -1,15 +1,23 @@
 package com.easymedia.api.controller;
 
+import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
+import com.easymedia.error.ErrorResponse;
 import com.easymedia.service.COCAdmService;
 import com.easymedia.service.CODMenuService;
 import com.easymedia.service.EgovCmmUseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -87,20 +95,18 @@ public class COCAdmController {
 		
 		return "mngwserc/co/coc/COCAdmList";
 	}
-	
-	/**
-	 * 관리자 계정 관리 List Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/list.ajax")
-	public String selectAdmListAjax(EmfMap emfMap, ModelMap modelMap) throws Exception
+
+	@Operation(summary = "관리자 계정 리스트", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@GetMapping(value="/list")
+	public EmfMap selectAdmListAjax(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
 	{
+		EmfMap rtnMap = null;
 		try
 		{
-			modelMap.addAttribute("rtnData", cOCAdmService.selectAdmList(emfMap));
+			rtnMap = cOCAdmService.selectAdmList(emfMap);
 		}
 		catch (Exception he) 
 		{
@@ -111,7 +117,7 @@ public class COCAdmController {
 			throw he;
 		} 
 
-		return "mngwserc/co/coc/COCAdmListAjax";
+		return rtnMap;
 	}
 	
 	/**
