@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,11 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,6 +56,32 @@ public class COCommonController {
 
     private final EgovFileMngUtil fileMngUtil;
 
+
+    /**
+     * 모든 코드 조회
+     *
+     * @return String View URL
+     * @throws Exception
+     */
+    @Operation(summary = "모든 코드 조회", description = "")
+    @RequestMapping(value="/co/code/list")
+    public EmfMap getCodeList() throws Exception
+    {
+        EmfMap rntCode = null;
+        try
+        {
+            ArrayList<String> codeList = new ArrayList<String>();
+            rntCode = cmmUseService.getCmmCodeBindAll(codeList);
+        }
+        catch (Exception he){
+            if (log.isDebugEnabled())
+            {
+                log.debug(he.getMessage());
+            }
+            throw he;
+        }
+        return rntCode;
+    }
 
 
     /**
@@ -193,210 +216,6 @@ public class COCommonController {
             throw he;
         }
         return rtnList;
-    }
-
-    /**
-     * 뱃지 쿠키 등록
-     *
-     * @param emfMap
-     * @return String View URL
-     * @throws Exception
-     */
-    @RequestMapping(value="/mngwserc/co/set-badge.ajax")
-    public String setBadgeList(EmfMap emfMap, ModelMap model, HttpServletRequest request, HttpServletResponse response) throws Exception
-    {
-        try
-        {
-            // 쿠키값 가져오기
-            Cookie[] cookies = request.getCookies() ;
-            String admPrcsLog = "";
-            ArrayList<String> admPrcsLogList = new ArrayList<String>();
-            ArrayList<String> admHotAlertLogList = new ArrayList<String>();
-            ArrayList<String> admMysLogList = new ArrayList<String>();
-            ArrayList<String> admRscLogList = new ArrayList<String>();
-            ArrayList<String> admHgsiLogList = new ArrayList<String>();
-            ArrayList<String> admKpiLogList = new ArrayList<String>();
-            if(cookies != null)
-            {
-                for(int i=0; i < cookies.length; i++)
-                {
-                    Cookie c = cookies[i] ;
-                    // 저장된 쿠키 이름을 가져온다
-                    String cName = c.getName();
-                    // 쿠키값을 가져온다
-                    String cValue = c.getValue() ;
-                    model.addAttribute(cName, cValue);
-                    if("ADM_PRCS_LOG".equals(cName))
-                    {
-                        Collections.addAll(admPrcsLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                    else if("HOT_ALERT".equals(cName))
-                    {
-                        Collections.addAll(admHotAlertLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                    else if("MYS".equals(cName))
-                    {
-                        Collections.addAll(admMysLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                    else if("RSC".equals(cName))
-                    {
-                        Collections.addAll(admRscLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                    else if("HGSI".equals(cName))
-                    {
-                        Collections.addAll(admHgsiLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                    else if("KPI".equals(cName))
-                    {
-                        Collections.addAll(admKpiLogList, cValue.trim().split("\\s*,\\s*"));
-                    }
-                }
-                String[] tmpVal = null;
-                int tmpCnt = 0;
-                Cookie c = null;
-                if(!"".equals(emfMap.getString("pAdmPrcsLog")))
-                {
-                    tmpVal = emfMap.getString("pAdmPrcsLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admPrcsLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admPrcsLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("ADM_PRCS_LOG", StringUtils.join(admPrcsLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-                if(!"".equals(emfMap.getString("pHotAlertLog")))
-                {
-                    tmpVal = emfMap.getString("pHotAlertLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admHotAlertLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admHotAlertLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("HOT_ALERTS", StringUtils.join(admHotAlertLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-                if(!"".equals(emfMap.getString("pMysLog")))
-                {
-                    tmpVal = emfMap.getString("pMysLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admMysLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admMysLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("MYS", StringUtils.join(admMysLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-                if(!"".equals(emfMap.getString("pRscLog")))
-                {
-                    tmpVal = emfMap.getString("pRscLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admRscLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admRscLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("RSC", StringUtils.join(admRscLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-                if(!"".equals(emfMap.getString("pHgsiLog")))
-                {
-                    tmpVal = emfMap.getString("pHgsiLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admHgsiLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admHgsiLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("HGSI", StringUtils.join(admHgsiLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-                if(!"".equals(emfMap.getString("pKpiLog")))
-                {
-                    tmpVal = emfMap.getString("pKpiLog").split(",");
-                    tmpCnt = tmpVal.length;
-                    for(int q = 0 ; q < tmpCnt ; q++)
-                    {
-                        if(!admPrcsLogList.contains(tmpVal[q].trim()))
-                        {
-                            admKpiLogList.add(tmpVal[q].trim());
-                        }
-                    }
-                    if(admKpiLogList.size() > 0)
-                    {
-                        // 회원번호를 쿠키에 지정한다
-                        c = new Cookie("HGSI", StringUtils.join(admKpiLogList, ",")) ;
-                        c.setPath("/");
-                        // 쿠키 유효기간을 설정한다. 초단위 : 60*60*24= 1일
-                        c.setMaxAge(60*60*24) ;
-                        // 응답헤더에 쿠키를 추가한다.
-                        response.addCookie(c) ;
-                    }
-                }
-            }
-        }
-        catch (Exception he)
-        {
-            if (log.isErrorEnabled())
-            {
-                log.error(he.getMessage());
-            }
-            throw he;
-        }
-        return "jsonView";
     }
 
     /**
@@ -577,7 +396,6 @@ public class COCommonController {
             he.printStackTrace();
             throw he;
         }
-
         return "jsonView";
     }
 

@@ -20,10 +20,12 @@
 			   , CD_ORD
 		  FROM CO_CD_DTL
 		 WHERE USE_YN = 'Y'
-		 AND CD_ID IN
-		<foreach collection="cdIdList" item="detailsKey" index="index" separator=", " open="(" close=")">
-			#{detailsKey}
-		</foreach>
+		<if test="cdIdList != null and cdIdList.size != 0">
+			AND CD_ID IN
+			<foreach collection="cdIdList" item="detailsKey" index="index" separator=", " open="(" close=")">
+				#{detailsKey}
+			</foreach>
+		</if>
 		 ORDER BY CD_ORD
 	</select>
 

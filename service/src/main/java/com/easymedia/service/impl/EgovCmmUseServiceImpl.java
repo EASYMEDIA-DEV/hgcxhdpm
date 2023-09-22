@@ -76,18 +76,26 @@ public class EgovCmmUseServiceImpl implements EgovCmmUseService
 
     	EmfMap rtnMap = new EmfMap();
 
-		for (int i = 0; i < cdDtList.size(); i++)
-    	{
-			cdId = cdDtList.get(i).toString();
+		if(cdDtList != null && cdDtList.size() > 0)
+		{
+			for (int i = 0; i < cdDtList.size(); i++) {
+				cdId = cdDtList.get(i).toString();
 
-			if (codeMap.get(cdId) != null)
-			{
-				rtnMap.put(cdId, (ArrayList<EmfMap>) codeMap.get(cdId));
+				if (codeMap.get(cdId) != null) {
+					rtnMap.put(cdId, (ArrayList<EmfMap>) codeMap.get(cdId));
+				}
 			}
 		}
-
+		else
+		{
+			for (String key : codeMap.keySet()) {
+				rtnMap.put(key, codeMap.get(key));
+			}
+		}
     	return rtnMap;
     }
+
+
 
     /**
      * 공통코드를 조회한다.

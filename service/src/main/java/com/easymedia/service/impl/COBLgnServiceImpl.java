@@ -9,6 +9,7 @@ import com.easymedia.jwt.JwtTokenProvider;
 import com.easymedia.property.JwtProperties;
 import com.easymedia.service.COBLgnService;
 import com.easymedia.service.COFSysLogService;
+import com.easymedia.service.EgovCmmUseService;
 import com.easymedia.service.MailService;
 import com.easymedia.service.dao.COBLgnDAO;
 import com.easymedia.utility.EgovDateUtil;
@@ -57,6 +58,9 @@ public class COBLgnServiceImpl implements COBLgnService {
     private final COBLgnDAO cOBLgnDAO;
 
    	private final COFSysLogService cOFSysLogService;
+
+	/** 공통 서비스  **/
+	private final EgovCmmUseService cmmUseService;
     
     /** 메일 보내는 사람 주소 **/
     @Value("${globals.http-admin-url}")
@@ -303,6 +307,8 @@ public class COBLgnServiceImpl implements COBLgnService {
    	       		    			HttpSession session = request.getSession();
    	       		    			session.setMaxInactiveInterval(3600);
    	       		    			info.put("sessionId", session.getId());
+
+								rtnMap.put("code", cmmUseService.getCmmCodeBindAll(new ArrayList<String>()));
 
 								//API TOKEN
 								setJwtToken(response, info, Site.MNGWSERC);
