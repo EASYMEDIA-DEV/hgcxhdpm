@@ -134,7 +134,7 @@
 			, #{ancmYn}
 			, #{regId}
 			, NOW()
-			, #{modId}
+			, #{regId}
 			, NOW()
 			)
  	</insert>
@@ -156,7 +156,7 @@
 		   , mod_dtm = NOW()
 		WHERE qstn_seq = #{detailsKey}
 		<if test="admAuthCd >= 30">
-    		and reg_id = #{regId}
+    		and mod_id = #{regId}
     	</if>
  	</update>
 

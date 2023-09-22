@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.geometry.Positions;
-import org.apache.tika.Tika;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -103,8 +102,6 @@ public class EgovFileMngUtil
 
 		String filePyhPath = null;
 
-		Tika tika = new Tika();
-
 		boolean isImage = false;
 		boolean isVideo = false;
 
@@ -117,9 +114,8 @@ public class EgovFileMngUtil
 		    if (file.getName().indexOf(formname) > -1)
 		    {
 		    	filePyhPath = pyhPath;
-			    String mimeType = tika.detect(file.getInputStream());
+			    String mimeType = file.getContentType();
 			    Calendar c = Calendar.getInstance();
-
 			    if (mimeType.indexOf("image") > -1)
 			    {
 			    	isImage = true;
@@ -151,11 +147,12 @@ public class EgovFileMngUtil
 			    // (첨부가 되지 않은 input file type)
 			    //--------------------------------------
 				String realFileNm = file.getOriginalFilename();
-
 			    if ("".equals(realFileNm))
 			    {
 			    	continue;
-			    }else{
+			    }
+				else
+				{
 			    	// 파일명이 동일한 경우 
 			    	Random random = new Random();
 			    	realFileNm = (random.nextInt(100) + 1) + "_" + realFileNm;
@@ -207,6 +204,8 @@ public class EgovFileMngUtil
 		    	{
 		    		filePath = filePyhPath + File.separator + saveFileNm;
 		    	}
+
+				//FileCopyUtils.copy(file.getBytes(), new File(WebUtil.filePathBlackList(filePath)));
 
 		    	file.transferTo(new File(WebUtil.filePathBlackList(filePath)));
 

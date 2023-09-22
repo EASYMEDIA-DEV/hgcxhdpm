@@ -107,6 +107,7 @@ public class COHQnaServiceImpl implements COHQnaService {
     public int insertQnaDtl(EmfMap emfMap) throws Exception
     {
     	int qstnSeq = qstnIdgen.getNextIntegerId();
+		emfMap.put("regId", AuthChecker.getLoginUser().getId());
     	emfMap.put("qstnSeq", qstnSeq);
     	return cOHQnaDAO.insertQnaDtl(emfMap);
     }
@@ -121,6 +122,7 @@ public class COHQnaServiceImpl implements COHQnaService {
      */
     public int updateQnaDtl(EmfMap emfMap) throws Exception
     {
+		emfMap.put("regId", AuthChecker.getLoginUser().getId());
     	return cOHQnaDAO.updateQnaDtl(emfMap);
     }
 

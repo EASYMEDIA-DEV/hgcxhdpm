@@ -245,8 +245,6 @@ project(":service") {
         //escapeHtml4 사용 하기 위해
         implementation group: 'org.apache.commons', name: 'commons-text', version: '1.9'
 
-        //tika
-        implementation 'org.apache.tika:tika-core:2.8.0'
         //thumnails
         implementation 'net.coobird:thumbnailator:0.4.20'
         //json

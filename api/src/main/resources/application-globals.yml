@@ -17,7 +17,7 @@ globals:
   mail-tmpl-file-path: D:\EGOVFRAME\project\2023\hgcxhdpm\api\src\main\webapp\WEB-INF\template\email\
   charcode: UTF-8
   #고객문의시 받을 이메일
-  qna-to-user: hgcx@easymedia.net
+  qna-to-user: dev@easymedia.net
 
 
 mail:
@@ -62,7 +62,7 @@ globals:
   my-mailer-identity: admin
   mail-tmpl-file-path: D:\EGOVFRAME\project\2018\HCS\workspace\MNGWSERC\src\main\webapp\WEB-INF\jsp\email\
   charcode: UTF-8
-  qna-to-user: hgcx@easymedia.net
+  qna-to-user: dev@easymedia.net
 
 mail:
   host: 112.175.14.89

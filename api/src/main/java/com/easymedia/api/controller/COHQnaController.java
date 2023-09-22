@@ -259,59 +259,33 @@ public class COHQnaController {
 
 
 	/**
-	 * 리스트 Ajax
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-write.do")
-	public String selectSDealershipDtl(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			EmfMap rtnData = cOHQnaService.selectQnaDtl(emfMap);
-			if(rtnData.get("info") != null && !"".equals(((EmfMap)rtnData.get("info")).getString("atchFileId")))
-			{
-				EmfMap fileMap = new EmfMap();
-				fileMap.put("atchFileId", ((EmfMap)rtnData.get("info")).getString("atchFileId"));
-				//emfMap.put("atchFile", fileMngService.selectFileInfs(fileMap));
-			}
-			modelMap.addAttribute("rtnData", rtnData);
-		}
-		catch (Exception he)
-		{
-			if (log.isErrorEnabled())
-			{
-				log.error(he.getMessage());
-            }
-			throw he;
-		}
-
-		return "mngwserc/co/coh/COHQnaWrite";
-	}
-
-
-	/**
 	 * QNA 등록
 	 *
 	 * @param emfMap
 	 * @return String View URL
 	 * @throws Exception
 	 */
-	@RequestMapping(value="/qna-insert.ajax")
-	public String insertQna(EmfMap emfMap, ModelMap modelMap, MultipartHttpServletRequest multiRequest) throws Exception
+	@Operation(summary = "QNA 등록", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/insert")
+	public int insertQna(@ApiData EmfMap emfMap, ModelMap modelMap, MultipartHttpServletRequest multiRequest) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
+			log.error(multiRequest.getFileMap().toString());
+			log.error(emfMap.toString());
 			List<EmfMap> atchFileList = fileUtil.parseFileInf(multiRequest.getFileMap(), "", 0, "", "Globals.fileStorePath", "atchFile", 20971520, "jpg,jpeg,gif,png,bmp,pdf,ppt,pptx,xls,xlsx,doc,docx,hwp,txt,zip".split(","));
+
 			String atchFileId = "";
 			if (atchFileList.size() > 0)
 			{
-				//atchFileId = fileMngService.insertFileInfs(atchFileList);
+				atchFileId = fileMngService.insertFileInfs(atchFileList);
 				emfMap.put("atchFileId", atchFileId);
 			}
-			int actCnt = cOHQnaService.insertQnaDtl(emfMap);
+			actCnt = cOHQnaService.insertQnaDtl(emfMap);
 			//이메일 발송
 			if(actCnt > 0)
 			{
@@ -339,20 +313,17 @@ public class COHQnaController {
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 
-
-	/**
-	 * QNA 수정
-	 *
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/qna-update.ajax")
-	public String updateQna(EmfMap emfMap, ModelMap modelMap, MultipartHttpServletRequest multiRequest) throws Exception
+	@Operation(summary = "QNA 수정", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/update")
+	public int updateQna(@ApiData EmfMap emfMap, MultipartHttpServletRequest multiRequest) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
 			if(!"".equals(emfMap.getString("delAtchFileSeq")))
@@ -361,7 +332,7 @@ public class COHQnaController {
 				EmfMap fileMap = new EmfMap();
 				fileMap.put("atchFileId", emfMap.getString("atchFileId"));
 				fileMap.put("fileSeq", emfMap.getString("delAtchFileSeq"));
-				//fileMngService.deleteFileInf(fileMap);
+				fileMngService.deleteFileInf(fileMap);
 			}
 			List<EmfMap> atchFileList = fileUtil.parseFileInf(multiRequest.getFileMap(), "", 0, emfMap.getString("atchFileId"), "Globals.fileStorePath", "atchFile", 20971520, "jpg,jpeg,gif,png,bmp,pdf,ppt,pptx,xls,xlsx,doc,docx,hwp,txt,zip".split(","));
 			String atchFileId = emfMap.getString("atchFileId");
@@ -369,16 +340,15 @@ public class COHQnaController {
 			{
 				if(!"".equals( atchFileId ))
 				{
-					//fileMngService.updateFileInfs(atchFileList);
+					fileMngService.updateFileInfs(atchFileList);
 				}
 				else
 				{
-					//atchFileId = fileMngService.insertFileInfs(atchFileList);
+					atchFileId = fileMngService.insertFileInfs(atchFileList);
 				}
 			}
 			emfMap.put("atchFileId", atchFileId);
-			int actCnt = cOHQnaService.updateQnaDtl(emfMap);
-			modelMap.addAttribute("actCnt", actCnt);
+			actCnt = cOHQnaService.updateQnaDtl(emfMap);
 		}
 		catch (Exception he)
 		{
@@ -389,7 +359,7 @@ public class COHQnaController {
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 
 
