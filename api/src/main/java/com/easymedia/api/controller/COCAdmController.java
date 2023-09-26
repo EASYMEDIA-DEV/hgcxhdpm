@@ -17,11 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -116,46 +114,56 @@ public class COCAdmController {
             }
 			throw he;
 		} 
-
 		return rtnMap;
 	}
-	
-	/**
-	 * 관리자 계정 관리 Details
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/write.do")
-	public String selectAdmDtl(EmfMap emfMap, ModelMap modelMap) throws Exception
+
+	@Operation(summary = "관리자 계정 삭제", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/delete")
+	public int deleteSample(@ApiData EmfMap emfMap) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
-			modelMap.addAttribute("paramMap", emfMap);
-			
-			// 공통코드 배열 셋팅
-			ArrayList<String> codeList = new ArrayList<String>();
-			
-			// 관리자 권한
-			codeList.add("AUTH_CD");
-			
-			// 정의된 코드id값들의 상세 코드 맵 반환		
-			modelMap.addAttribute("rtnCode", cmmUseService.getCmmCodeBindAll(codeList));
-			
-			// Details
-			modelMap.addAttribute("rtnData", cOCAdmService.selectAdmDtl(emfMap));
+			actCnt = cOCAdmService.deleteAdm(emfMap);
 		}
-		catch (Exception he) 
+		catch (Exception he)
 		{
-			if (log.isDebugEnabled()) 
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+
+		return actCnt;
+	}
+
+	@Operation(summary = "관리자 계정 상세", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/detail")
+	public EmfMap selectAdmDtl(@ApiData  EmfMap emfMap) throws Exception
+	{
+		EmfMap rtnMap = null;
+		try
+		{
+			// Details
+			rtnMap = cOCAdmService.selectAdmDtl(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
 			{
 				log.debug(he.getMessage());
             }
 			throw he;
 		}
-		
-		return "mngwserc/co/coc/COCAdmWrite";
+
+		return rtnMap;
 	}
 	
 	/**
@@ -211,33 +219,7 @@ public class COCAdmController {
 
 		return "jsonView";
 	}
-	
-	/**
-	 * 관리자 계정 관리 Delete Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/delete.ajax", method=RequestMethod.POST)
-	public String deleteSample(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cOCAdmService.deleteAdm(emfMap));
-		}
-		catch (Exception he) 
-		{
-			if (log.isDebugEnabled()) 
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
-	
 	/**
 	 * 관리자 계정 중복 Check Ajax
 	 * 

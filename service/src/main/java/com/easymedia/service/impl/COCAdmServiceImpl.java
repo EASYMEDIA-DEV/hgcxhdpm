@@ -107,27 +107,12 @@ public class COCAdmServiceImpl implements COCAdmService {
 	 */
     public EmfMap selectAdmDtl(EmfMap emfMap) throws Exception
     {
-    	EmfMap rtnMap = new EmfMap();
-
-    	if (!"".equals(emfMap.getString("detailsKey")))
+		EmfMap info = null;
+		if (!"".equals(emfMap.getString("detailsKey")))
     	{
-    		EmfMap info = cOCAdmDAO.selectAdmDtl(emfMap);
-
-	    	if (info != null)
-	    	{
-	    		/*
-	    		// 연락처
-	    		String tel = info.getString("tel");
-	    		if (!"".equals(tel) && tel.indexOf("0") != 0)
-	    		{
-	    			info.put("tel", SeedCipher.decrypt(tel, ENCODE));
-	    		}
-				*/
-	    		rtnMap.put("info", COJsonUtil.getJsonStringFromMap(info));
-	    	}
+    		info = cOCAdmDAO.selectAdmDtl(emfMap);
     	}
-
-    	return rtnMap;
+    	return info;
     }
 
 	/**

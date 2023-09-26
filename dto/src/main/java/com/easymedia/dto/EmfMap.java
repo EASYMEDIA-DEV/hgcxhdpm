@@ -115,6 +115,12 @@ public class EmfMap extends ListOrderedMap {
                 ArrayList list = new ArrayList(Arrays.asList((Object[])super.get(str)));
                 return list;
             }
+            else if(src instanceof ArrayList)
+            {
+                ArrayList list = new ArrayList();
+                list.addAll((List)super.get(str));
+                return list;
+            }
             else
             {
                 ArrayList list = new ArrayList();
