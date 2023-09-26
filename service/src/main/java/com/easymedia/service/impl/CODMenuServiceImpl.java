@@ -590,12 +590,14 @@ public class CODMenuServiceImpl implements CODMenuService {
 			{
 				JSONObject tmpObject = new JSONObject();
 
-				tmpObject.put("data", jsonMap.getString("menuNm"));
+				tmpObject.put("text", jsonMap.getString("menuNm"));
 				tmpObject.put("i", i);
 
 				if (Integer.parseInt(String.valueOf(jsonMap.get("childcnt"))) > 0)
 				{
-					tmpObject.put("state", "open");
+					JSONObject openObject = new JSONObject();
+					openObject.put("opened", true);
+					tmpObject.put("state", openObject);
 
 					i = i + 1;
 
@@ -610,27 +612,27 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 				JSONObject jsonAttr = new JSONObject();
 
-		        jsonAttr.put("id", "node_" + jsonMap.get("menuSeq"));
-		        jsonAttr.put("rel", jsonMap.getString("menuGb"));
-		        jsonAttr.put("parent_treeid", jsonMap.get("parntSeq"));
-		        jsonAttr.put("level", jsonMap.getString("dpth"));
-		        jsonAttr.put("status", jsonMap.getString("userUseYn"));
-		        jsonAttr.put("link", jsonMap.getString("userLink"));
-		        jsonAttr.put("treeid", jsonMap.get("menuSeq"));
+				jsonAttr.put("id", "node_" + jsonMap.get("menuSeq"));
+				jsonAttr.put("rel", jsonMap.getString("menuGb"));
+				jsonAttr.put("parent_treeid", jsonMap.get("parntSeq"));
+				jsonAttr.put("level", jsonMap.getString("dpth"));
+				jsonAttr.put("status", jsonMap.getString("userUseYn"));
+				jsonAttr.put("link", jsonMap.getString("userLink"));
+				jsonAttr.put("treeid", jsonMap.get("menuSeq"));
 
 		        if (jsonMap.containsKey("checktype"))
 		        {
 		        	checktype = jsonMap.getString("checktype");
 
-		        	jsonAttr.put("checktype", checktype);
+					jsonAttr.put("checktype", checktype);
 
 		        	if ("".equals(checktype))
 	                {
-	                	jsonAttr.put("class", "jstree-unchecked");
+						jsonAttr.put("class", "jstree-unchecked");
 	                }
 	                else
 	                {
-	                	jsonAttr.put("class", "jstree-checked");
+						jsonAttr.put("class", "jstree-checked");
 	                }
 		        }
 
@@ -640,7 +642,7 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 		        	if (!"".equals(checkrole))
 		        	{
-		        		jsonAttr.put("checkrole", checkrole);
+						jsonAttr.put("checkrole", checkrole);
 		        	}
 		        }
 
