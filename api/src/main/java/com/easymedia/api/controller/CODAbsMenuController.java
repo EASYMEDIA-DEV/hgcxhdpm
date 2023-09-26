@@ -1,5 +1,6 @@
 package com.easymedia.api.controller;
 
+import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
 import com.easymedia.service.CODMenuService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,9 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
@@ -63,8 +62,8 @@ public class CODAbsMenuController  {
 	 * @return JSON 데이터
 	 * @throws Exception
 	 */
-	@RequestMapping(value="/menu-list.ajax")
-	public void selectMenuList(EmfMap emfMap, HttpServletResponse response) throws Exception
+	@PostMapping(value="/menu-list")
+	public void selectMenuList(@RequestBody @ApiData EmfMap emfMap,  HttpServletResponse response) throws Exception
 	{
 		response.setContentType("text/html;charset=UTF-8");
 
@@ -81,7 +80,8 @@ public class CODAbsMenuController  {
             int startNum = 0;
             jSONArray = cODMenuService.getJsonData(menuList, startNum, paramSeq);
             out.print(jSONArray);
-            
+
+			//return jSONArray;
             jSONArray = null;
         }
         catch (Exception he)
