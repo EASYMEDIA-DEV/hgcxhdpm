@@ -581,14 +581,13 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 				tmpObject.put("text", jsonMap.getString("menuNm"));
 				tmpObject.put("key", seq);
-				tmpObject.put("i", i);
-
+				tmpObject.put("i", seq);
+				tmpObject.put("id", "node_" + seq);
+				JSONObject stateObject = new JSONObject();
+				tmpObject.put("state", stateObject);
 				if (Integer.parseInt(String.valueOf(jsonMap.get("childcnt"))) > 0)
 				{
-					JSONObject openedObject = new JSONObject();
-					openedObject.put("opened", true);
-					tmpObject.put("state", openedObject);
-
+					stateObject.put("opened", true);
 					i = i + 1;
 
 					JSONArray rtnArray = getJsonData(jsonList, i, seq);
@@ -618,10 +617,12 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 		        	if ("".equals(checktype))
 	                {
+						stateObject.put("selected", false);
 	                	jsonAttr.put("class", "jstree-unchecked");
 	                }
 	                else
 	                {
+						stateObject.put("selected", true);
 	                	jsonAttr.put("class", "jstree-checked");
 	                }
 		        }

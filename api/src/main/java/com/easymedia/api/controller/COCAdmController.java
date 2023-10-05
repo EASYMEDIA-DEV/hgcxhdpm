@@ -208,47 +208,42 @@ public class COCAdmController {
 		}
 	}
 	
-	/**
-	 * 관리자 계정 관리 Insert Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/insert.ajax", method=RequestMethod.POST)
-	public String insertSample(EmfMap emfMap, ModelMap modelMap) throws Exception
+	@Operation(summary = "관리자 계정 등록", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/insert")
+	public int insertSample(@ApiData  EmfMap emfMap, ModelMap modelMap) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
-			modelMap.addAttribute("actCnt", cOCAdmService.insertAdm(emfMap));
+			actCnt = cOCAdmService.insertAdm(emfMap);
 		}
-		catch (Exception he) 
+		catch (Exception he)
 		{
-			if (log.isDebugEnabled()) 
+			if (log.isDebugEnabled())
 			{
 				log.debug(he.getMessage());
             }
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 	
-	/**
-	 * 관리자 계정 관리 Update Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/update.ajax", method=RequestMethod.POST)
-	public String updateAdm(EmfMap emfMap, ModelMap modelMap) throws Exception
+	@Operation(summary = "관리자 계정 수정", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/update")
+	public int updateAdm(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
 			emfMap.put("isAdmMng", "Y");
-			
-			modelMap.addAttribute("actCnt", cOCAdmService.updateAdm(emfMap));
+			actCnt = cOCAdmService.updateAdm(emfMap);
 		}
 		catch (Exception he) 
 		{
@@ -259,7 +254,7 @@ public class COCAdmController {
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 
 	/**

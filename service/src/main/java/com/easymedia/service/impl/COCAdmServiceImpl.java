@@ -266,29 +266,16 @@ public class COCAdmServiceImpl implements COCAdmService {
     	}
 
     	// 관리자 계정 메뉴 Insert
-    	String mChecked = emfMap.getString("mChecked");
-
+    	List<String> mChecked = emfMap.getList("mChecked");
     	if (!"".equals(mChecked))
 		{
-			String[] menuSeqs;
-
-			if (mChecked.indexOf(",") > 0)
-			{
-				menuSeqs = mChecked.split(",");
-			}
-			else
-			{
-				menuSeqs = new String[]{mChecked};
-			}
-
 			if (!"0".equals(emfMap.getString("authCd")))
 			{
-				if (menuSeqs != null)
+				if (mChecked != null)
 				{
-					for (int q = 0; q < menuSeqs.length; q++)
+					for (int q = 0; q < mChecked.size(); q++)
 					{
-						emfMap.put("menuSeq", Integer.parseInt(menuSeqs[q]));
-
+						emfMap.put("menuSeq", Integer.parseInt(mChecked.get(q).replace("node_", "")));
 						cOCAdmDAO.insertAdmMenu(emfMap);
 					}
 				}
