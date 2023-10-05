@@ -2,7 +2,13 @@ package com.easymedia.api.controller;
 
 import com.easymedia.api.annotation.ApiData;
 import com.easymedia.dto.EmfMap;
+import com.easymedia.error.ErrorResponse;
 import com.easymedia.service.CODMenuService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,6 +104,84 @@ public class CODAbsMenuController  {
         }
 	}
 
+	@Operation(summary = "메뉴 등록", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/insert")
+	public EmfMap insertMenu(@ApiData EmfMap emfMap) throws Exception
+	{
+		EmfMap rtnMap = null;
+		try
+		{
+			rtnMap = cODMenuService.insertMenu(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+
+		return rtnMap;
+	}
+
+	@Operation(summary = "메뉴 삭제", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/delete")
+	public int deleteMenu(@ApiData  EmfMap emfMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			actCnt = cODMenuService.deleteMenu(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+
+		return actCnt;
+	}
+
+	/**
+	 * 메뉴명을 수정한다.
+	 *
+	 * @param emfMap
+	 * @return JSON 데이터
+	 * @throws Exception
+	 */
+	@Operation(summary = "메뉴명 수정", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/name-update")
+	public int updateMenuNm(@ApiData  EmfMap emfMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			actCnt = cODMenuService.updateMenuNm(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+		return actCnt;
+	}
+
 	/**
 	 * 메뉴의 상세정보를 조회한다.
 	 *
@@ -125,57 +209,9 @@ public class CODAbsMenuController  {
         return rtnMap;
 	}
 
-	/**
-	 * 메뉴를 등록한다.
-	 *
-	 * @param emfMap
-	 * @return JSON 데이터
-	 * @throws Exception
-	 */
-	@RequestMapping(value="/insert.ajax", method=RequestMethod.POST)
-	public String insertMenu(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cODMenuService.insertMenu(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isDebugEnabled())
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 
-	/**
-	 * 메뉴명을 수정한다.
-	 *
-	 * @param emfMap
-	 * @return JSON 데이터
-	 * @throws Exception
-	 */
-	@RequestMapping(value ="/name-update.ajax", method=RequestMethod.POST)
-	public String updateMenuNm(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cODMenuService.updateMenuNm(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isDebugEnabled())
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 
 	/**
 	 * 메뉴정보를 수정한다.
@@ -255,31 +291,7 @@ public class CODAbsMenuController  {
 		return "jsonView";
 	}
 
-	/**
-	 * 메뉴를 삭제한다.
-	 *
-	 * @param emfMap
-	 * @return JSON 데이터
-	 * @throws Exception
-	 */
-	@RequestMapping(value ="/delete.ajax", method=RequestMethod.POST)
-	public String deleteMenu(EmfMap emfMap, ModelMap modelMap) throws Exception
-	{
-		try
-		{
-			modelMap.addAttribute("actCnt", cODMenuService.deleteMenu(emfMap));
-		}
-		catch (Exception he)
-		{
-			if (log.isDebugEnabled())
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
 
-		return "jsonView";
-	}
 
 	/**
      * 상위부모를 다 가져온다.

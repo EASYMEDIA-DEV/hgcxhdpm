@@ -91,13 +91,15 @@ public class CODMenuServiceImpl implements CODMenuService {
 	 * @return
 	 * @throws Exception
 	 */
-	public int insertMenu(EmfMap emfMap) throws Exception
+	public EmfMap insertMenu(EmfMap emfMap) throws Exception
 	{
 		EmfMap lgnMap = (EmfMap) EgovUserDetailsHelper.getAuthenticatedUser();
 
 		int menuSeq = menuIdgen.getNextIntegerId();
+		int pstn = cODMenuDAO.getParentMenuMaxPstn(emfMap);
 
 		emfMap.put("menuSeq", menuSeq);
+		emfMap.put("pstn", pstn+1);
 		emfMap.put("rhtVal", cODMenuDAO.getRhtVal(emfMap));
 		emfMap.put("dpth", cODMenuDAO.getDpth(emfMap));
 
@@ -110,19 +112,8 @@ public class CODMenuServiceImpl implements CODMenuService {
 		emfMap.put("modIp", lgnMap.getString("loginIp"));
 
 		//공통코드 배열 셋팅
-
-		ArrayList<String> cdDtlList = new ArrayList<String>();
-		cdDtlList.add("LGUG_CD");	//언어코드
-		//정의된 코드id값들의 상세 코드 맵 반환
-		List<EmfMap> lgugList = (List<EmfMap>)cmmUseService.getCmmCodeBindAll(cdDtlList).get("lgugCd");
-		if(lgugList != null && lgugList.size() > 0)
-		{
-			for(int q = 0  ; q < lgugList.size() ; q++)
-			{
-				System.out.println("cd : " + lgugList.get(q).getString("cd"));
-			}
-		}
-		return cODMenuDAO.insertMenu(emfMap);
+		cODMenuDAO.insertMenu(emfMap);
+		return emfMap;
 	}
 
 	/**
@@ -138,8 +129,6 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 		emfMap.put("modId", lgnMap.getString("id"));
 		emfMap.put("modIp", lgnMap.getString("loginIp"));
-
-
 
 		return cODMenuDAO.updateMenuNm(emfMap);
 	}
@@ -591,13 +580,14 @@ public class CODMenuServiceImpl implements CODMenuService {
 				JSONObject tmpObject = new JSONObject();
 
 				tmpObject.put("text", jsonMap.getString("menuNm"));
+				tmpObject.put("key", seq);
 				tmpObject.put("i", i);
 
 				if (Integer.parseInt(String.valueOf(jsonMap.get("childcnt"))) > 0)
 				{
-					JSONObject openObject = new JSONObject();
-					openObject.put("opened", true);
-					tmpObject.put("state", openObject);
+					JSONObject openedObject = new JSONObject();
+					openedObject.put("opened", true);
+					tmpObject.put("state", openedObject);
 
 					i = i + 1;
 
@@ -612,27 +602,27 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 				JSONObject jsonAttr = new JSONObject();
 
-				jsonAttr.put("id", "node_" + jsonMap.get("menuSeq"));
-				jsonAttr.put("rel", jsonMap.getString("menuGb"));
-				jsonAttr.put("parent_treeid", jsonMap.get("parntSeq"));
-				jsonAttr.put("level", jsonMap.getString("dpth"));
-				jsonAttr.put("status", jsonMap.getString("userUseYn"));
-				jsonAttr.put("link", jsonMap.getString("userLink"));
-				jsonAttr.put("treeid", jsonMap.get("menuSeq"));
+		        jsonAttr.put("id", "node_" + jsonMap.get("menuSeq"));
+		        jsonAttr.put("rel", jsonMap.getString("menuGb"));
+		        jsonAttr.put("parent_treeid", jsonMap.get("parntSeq"));
+		        jsonAttr.put("level", jsonMap.getString("dpth"));
+		        jsonAttr.put("status", jsonMap.getString("userUseYn"));
+		        jsonAttr.put("link", jsonMap.getString("userLink"));
+		        jsonAttr.put("treeid", jsonMap.get("menuSeq"));
 
 		        if (jsonMap.containsKey("checktype"))
 		        {
 		        	checktype = jsonMap.getString("checktype");
 
-					jsonAttr.put("checktype", checktype);
+		        	jsonAttr.put("checktype", checktype);
 
 		        	if ("".equals(checktype))
 	                {
-						jsonAttr.put("class", "jstree-unchecked");
+	                	jsonAttr.put("class", "jstree-unchecked");
 	                }
 	                else
 	                {
-						jsonAttr.put("class", "jstree-checked");
+	                	jsonAttr.put("class", "jstree-checked");
 	                }
 		        }
 
@@ -642,7 +632,7 @@ public class CODMenuServiceImpl implements CODMenuService {
 
 		        	if (!"".equals(checkrole))
 		        	{
-						jsonAttr.put("checkrole", checkrole);
+		        		jsonAttr.put("checkrole", checkrole);
 		        	}
 		        }
 

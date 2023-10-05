@@ -76,6 +76,22 @@
 	</select>
 
 	<!--
+         쿼리명 : getParentMenuMaxPstn
+         설  명 : 부모 키를 가진 노드들의 Pstn 최대값
+          수정일     수정자       수정내용
+        ==========   ======    ==============
+        2019.01.15   김대환       최초생성
+    -->
+	<select id="getParentMenuMaxPstn" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* getParentMenuMaxPstn */
+			IFNULL(MAX(PSTN), 0) AS PSTN
+		FROM
+			CO_MENU_MST
+		WHERE
+			PARNT_SEQ = #{parntSeq}
+	</select>
+
+	<!--
          쿼리명 : insertMenu
          설  명 : 메뉴를 등록한다.
           수정일     수정자       수정내용
@@ -113,8 +129,8 @@
 			, IFNULL(#{rhtVal}, 1)
 			, IFNULL(#{rhtVal} + 1 , 2)
 			, #{dpth}
-			, #{menuGb}
-			, #{menuNm}
+			, IFNULL(#{menuGb}, #{type})
+			, IFNULL(#{menuNm}, #{text})
 			, #{menuIcon}
 			, #{admLink}
 			, #{userLink}
@@ -141,7 +157,10 @@
 	<update id="updateMenuNm" parameterType="emfMap">
 		UPDATE /* updateMenuNm */ CO_MENU_MST
 		SET
-			MENU_NM = #{menuNm}
+			  MENU_NM = #{menuNm}
+			<if test="userUseYn != null and userUseYn != ''">
+				, USER_USE_YN = #{userUseYn}
+			</if>
 		    , MOD_ID = #{modId}
 			, MOD_IP = #{modIp}
 			, MOD_DTM = NOW()

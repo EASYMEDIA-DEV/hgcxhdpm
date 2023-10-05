@@ -50,7 +50,7 @@ public interface CODMenuService {
 	 * @return
 	 * @throws Exception
 	 */
-	public int insertMenu(EmfMap emfMap) throws Exception;
+	public EmfMap insertMenu(EmfMap emfMap) throws Exception;
 
 	/**
 	 * 메뉴명을 수정한다.

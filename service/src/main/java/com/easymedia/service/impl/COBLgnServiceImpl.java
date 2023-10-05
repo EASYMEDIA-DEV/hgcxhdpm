@@ -253,8 +253,8 @@ public class COBLgnServiceImpl implements COBLgnService {
 
    	           				if (intAuthCd <= 29)
    	           				{
-   	           					pageAdminLink = "/mngwserc/co/coa/all/mainDashBoard.do";
-   	           					rtnMap.put("rtnUrl", "/mngwserc/co/coa/all/mainDashBoard.do");
+   	           					pageAdminLink = "/mngwserc/main";
+   	           					rtnMap.put("rtnUrl", pageAdminLink);
    	           					//2022-10-18 본사에서 타권역 이동 시 본사 호출인지 check
    	           					rtnMap.put("hcsHo", 10);
    	           				}
