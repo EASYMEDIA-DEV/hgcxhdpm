@@ -45,6 +45,15 @@ public interface CODMenuDAO {
 	public EmfMap selectMenuDtl(EmfMap emfMap) throws Exception;
 
 	/**
+	 * 부모 키를 가진 노드들의 Pstn 최대값
+	 *
+	 * @param emfMap
+	 * @return
+	 * @throws Exception
+	 */
+	public int getParentMenuMaxPstn(EmfMap emfMap) throws Exception;
+
+	/**
 	 * 메뉴를 등록한다.
 	 *
 	 * @param emfMap

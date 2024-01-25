@@ -165,48 +165,85 @@ public class COCAdmController {
 
 		return rtnMap;
 	}
-	
-	/**
-	 * 관리자 계정 관리 Insert Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/insert.ajax", method=RequestMethod.POST)
-	public String insertSample(EmfMap emfMap, ModelMap modelMap) throws Exception
+
+	@Operation(summary = "관리자 계정 메뉴", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/menu-list")
+	public void seleteMenuList(@ApiData  EmfMap emfMap, HttpServletResponse response) throws Exception
 	{
+		response.setContentType("text/html;charset=UTF-8");
+
+		PrintWriter out = response.getWriter();
+
 		try
 		{
-			modelMap.addAttribute("actCnt", cOCAdmService.insertAdm(emfMap));
+			emfMap.put("isChkd", "Y");
+			emfMap.put("menuType", "admin");
+
+			List<EmfMap> menuList = cODMenuService.selectMenuList(emfMap);
+
+			JSONArray jSONArray = new JSONArray();
+
+			int paramSeq = Integer.parseInt(emfMap.getString("menuSeq"));
+			int startNum = 0;
+
+			jSONArray = cODMenuService.getJsonData(menuList, startNum, paramSeq);
+
+			out.print(jSONArray);
+			jSONArray = null;
 		}
-		catch (Exception he) 
+		catch (Exception he)
 		{
-			if (log.isDebugEnabled()) 
+			if (log.isDebugEnabled())
+			{
+				log.debug(he.getMessage());
+			}
+			throw he;
+		}
+		finally
+		{
+			out.close();
+		}
+	}
+	
+	@Operation(summary = "관리자 계정 등록", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/insert")
+	public int insertSample(@ApiData  EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		int actCnt = 0;
+		try
+		{
+			actCnt = cOCAdmService.insertAdm(emfMap);
+		}
+		catch (Exception he)
+		{
+			if (log.isDebugEnabled())
 			{
 				log.debug(he.getMessage());
             }
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 	
-	/**
-	 * 관리자 계정 관리 Update Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */
-	@RequestMapping(value="/update.ajax", method=RequestMethod.POST)
-	public String updateAdm(EmfMap emfMap, ModelMap modelMap) throws Exception
+	@Operation(summary = "관리자 계정 수정", description = "")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "성공"),
+			@ApiResponse(responseCode = "400", description = "실패", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+	@PostMapping(value="/update")
+	public int updateAdm(@ApiData EmfMap emfMap, ModelMap modelMap) throws Exception
 	{
+		int actCnt = 0;
 		try
 		{
 			emfMap.put("isAdmMng", "Y");
-			
-			modelMap.addAttribute("actCnt", cOCAdmService.updateAdm(emfMap));
+			actCnt = cOCAdmService.updateAdm(emfMap);
 		}
 		catch (Exception he) 
 		{
@@ -217,7 +254,7 @@ public class COCAdmController {
 			throw he;
 		}
 
-		return "jsonView";
+		return actCnt;
 	}
 
 	/**
@@ -255,48 +292,5 @@ public class COCAdmController {
 		return "jsonView";
 	}
 	
-	/**
-	 * 관리자 계정 메뉴 List Ajax
-	 * 
-	 * @param emfMap
-	 * @return String View URL
-	 * @throws 
-	 */	
-	@RequestMapping(value="/menu-list.ajax")
-	public void seleteMenuList(EmfMap emfMap, ModelMap modelMap, HttpServletResponse response) throws Exception
-	{
-        response.setContentType("text/html;charset=UTF-8");
-        
-        PrintWriter out = response.getWriter();
 
-        try 
-        {
-            emfMap.put("isChkd", "Y");
-            emfMap.put("menuType", "admin");
-        	
-        	List<EmfMap> menuList = cODMenuService.selectMenuList(emfMap);
-            
-            JSONArray jSONArray = new JSONArray();
-            
-            int paramSeq = Integer.parseInt(emfMap.getString("menuSeq"));
-            int startNum = 0;
-
-            jSONArray = cODMenuService.getJsonData(menuList, startNum, paramSeq);
-            
-            out.print(jSONArray);
-            jSONArray = null;
-        }
-        catch (Exception he) 
-		{
-			if (log.isDebugEnabled()) 
-			{
-				log.debug(he.getMessage());
-            }
-			throw he;
-		}
-        finally 
-        {
-            out.close();
-        }
-	}
 }
