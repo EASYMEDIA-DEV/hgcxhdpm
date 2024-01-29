@@ -59,6 +59,7 @@ public class ApiSecurityConfig {
                         ,"/api/v1/login/sendMailResetPwd"
                         ,"/api/v1/login/getEmailUuid"
                         ,"/api/v1/login/resetPwd"
+                ,"/api/v1/co/cod/**"
                         )
                 .mvcMatchers("/*.*",
                         "/files/**",

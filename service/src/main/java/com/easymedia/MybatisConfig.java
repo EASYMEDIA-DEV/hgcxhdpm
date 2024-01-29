@@ -11,6 +11,8 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.datasource.lookup.JndiDataSourceLookup;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
@@ -45,11 +47,29 @@ public class MybatisConfig {
     //마이바티스 config xml 위치
     @Value("classpath:mybatis.xml")
     private String cPath;
+
+    @Value("${spring.db.datasource.jndi-name}")
+    private String jndiName;
+
     //DATABASE
     @Bean(name = "dataSource")
+    @Profile("dev_hgcx")
     @ConfigurationProperties(prefix = "spring.hcsdb.datasource")
     public DataSource DataSource() {
         return DataSourceBuilder.create().build();
+    }
+
+    /**
+     * dataSource 생성
+     * @return
+     */
+    //DATABASE
+    @Bean(name = "dataSource")
+    @Profile("!dev_hgcx")
+    public DataSource jndiDataSource() {
+        JndiDataSourceLookup dataSourceLookup = new JndiDataSourceLookup();
+        DataSource dataSource = dataSourceLookup.getDataSource(jndiName);
+        return dataSource;
     }
 
     @Bean(name = "SqlSessionFactory")
