@@ -48,17 +48,13 @@ spring:
       jdbc-url: jdbc:mysql://s190.mailwings.co:3306/me6?autoReconnect=true&useUnicode=true&characterEncoding=utf8
       username: easymedia
       password: easymedia!@#
-  db:
-    datasource:
-      ##Db jndi 명
-      jndi-name:
 ---
 spring.config.activate.on-profile: stg_hgcx
 spring:
   datasource:
-    jndi-name: jdbc/hcsDS
+    jndi-name: hcsDS
 ---
 spring.config.activate.on-profile: prod_hgcx
 spring:
   datasource:
-    jndi-name: jdbc/hcsDS
+    jndi-name: hcsDS

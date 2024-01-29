@@ -71,12 +71,6 @@ spring.config.activate.on-profile: stg_hgcx, prod_hgcx
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:- } [%10t] %-60(%logger{39}.%M\\(%L\\)) : %m%n%wEx"
-  file:
-    path: /home/app/hgcx_api/logs
-  level:
-    org.springframework.orm.jpa: debug
-    org.springframework.orm.jpa.SharedEntityManagerCreator: info
-    com.easymedia: debug
 ---
 spring.config.activate.on-profile: dev_hgcx
 spring :

@@ -59,8 +59,7 @@ public class ApiSecurityConfig {
                         ,"/api/v1/login/sendMailResetPwd"
                         ,"/api/v1/login/getEmailUuid"
                         ,"/api/v1/login/resetPwd"
-                ,"/api/v1/co/cod/**"
-                        )
+                )
                 .mvcMatchers("/*.*",
                         "/files/**",
                         "/swagger-ui/**",
@@ -83,8 +82,8 @@ public class ApiSecurityConfig {
         http.cors();
         //인증
         http
-        .authorizeRequests()
-        .anyRequest().authenticated();
+                .authorizeRequests()
+                .anyRequest().authenticated();
 
         http.addFilterBefore(new JwtRequestFilter(_jwtProperties, _apiJwtTokenProvider, Site.MNGWSERC), UsernamePasswordAuthenticationFilter.class);
         return http.build();
