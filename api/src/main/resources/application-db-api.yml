@@ -52,9 +52,12 @@ spring:
 spring.config.activate.on-profile: stg_hgcx
 spring:
   datasource:
-    jndi-name: hcsDS
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbc-url: jdbc:mysql://192.168.0.12:3306/hcss?allowMultiQueries=true&autoReconnect=true&useUnicode=true&characterEncoding=utf8
+    username: hcss
+    password: dnfntk1##
 ---
 spring.config.activate.on-profile: prod_hgcx
 spring:
   datasource:
-    jndi-name: hcsDS
+    jndi-name: jdbc/hcsDS
